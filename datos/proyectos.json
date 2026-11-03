@@ -1,0 +1,377 @@
+{
+  "proyectos": [
+    {
+      "id": "recepcion-ia",
+      "destacado": true,
+      "tipo": "Producto propio · piloto",
+      "titulo": "Recepción IA",
+      "descripcion": "Una recepcionista con IA para negocios pequeños: contesta por WhatsApp y Telegram, agenda, reagenda y cancela sin dobles reservas. Dos asistentes de IA con tool calling trabajan sobre la agenda, las colas y las reglas de negocio en PostgreSQL. El asistente del dueño tiene más de 30 herramientas y nunca cambia nada solo: propone y el dueño aprueba con un clic. Evaluado con el modelo real por estado de la base de datos: 0 errores de cita, 21/21 ataques bloqueados. En producción desde septiembre de 2026, con un piloto real en una veterinaria.",
+      "rol": "Diseñé el producto, definí la arquitectura y los contratos de API, dirigí la construcción y opero el piloto en producción.",
+      "stack": [
+        "TypeScript",
+        "Node 24",
+        "Fastify",
+        "pg-boss",
+        "PostgreSQL 18 (multi-tenant, RLS)",
+        "React 19 (PWA)"
+      ],
+      "cifras": [
+        "73 migraciones",
+        "Más de 3,300 pruebas automatizadas"
+      ],
+      "medio": {
+        "tipo": "imagen",
+        "src": "img/proyectos/recepcion-agenda",
+        "ancho": 960,
+        "alto": 600,
+        "alt": "Panel de Recepción IA: agenda del día de un negocio de demostración",
+        "pie": "Panel real, datos de demostración"
+      },
+      "enlaces": [
+        {
+          "texto": "app.recepcionia.com.mx",
+          "url": "https://app.recepcionia.com.mx"
+        }
+      ]
+    },
+    {
+      "id": "medibot",
+      "destacado": true,
+      "tipo": "Prototipo escolar · software y hardware",
+      "titulo": "MediBot",
+      "descripcion": "Un quiosco que orienta en salud a comunidades rurales: mide pulso, oxígeno, temperatura y peso con sensores, hace preguntas de señales de alarma y responde con un semáforo verde, ámbar o rojo, con la fuente de cada número. No diagnostica y no guarda nada.",
+      "rol": "Desarrollé el software de un prototipo escolar del grupo de Medirobot: la app de escritorio, el motor de reglas, la comunicación serial con el ESP32 y el firmware, que todavía no se prueba en hardware real.",
+      "stack": [
+        "JavaScript sin framework",
+        "Web Serial",
+        "Electron",
+        "ESP32",
+        "node --test",
+        "Playwright"
+      ],
+      "medio": {
+        "tipo": "imagen",
+        "src": "img/proyectos/medibot",
+        "ancho": 960,
+        "alto": 600,
+        "alt": "Pantalla de bienvenida de MediBot con pulso y oxígeno, temperatura y peso"
+      },
+      "enlaces": [
+        {
+          "texto": "Código en GitHub",
+          "url": "https://github.com/angeljgc-dev/medibot"
+        }
+      ]
+    },
+    {
+      "id": "comerciales",
+      "tipo": "Video hecho en código",
+      "titulo": "Comerciales de Recepción IA",
+      "descripcion": "Una serie de comerciales verticales para mi producto, programados de principio a fin, cada uno con un estilo distinto: dioramas 3D, fluidos y plastilina 3D, entre otros. La música y la mezcla también se generan en código.",
+      "rol": "Dirigí y produje la serie: definí el mensaje de cada pieza y revisé y aprobé cada corte.",
+      "stack": [
+        "Remotion",
+        "React 19",
+        "Three.js",
+        "React Three Fiber",
+        "TypeScript",
+        "Python para el audio"
+      ],
+      "medio": {
+        "tipo": "videos",
+        "piezas": [
+          {
+            "nombre": "diorama",
+            "poster": "img/proyectos/comercial-diorama-poster.webp",
+            "video": "videos/comercial-diorama.mp4",
+            "alt": "Diorama 3D de una barbería con la conversación del bot"
+          },
+          {
+            "nombre": "fluidos",
+            "poster": "img/proyectos/comercial-fluidos-poster.webp",
+            "video": "videos/comercial-fluidos.mp4",
+            "alt": "Gota azul de fluido bajo la pregunta: ¿Y si quiero contestar yo?"
+          },
+          {
+            "nombre": "plastilina",
+            "poster": "img/proyectos/comercial-plastilina-poster.webp",
+            "video": "videos/comercial-plastilina.mp4",
+            "alt": "Teléfono y objetos de plastilina 3D sobre fondo amarillo"
+          }
+        ],
+        "pie": "Modelos 3D de Kenney (CC0)"
+      },
+      "enlaces": []
+    },
+    {
+      "id": "bot-whatsapp-clinica",
+      "tipo": "Clínica · puesto en producción",
+      "titulo": "Bot de WhatsApp para una clínica",
+      "descripcion": "Recepcionista de WhatsApp para un consultorio: registra pacientes, agenda en Google Calendar, manda recordatorios y avisa al médico cuando el caso necesita a una persona.",
+      "rol": "Lo construí y lo puse en producción. Lo migré de whatsappweb.js a Baileys y la memoria bajó de 600 MB a 50 MB.",
+      "stack": [
+        "Node.js",
+        "Baileys",
+        "SQLite",
+        "Express",
+        "Google Calendar API",
+        "Groq (Llama 3.1)"
+      ],
+      "medio": {
+        "tipo": "cifra",
+        "antes": "600 MB",
+        "despues": "50 MB",
+        "nota": "Memoria al pasar a Baileys"
+      },
+      "enlaces": [
+        {
+          "texto": "Código en GitHub",
+          "url": "https://github.com/angeljgc-dev/bot-asistente-medica-whatsapp"
+        }
+      ]
+    },
+    {
+      "id": "surco",
+      "tipo": "Sitio · marca ficticia",
+      "titulo": "Surco",
+      "descripcion": "Landing de una disquera ficticia con una tornamesa 3D modelada en código; el disco suena con audio sintetizado en el navegador, sin archivos de sonido.",
+      "rol": "La diseñé, la construí y la publiqué.",
+      "stack": [
+        "React 19",
+        "React Compiler",
+        "React Three Fiber",
+        "CSG",
+        "Motion",
+        "Web Audio",
+        "Tailwind 4",
+        "Vite"
+      ],
+      "medio": {
+        "tipo": "imagen",
+        "src": "img/proyectos/surco",
+        "ancho": 960,
+        "alto": 600,
+        "alt": "Portada de Surco con la tornamesa 3D"
+      },
+      "enlaces": [
+        {
+          "texto": "Ver sitio",
+          "url": "https://angeljgc-dev.github.io/surco-disquera/"
+        },
+        {
+          "texto": "Código",
+          "url": "https://github.com/angeljgc-dev/surco-disquera"
+        }
+      ]
+    },
+    {
+      "id": "ultravioleta",
+      "tipo": "Sitio · marca ficticia",
+      "titulo": "Ultravioleta",
+      "descripcion": "Landing de un bar arcade ficticio con un shader GLSL propio y animación con Motion.",
+      "rol": "La diseñé, la construí y la publiqué.",
+      "stack": [
+        "React 19",
+        "Three.js",
+        "React Three Fiber",
+        "GLSL",
+        "Motion",
+        "Tailwind 4",
+        "Vite",
+        "TypeScript"
+      ],
+      "medio": {
+        "tipo": "imagen",
+        "src": "img/proyectos/ultravioleta",
+        "ancho": 960,
+        "alto": 600,
+        "alt": "Portada de Ultravioleta con el shader de neón"
+      },
+      "enlaces": [
+        {
+          "texto": "Ver sitio",
+          "url": "https://angeljgc-dev.github.io/ultravioleta/"
+        },
+        {
+          "texto": "Código",
+          "url": "https://github.com/angeljgc-dev/ultravioleta"
+        }
+      ]
+    },
+    {
+      "id": "halley",
+      "tipo": "Sitio · marca ficticia",
+      "titulo": "Halley",
+      "descripcion": "Landing de un planetario ficticio: un campo de estrellas infinito y una luna con brillo de borde.",
+      "rol": "La diseñé, la construí y la publiqué.",
+      "stack": [
+        "Three.js",
+        "GSAP"
+      ],
+      "medio": {
+        "tipo": "imagen",
+        "src": "img/proyectos/halley",
+        "ancho": 960,
+        "alto": 600,
+        "alt": "Portada de Halley con el campo de estrellas y la luna"
+      },
+      "enlaces": [
+        {
+          "texto": "Ver sitio",
+          "url": "https://angeljgc-dev.github.io/halley-planetario/"
+        },
+        {
+          "texto": "Código",
+          "url": "https://github.com/angeljgc-dev/halley-planetario"
+        }
+      ]
+    },
+    {
+      "id": "madrigal",
+      "tipo": "Sitio · marca ficticia",
+      "titulo": "Madrigal",
+      "descripcion": "Landing de una florería ficticia donde las fotos ganan relieve 3D con mapas de profundidad, en WebGL sin librería.",
+      "rol": "La diseñé, la construí y la publiqué.",
+      "stack": [
+        "WebGL",
+        "GSAP"
+      ],
+      "medio": {
+        "tipo": "imagen",
+        "src": "img/proyectos/madrigal",
+        "ancho": 960,
+        "alto": 600,
+        "alt": "Portada de Madrigal con flores en relieve"
+      },
+      "enlaces": [
+        {
+          "texto": "Ver sitio",
+          "url": "https://angeljgc-dev.github.io/madrigal-floreria/"
+        },
+        {
+          "texto": "Código",
+          "url": "https://github.com/angeljgc-dev/madrigal-floreria"
+        }
+      ]
+    },
+    {
+      "id": "mi-kinder",
+      "tipo": "Sistema web",
+      "titulo": "Mi Kinder",
+      "descripcion": "Sistema de gestión escolar para un preescolar: roles de directora y maestra, grupos, evaluaciones por área, asistencia y boletas en PDF.",
+      "rol": "Lo construí y lo publiqué.",
+      "stack": [
+        "Python",
+        "Flask",
+        "Flask-Login",
+        "bcrypt",
+        "SQLite",
+        "fpdf2",
+        "matplotlib",
+        "HTML/Jinja"
+      ],
+      "medio": {
+        "tipo": "imagen",
+        "src": "img/proyectos/mi-kinder",
+        "ancho": 960,
+        "alto": 599,
+        "alt": "Resumen del sistema Mi Kinder con alumnos, grupos y maestras de demostración",
+        "pie": "Datos de demostración"
+      },
+      "enlaces": [
+        {
+          "texto": "Código",
+          "url": "https://github.com/angeljgc-dev/mi-kinder-gestion-escolar"
+        }
+      ]
+    },
+    {
+      "id": "bot-vial",
+      "tipo": "Prototipo",
+      "titulo": "Bot vial Huajuapan",
+      "descripcion": "Bot de WhatsApp que junta reportes viales de medios locales, X y TomTom, los ordena con un LLM y sugiere calles alternas.",
+      "rol": "Lo construí.",
+      "stack": [
+        "Node.js",
+        "Baileys",
+        "SQLite",
+        "Groq",
+        "RSS",
+        "TomTom",
+        "Google Maps"
+      ],
+      "medio": {
+        "tipo": "texto",
+        "lineas": [
+          "RSS · X · TomTom",
+          "LLM",
+          "Calles alternas"
+        ]
+      },
+      "enlaces": [
+        {
+          "texto": "Código",
+          "url": "https://github.com/angeljgc-dev/bot-vial-huajuapan"
+        }
+      ]
+    },
+    {
+      "id": "cotizador",
+      "tipo": "App de escritorio",
+      "titulo": "Cotizador de impresiones",
+      "descripcion": "Aplicación de escritorio hecha para cotizar impresiones en una papelería: mide cuánta tinta lleva cada página de un PDF, Word o imagen, sugiere el precio y manda a imprimir desde la misma ventana.",
+      "rol": "La diseñé, la construí y la probé.",
+      "stack": [
+        "Python",
+        "CustomTkinter",
+        "pypdfium2",
+        "numpy",
+        "Word COM",
+        "reportlab",
+        "PyInstaller",
+        "pytest"
+      ],
+      "medio": {
+        "tipo": "imagen",
+        "src": "img/proyectos/cotizador",
+        "ancho": 960,
+        "alto": 570,
+        "alt": "Cotización de un PDF de prueba con el desglose de tinta por página"
+      },
+      "enlaces": []
+    }
+  ],
+  "masSitios": {
+    "texto": "Más sitios, con marcas ficticias:",
+    "sitios": [
+      {
+        "nombre": "Laca",
+        "url": "https://angeljgc-dev.github.io/laca-estudio-unas/"
+      },
+      {
+        "nombre": "Fermento",
+        "url": "https://angeljgc-dev.github.io/fermento-pizzeria/"
+      },
+      {
+        "nombre": "Volcán",
+        "url": "https://angeljgc-dev.github.io/volcan-tostaduria/"
+      },
+      {
+        "nombre": "Doce Rounds",
+        "url": "https://angeljgc-dev.github.io/doce-rounds/"
+      },
+      {
+        "nombre": "Gloss Club",
+        "url": "https://angeljgc-dev.github.io/gloss-club/"
+      },
+      {
+        "nombre": "Navaja",
+        "url": "https://angeljgc-dev.github.io/navaja-barberia/"
+      },
+      {
+        "nombre": "Remolino",
+        "url": "https://angeljgc-dev.github.io/remolino-heladeria/"
+      }
+    ]
+  }
+}

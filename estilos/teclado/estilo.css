@@ -1,0 +1,362 @@
+/* Estilo "teclado". Tinta azul muy oscura, texto hueso y teclas en cinco tonos: el tono dice la
+   familia de la tecnología, nunca el color de su marca. El teclado 3D vive fijo detrás de todo;
+   el texto va sobre placas casi opacas para que se lea igual con una tecla clara detrás. */
+
+/* Anton solo dibuja las leyendas de las teclas (en el lienzo). */
+@font-face {
+  font-family: 'Anton';
+  src: url('../../fuentes/anton.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson';
+  src: url('../../fuentes/atkinson-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson';
+  src: url('../../fuentes/atkinson-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+html[data-estilo="teclado"] {
+  --fondo: #0b0f1a;
+  --superficie: #171c2b;
+  --placa: rgba(18, 23, 37, 0.9);
+  --placa-alta: #1d2334;
+  --chasis: #222838;
+  --texto: #f5f1e9;
+  --texto-2: #c5cad8;
+  --acento: #fba95b;
+  --tinta: #101524;
+  --hueso: #eee7d9;
+  --coral: #ed826e;
+  --albaricoque: #f7b56a;
+  --agua: #57c5c8;
+  --grafito: #3e424d;
+  --grafito-borde: #8a90a0;
+  --linea: rgba(245, 241, 233, 0.1);
+  --linea-fuerte: rgba(245, 241, 233, 0.24);
+  --lectura: 'Atkinson', 'Segoe UI', Arial, sans-serif;
+  --margen: 16px;
+  --ancho: 1280px;
+  --radio: 20px;
+  color-scheme: dark;
+  background: var(--fondo);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+html[data-estilo="teclado"] *,
+html[data-estilo="teclado"] *::before,
+html[data-estilo="teclado"] *::after { box-sizing: border-box; }
+html[data-estilo="teclado"] body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 400 1.125rem/1.6 var(--lectura);
+  overflow-x: clip;
+}
+html[data-estilo="teclado"] img { max-width: 100%; height: auto; display: block; }
+html[data-estilo="teclado"] a { color: inherit; }
+html[data-estilo="teclado"] :is(h1, h2, h3, h4, p, ul, ol, dl, dd, figure) { margin: 0; }
+html[data-estilo="teclado"] :is(main, footer) :is(ul, ol) { padding: 0; list-style: none; }
+html[data-estilo="teclado"] :is(h1, h2, h3, h4) { font-family: var(--lectura); font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
+html[data-estilo="teclado"] :focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
+html[data-estilo="teclado"] .envoltura { width: 100%; max-width: calc(var(--ancho) + 2 * var(--margen)); margin: 0 auto; padding-inline: var(--margen); }
+
+/* ---------- capas: el teclado atrás, la capa de teclas en medio, el contenido encima ---------- */
+html[data-estilo="teclado"] .tk-lienzo {
+  position: fixed; left: 0; top: 0; z-index: 0; display: block;
+  width: 100%; height: 100vh; height: 100lvh; pointer-events: none;
+}
+html[data-estilo="teclado"] .tk-quieto {
+  position: fixed; z-index: 0; pointer-events: none; height: auto;
+  right: -4vw; bottom: -6vh; width: min(58vw, 760px); opacity: 0.92;
+}
+html[data-estilo="teclado"] .tk-capa { position: fixed; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+html[data-estilo="teclado"] .tk-capa.tk-activa { pointer-events: auto; }
+html[data-estilo="teclado"] .tk-capa.tk-sobre { cursor: pointer; }
+html[data-estilo="teclado"] .tk-tecla {
+  position: absolute; left: 0; top: 0; margin: 0; padding: 0; border: 0; border-radius: 12px;
+  background: transparent; opacity: 0; pointer-events: none; will-change: transform;
+}
+html[data-estilo="teclado"] .tk-tecla:focus-visible { opacity: 1; outline: 3px solid var(--acento); outline-offset: 2px; box-shadow: 0 0 0 6px rgba(11, 15, 26, 0.8); }
+html[data-estilo="teclado"] .cabecera { position: relative; z-index: 30; }
+html[data-estilo="teclado"] main { position: relative; z-index: 2; pointer-events: none; }
+/* Dentro de main la capa de teclas va en 1 y las secciones en 2: el contenido queda siempre
+   encima y solo lo vacío deja pasar el puntero hasta las teclas. */
+html[data-estilo="teclado"] main > section { position: relative; z-index: 2; }
+html[data-estilo="teclado"] .pie { position: relative; z-index: 2; }
+/* Lo que no tiene contenido deja pasar el puntero hasta el teclado; lo que sí, lo recibe. */
+html[data-estilo="teclado"] main :is(section, .envoltura, .inicio-reja, .proyectos, .trayecto, .grados, .grupos, .tesis, .zona-cabeza) { pointer-events: none; }
+html[data-estilo="teclado"] main :is(.inicio-reja > *, .zona-cabeza > *, .proyecto, .puesto, .grupo, .tesis > *, .canales, .mas-sitios, .subtitulo, .idiomas, .tk-capa .tk-tecla:focus-visible) { pointer-events: auto; }
+
+/* ---------- placas ---------- */
+html[data-estilo="teclado"] :is(.zona-cabeza, .proyecto, .puesto, .grupo, .tesis-texto, .tesis-datos li, .canal, .mas-sitios, .subtitulo, .idiomas, .dato) {
+  background: var(--placa);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 24px 48px -28px rgba(0, 0, 0, 0.85);
+}
+
+/* ---------- partes comunes ---------- */
+html[data-estilo="teclado"] .saltar {
+  position: absolute; left: var(--margen); top: -100px; z-index: 60; min-height: 44px; padding: 12px 16px;
+  background: var(--albaricoque); color: var(--tinta); font-weight: 700; text-decoration: none; border-radius: 10px;
+}
+html[data-estilo="teclado"] .saltar:focus { top: 8px; }
+html[data-estilo="teclado"] .rotulo {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 4px 12px; border-radius: 9px;
+  background: var(--chasis); border-bottom: 3px solid var(--albaricoque);
+  font-weight: 700; font-size: 0.875rem; line-height: 1.4; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texto);
+}
+html[data-estilo="teclado"] .boton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 20px;
+  border-radius: 12px; border: 1px solid var(--linea-fuerte); background: var(--chasis); color: var(--texto);
+  box-shadow: 0 4px 0 #070a12; font-weight: 700; font-size: 1rem; line-height: 1.2; text-decoration: none;
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out, background-color 0.2s;
+}
+html[data-estilo="teclado"] .boton:hover { background: #2b3246; }
+html[data-estilo="teclado"] .boton:active { transform: translateY(3px); box-shadow: 0 1px 0 #070a12; }
+html[data-estilo="teclado"] .boton-principal { background: var(--albaricoque); color: var(--tinta); border-color: var(--albaricoque); }
+html[data-estilo="teclado"] .boton-principal:hover { background: #ffc887; }
+
+/* Cabecera */
+html[data-estilo="teclado"] .cabecera { background: rgba(11, 15, 26, 0.94); border-bottom: 1px solid var(--linea); }
+html[data-estilo="teclado"] .cabecera .envoltura { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 64px; }
+html[data-estilo="teclado"] .marca { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; min-width: 44px; text-decoration: none; font-weight: 700; }
+html[data-estilo="teclado"] .marca svg { width: 34px; height: 34px; flex: none; }
+html[data-estilo="teclado"] .marca svg rect { fill: var(--albaricoque); }
+html[data-estilo="teclado"] .marca svg path { stroke: var(--tinta); }
+html[data-estilo="teclado"] .marca span { display: none; }
+html[data-estilo="teclado"] .menu { display: flex; gap: 2px; margin-left: auto; }
+html[data-estilo="teclado"] .menu a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; font-weight: 700; font-size: 0.9375rem; text-decoration: none; color: var(--texto-2); border-radius: 10px; }
+html[data-estilo="teclado"] .menu a:hover { color: var(--texto); background: var(--chasis); }
+html[data-estilo="teclado"] .menu .solo-ancho { display: none; }
+html[data-estilo="teclado"] .selector-estilo select {
+  min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--linea-fuerte);
+  background: var(--chasis); color: var(--texto); font: 700 0.9375rem var(--lectura); box-shadow: 0 3px 0 #070a12;
+}
+
+/* ---------- presentación ---------- */
+html[data-estilo="teclado"] .inicio { position: relative; padding-block: 18px 64px; }
+html[data-estilo="teclado"] .inicio-reja {
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'retrato' 'lugar' 'saludo' 'nombre' 'cargo' 'resumen' 'acciones' 'datos';
+}
+html[data-estilo="teclado"] .inicio-reja > :is(.lugar, .saludo, .nombre, .cargo, .resumen, .acciones) { background: var(--placa); padding-inline: 20px; }
+/* Retrato como tecla de perfil: cuadro redondeado con el tono albaricoque detrás. */
+html[data-estilo="teclado"] .retrato {
+  grid-area: retrato; position: relative; width: 132px; aspect-ratio: 1; margin-bottom: 14px; overflow: hidden;
+  border-radius: 28px; background: radial-gradient(120% 100% at 30% 10%, #ffd3a1, var(--albaricoque) 45%, var(--coral));
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.22), 0 16px 30px -14px rgba(0, 0, 0, 0.9);
+}
+html[data-estilo="teclado"] .retrato img { position: absolute; left: 50%; bottom: 0; width: 118%; max-width: none; transform: translateX(-50%); }
+html[data-estilo="teclado"] .lugar {
+  grid-area: lugar; padding-top: 20px; border-radius: var(--radio) var(--radio) 0 0;
+  font-weight: 700; font-size: 0.875rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--texto-2);
+}
+html[data-estilo="teclado"] .saludo { grid-area: saludo; padding-top: 14px; font-size: 1.25rem; font-weight: 700; color: var(--texto-2); }
+html[data-estilo="teclado"] .nombre { grid-area: nombre; font-size: clamp(2.75rem, 12.5vw, 6.25rem); line-height: 1.02; padding-top: 4px; }
+html[data-estilo="teclado"] .nombre span { display: block; }
+html[data-estilo="teclado"] .nombre span:first-child { color: var(--albaricoque); }
+html[data-estilo="teclado"] .cargo { grid-area: cargo; padding-top: 12px; font-weight: 700; font-size: 1.125rem; letter-spacing: 0.06em; text-transform: uppercase; }
+html[data-estilo="teclado"] .resumen { grid-area: resumen; padding-top: 12px; color: var(--texto-2); }
+html[data-estilo="teclado"] .acciones { grid-area: acciones; display: flex; flex-wrap: wrap; gap: 10px; padding-top: 22px; padding-bottom: 24px; border-radius: 0 0 var(--radio) var(--radio); }
+html[data-estilo="teclado"] .datos { grid-area: datos; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+html[data-estilo="teclado"] .dato { padding: 14px 14px 12px; border-radius: 16px; border-bottom: 3px solid var(--agua); }
+html[data-estilo="teclado"] .dato dt { font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texto-2); }
+html[data-estilo="teclado"] .dato dd { font-size: 1.125rem; line-height: 1.35; margin-top: 4px; }
+
+/* ---------- secciones ---------- */
+html[data-estilo="teclado"] .zona { position: relative; padding-block: 72px; }
+html[data-estilo="teclado"] .zona-cabeza { width: fit-content; max-width: 100%; padding: 18px 20px 22px; margin-bottom: 24px; }
+html[data-estilo="teclado"] .zona-cabeza h2 { margin-top: 12px; font-size: clamp(2.4rem, 10vw, 4.75rem); line-height: 1.04; }
+html[data-estilo="teclado"] .zona-cabeza p { margin-top: 14px; max-width: 36em; color: var(--texto-2); }
+
+/* Proyectos: entre tarjeta y tarjeta queda un respiro donde el teclado enciende sus teclas. */
+html[data-estilo="teclado"] .proyectos { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: max(150px, 22vh); column-gap: 24px; }
+html[data-estilo="teclado"] .proyecto { display: flex; flex-direction: column; overflow: hidden; }
+html[data-estilo="teclado"] .proyecto-medio { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--tinta); border-bottom: 1px solid var(--linea); }
+html[data-estilo="teclado"] .proyecto-medio img { width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+html[data-estilo="teclado"] .proyecto-medio figcaption {
+  position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; border-radius: 9px;
+  font-weight: 700; font-size: 0.875rem; color: var(--texto); background: rgba(11, 15, 26, 0.9); border: 1px solid var(--linea-fuerte);
+}
+html[data-estilo="teclado"] .proyecto-videos { aspect-ratio: auto; padding: 14px; }
+html[data-estilo="teclado"] .proyecto-videos .videos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+html[data-estilo="teclado"] .video-marco { position: relative; aspect-ratio: 9 / 16; overflow: hidden; border-radius: 14px; background: #000; }
+html[data-estilo="teclado"] .video-marco img, html[data-estilo="teclado"] .video-marco video { width: 100%; height: 100%; object-fit: cover; display: block; }
+html[data-estilo="teclado"] .video-nombre { display: block; margin-top: 8px; font-weight: 700; font-size: 0.875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texto-2); }
+html[data-estilo="teclado"] .proyecto-videos figcaption { position: static; display: inline-block; margin-top: 12px; }
+html[data-estilo="teclado"] .ver-video {
+  position: absolute; left: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 44px;
+  padding: 0 14px 0 12px; border-radius: 12px; background: var(--albaricoque); color: var(--tinta); font-weight: 700; text-decoration: none; box-shadow: 0 3px 0 #070a12;
+}
+html[data-estilo="teclado"] .ver-video::before { content: ''; border-left: 10px solid currentColor; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+html[data-estilo="teclado"] .proyecto-cifra { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 22px; background: radial-gradient(120% 90% at 80% 10%, #262d42, var(--tinta) 70%); }
+html[data-estilo="teclado"] .proyecto-cifra .antes { font-weight: 700; font-size: clamp(2.5rem, 11vw, 4rem); line-height: 0.95; color: var(--texto-2); text-decoration: line-through; text-decoration-thickness: 4px; }
+html[data-estilo="teclado"] .proyecto-cifra .despues { font-weight: 700; font-size: clamp(3.75rem, 17vw, 6rem); line-height: 0.95; color: var(--albaricoque); }
+html[data-estilo="teclado"] .proyecto-cifra .nota { font-weight: 700; font-size: 0.875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texto-2); margin-top: 8px; }
+html[data-estilo="teclado"] .proyecto-esquema { display: flex; align-items: center; padding: 22px; background: radial-gradient(120% 90% at 20% 10%, #262d42, var(--tinta) 70%); }
+html[data-estilo="teclado"] .proyecto-esquema ol { display: grid; gap: 8px; }
+html[data-estilo="teclado"] .proyecto-esquema li { display: inline-flex; width: fit-content; padding: 6px 14px; border-radius: 10px; background: var(--chasis); border-bottom: 3px solid var(--agua); font-weight: 700; font-size: clamp(1.25rem, 5vw, 1.75rem); }
+html[data-estilo="teclado"] .proyecto-texto { padding: 20px 20px 22px; display: flex; flex-direction: column; flex: 1; }
+html[data-estilo="teclado"] .proyecto-tipo { font-weight: 700; font-size: 0.875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texto-2); }
+html[data-estilo="teclado"] .proyecto-titulo { font-size: clamp(1.75rem, 7vw, 2.5rem); line-height: 1.05; margin-top: 8px; }
+html[data-estilo="teclado"] .proyecto-descripcion, html[data-estilo="teclado"] .proyecto-rol { margin-top: 12px; color: var(--texto-2); }
+html[data-estilo="teclado"] .proyecto-rol strong { color: var(--texto); }
+html[data-estilo="teclado"] .proyecto-cifras { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+html[data-estilo="teclado"] .proyecto-cifras li { font-weight: 700; font-size: 1.0625rem; line-height: 1.3; padding: 6px 12px; border-radius: 10px; background: var(--placa-alta); border-bottom: 3px solid var(--albaricoque); }
+/* El stack como teclas chicas: el contorno de abajo es el canto de la tecla. */
+html[data-estilo="teclado"] :is(.proyecto-stack, .etiquetas) { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+html[data-estilo="teclado"] :is(.proyecto-stack, .etiquetas) li {
+  font-size: 1.0625rem; line-height: 1.3; padding: 5px 11px 4px; border-radius: 9px;
+  background: var(--placa-alta); color: var(--texto); border: 1px solid var(--linea); border-bottom: 3px solid var(--linea-fuerte);
+}
+html[data-estilo="teclado"] .proyecto-enlaces { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+html[data-estilo="teclado"] .mas-sitios { margin-top: max(150px, 22vh); padding: 20px; }
+html[data-estilo="teclado"] .mas-sitios p { color: var(--texto-2); }
+html[data-estilo="teclado"] .mas-sitios ul { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+/* Experiencia, estudios e idiomas */
+html[data-estilo="teclado"] .trayecto, html[data-estilo="teclado"] .grados { display: grid; gap: 14px; }
+html[data-estilo="teclado"] .puesto { display: grid; gap: 6px; padding: 20px; }
+html[data-estilo="teclado"] .puesto .meta {
+  display: inline-flex; width: fit-content; padding: 2px 12px; border-radius: 10px; background: var(--chasis); border-bottom: 3px solid var(--coral);
+  font-weight: 700; font-size: 1.5rem; line-height: 1.3;
+}
+html[data-estilo="teclado"] .puesto h3 { font-size: clamp(1.5rem, 6vw, 2.125rem); line-height: 1.1; margin-top: 6px; }
+html[data-estilo="teclado"] .puesto h4 { font-size: clamp(1.25rem, 5vw, 1.625rem); line-height: 1.15; }
+html[data-estilo="teclado"] .lugar-puesto, html[data-estilo="teclado"] .meta-chica { display: block; font-weight: 700; font-size: 0.9375rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--texto-2); }
+html[data-estilo="teclado"] .puesto ul { margin-top: 10px; display: grid; gap: 10px; }
+html[data-estilo="teclado"] .puesto li { position: relative; padding-left: 22px; color: var(--texto-2); }
+html[data-estilo="teclado"] .puesto li::before { content: ''; position: absolute; left: 0; top: 0.55em; width: 10px; height: 10px; border-radius: 3px; background: var(--coral); }
+html[data-estilo="teclado"] .subtitulo { width: fit-content; max-width: 100%; margin-top: 56px; margin-bottom: 14px; padding: 14px 20px; font-size: clamp(1.75rem, 7vw, 2.75rem); line-height: 1.1; }
+html[data-estilo="teclado"] .idiomas { margin-top: 14px; padding: 18px 20px; display: grid; gap: 8px; color: var(--texto-2); }
+html[data-estilo="teclado"] .idiomas strong { color: var(--texto); }
+
+/* Investigación */
+html[data-estilo="teclado"] .tesis { display: grid; gap: 14px; }
+html[data-estilo="teclado"] .tesis-texto { padding: 22px; font-weight: 700; font-size: clamp(1.375rem, 5vw, 2.125rem); line-height: 1.3; }
+html[data-estilo="teclado"] .tesis-datos { display: grid; gap: 12px; }
+html[data-estilo="teclado"] .tesis-datos li { padding: 16px; border-bottom: 3px solid var(--hueso); }
+html[data-estilo="teclado"] .tesis-datos strong { display: block; font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texto-2); }
+
+/* Habilidades: en teléfono queda un claro del alto del teclado (que crece con el ancho de la
+   pantalla) más 60 px arriba y 70 abajo, donde el teclado se ve completo. */
+html[data-estilo="teclado"] [data-seccion="habilidades"] .grupos { margin-top: calc(130px + 116vw); }
+@media (max-width: 359px) {
+  html[data-estilo="teclado"] [data-seccion="habilidades"] .grupos { margin-top: calc(130px + 134vw); }
+}
+@media (min-width: 720px) {
+  html[data-estilo="teclado"] [data-seccion="habilidades"] .grupos { margin-top: 82vh; margin-top: 82svh; }
+}
+html[data-estilo="teclado"] .grupos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+html[data-estilo="teclado"] .grupo { padding: 20px; }
+html[data-estilo="teclado"] .grupo h3 { font-size: 1.625rem; line-height: 1.1; }
+html[data-estilo="teclado"] [data-pieza="hab-lenguajes"] .etiquetas li { border-bottom-color: var(--hueso); }
+html[data-estilo="teclado"] [data-pieza="hab-front"] .etiquetas li { border-bottom-color: var(--coral); }
+html[data-estilo="teclado"] [data-pieza="hab-back"] .etiquetas li { border-bottom-color: var(--albaricoque); }
+html[data-estilo="teclado"] :is([data-pieza="hab-datos"], [data-pieza="hab-ia"]) .etiquetas li { border-bottom-color: var(--agua); }
+html[data-estilo="teclado"] [data-pieza="hab-calidad"] .etiquetas li { border-bottom-color: var(--grafito-borde); }
+
+/* Contacto */
+html[data-estilo="teclado"] .contacto .zona-cabeza h2 { font-size: clamp(3rem, 15vw, 7rem); }
+html[data-estilo="teclado"] .canales { display: grid; gap: 12px; }
+html[data-estilo="teclado"] .canal {
+  display: flex; flex-direction: column; justify-content: center; min-height: 76px; padding: 12px 20px;
+  text-decoration: none; border-bottom: 3px solid var(--albaricoque); transition: background-color 0.2s, transform 0.12s;
+}
+html[data-estilo="teclado"] .canal:hover { background: var(--placa-alta); }
+html[data-estilo="teclado"] .canal:active { transform: translateY(2px); }
+html[data-estilo="teclado"] .canal-tipo { font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texto-2); }
+html[data-estilo="teclado"] .canal-dato { font-size: 1.125rem; line-height: 1.35; overflow-wrap: anywhere; }
+html[data-estilo="teclado"] .pie { padding-block: 28px 44px; background: rgba(11, 15, 26, 0.94); border-top: 1px solid var(--linea); color: var(--texto-2); }
+
+/* ---------- el panel de la tecla elegida ---------- */
+html[data-estilo="teclado"] .tk-panel {
+  position: fixed; z-index: 40; left: 12px; right: 12px; bottom: 12px; max-height: 56vh; max-height: 56svh; overflow: auto;
+  padding: 16px 16px 14px; border-radius: 20px; background: var(--superficie); color: var(--texto);
+  border: 1px solid var(--linea-fuerte); border-top: 5px solid var(--tono, var(--albaricoque));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+}
+html[data-estilo="teclado"] .tk-panel[hidden] { display: none; }
+html[data-estilo="teclado"] .tk-panel[data-tono="hueso"] { --tono: var(--hueso); }
+html[data-estilo="teclado"] .tk-panel[data-tono="coral"] { --tono: var(--coral); }
+html[data-estilo="teclado"] .tk-panel[data-tono="albaricoque"] { --tono: var(--albaricoque); }
+html[data-estilo="teclado"] .tk-panel[data-tono="agua"] { --tono: var(--agua); }
+html[data-estilo="teclado"] .tk-panel[data-tono="grafito"] { --tono: var(--grafito-borde); }
+html[data-estilo="teclado"] .tk-panel-familia { font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--texto-2); }
+html[data-estilo="teclado"] .tk-panel-nombre { font-weight: 700; font-size: 1.75rem; line-height: 1.1; margin: 2px 52px 10px 0; letter-spacing: -0.01em; }
+html[data-estilo="teclado"] .tk-panel-lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+html[data-estilo="teclado"] .tk-panel-ir {
+  display: grid; gap: 2px; width: 100%; min-height: 44px; padding: 10px 12px; text-align: left; cursor: pointer;
+  border-radius: 12px; border: 1px solid var(--linea); border-bottom: 3px solid var(--tono, var(--albaricoque));
+  background: var(--chasis); color: var(--texto); font: inherit;
+}
+html[data-estilo="teclado"] .tk-panel-ir:hover { background: #2b3246; }
+html[data-estilo="teclado"] .tk-panel-titulo { font-weight: 700; font-size: 1rem; }
+html[data-estilo="teclado"] .tk-panel-frase { font-size: 0.9375rem; line-height: 1.45; color: var(--texto-2); }
+html[data-estilo="teclado"] .tk-panel-vacio { color: var(--texto-2); font-size: 1rem; }
+html[data-estilo="teclado"] .tk-panel-cerrar {
+  position: absolute; top: 12px; right: 12px; min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 12px;
+  border: 1px solid var(--linea-fuerte); background: var(--chasis); color: var(--texto); font: 700 0.875rem var(--lectura); cursor: pointer;
+}
+
+/* ---------- tamaños ---------- */
+@media (min-width: 600px) {
+  html[data-estilo="teclado"] .marca span { display: inline; }
+  html[data-estilo="teclado"] .datos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  html[data-estilo="teclado"] .canales { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  html[data-estilo="teclado"] .retrato { width: 150px; }
+}
+@media (min-width: 720px) {
+  html[data-estilo="teclado"] { --margen: 32px; }
+  html[data-estilo="teclado"] .menu .solo-ancho { display: inline-flex; }
+  html[data-estilo="teclado"] .zona { padding-block: 104px; }
+  html[data-estilo="teclado"] .tk-panel { left: auto; right: 24px; bottom: 24px; width: 420px; }
+  html[data-estilo="teclado"] .trayecto { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-estilo="teclado"] .grados { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  html[data-estilo="teclado"] .grupos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Escritorio: el contenido a la izquierda y el teclado libre a la derecha. */
+@media (min-width: 1024px) {
+  html[data-estilo="teclado"] body { font-size: 1.1875rem; }
+  html[data-estilo="teclado"] .inicio { min-height: calc(100vh - 64px); min-height: calc(100svh - 64px); display: flex; align-items: center; padding-block: 40px 72px; }
+  html[data-estilo="teclado"] .inicio-reja { max-width: calc(var(--ancho) + 2 * var(--margen)); }
+  html[data-estilo="teclado"] .inicio-reja > :not(.retrato) { width: min(100%, 640px); }
+  html[data-estilo="teclado"] .nombre { font-size: clamp(4rem, 6.4vw, 6.25rem); }
+  html[data-estilo="teclado"] .datos { width: min(100%, 640px); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-estilo="teclado"] .proyectos, html[data-estilo="teclado"] .trayecto, html[data-estilo="teclado"] .grados,
+  html[data-estilo="teclado"] .tesis, html[data-estilo="teclado"] .grupos, html[data-estilo="teclado"] .canales,
+  html[data-estilo="teclado"] .mas-sitios, html[data-estilo="teclado"] .idiomas { width: 58%; }
+  html[data-estilo="teclado"] .proyectos { row-gap: 28px; }
+  html[data-estilo="teclado"] .mas-sitios { margin-top: 28px; }
+  html[data-estilo="teclado"] .trayecto, html[data-estilo="teclado"] .grados, html[data-estilo="teclado"] .grupos, html[data-estilo="teclado"] .canales { grid-template-columns: minmax(0, 1fr); }
+  html[data-estilo="teclado"] [data-seccion="habilidades"] .grupos { margin-top: 0; width: 46%; }
+  html[data-estilo="teclado"] .zona { padding-block: 130px; }
+  html[data-estilo="teclado"] .tk-panel { left: var(--margen); right: auto; bottom: 28px; width: min(440px, 40vw); }
+  html[data-estilo="teclado"] .tk-quieto { right: 2vw; bottom: 10vh; width: min(44vw, 760px); }
+}
+@media (min-width: 1280px) {
+  html[data-estilo="teclado"] .proyectos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-estilo="teclado"] .proyecto[data-destacado] { grid-column: 1 / -1; }
+}
+@media (min-width: 1440px) {
+  html[data-estilo="teclado"] { --margen: 48px; }
+}
+@media (max-width: 1023px) {
+  html[data-estilo="teclado"] .tk-quieto { right: -10vw; bottom: -4vh; width: 100vw; opacity: 0.5; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-estilo="teclado"] { scroll-behavior: auto; }
+  html[data-estilo="teclado"] .boton, html[data-estilo="teclado"] .canal { transition: none; }
+}
+@media print {
+  html[data-estilo="teclado"] :is(.tk-lienzo, .tk-capa, .tk-panel, .tk-quieto) { display: none !important; }
+}

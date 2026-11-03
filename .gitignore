@@ -1,0 +1,4 @@
+# Notas de trabajo. Nunca se publican.
+.equipo/
+node_modules/
+dist/

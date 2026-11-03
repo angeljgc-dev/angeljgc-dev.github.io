@@ -1,0 +1,421 @@
+/* Estilo "descenso". La página es una inmersión: arriba el cielo, el nombre flotando en la
+   línea de agua, y cada sección más honda que la anterior. El agua la pinta un shader en un
+   lienzo fijo detrás de todo; esta hoja acomoda el contenido encima, siempre sobre paneles
+   opacos, porque los rayos y las cáusticas aclaran el fondo y el texto tiene que leerse igual.
+   Sin WebGL, o con movimiento reducido, el mismo mundo queda en degradados de CSS. */
+
+@font-face {
+  font-family: 'Descenso Anton';
+  src: url('../../fuentes/anton.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Descenso Atkinson';
+  src: url('../../fuentes/atkinson-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Descenso Atkinson';
+  src: url('../../fuentes/atkinson-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+html[data-estilo="descenso"] {
+  /* La rampa del agua va de turquesa petróleo a casi negro. Arriba el acento es ámbar, la luz
+     que viene de afuera; abajo es verde bioluminiscente, la luz que hace el propio mar. */
+  --cielo: #E6F3F1;
+  --tinta: #072A33;
+  --iluminada: #0B4F5C;
+  --crepusculo: #0A2F3D;
+  --abisal: #03111A;
+  --panel: #0C3442;
+  --panel-hondo: #0A1E28;
+  --claro: #F2FAF9;
+  --claro-suave: #A9CBCD;
+  --ambar: #FF9F45;
+  --bio: #4DFFD2;
+  --borde: rgba(169, 203, 205, 0.22);
+  --sombra: 0 34px 60px -26px rgba(1, 9, 16, 0.92), 0 10px 22px -12px rgba(2, 20, 30, 0.8);
+  --display: 'Descenso Anton', Impact, 'Arial Narrow Bold', sans-serif;
+  --lectura: 'Descenso Atkinson', Arial, sans-serif;
+  --margen: 16px;
+  --ancho: 1240px;
+  --alto-cabecera: 96px;
+  color-scheme: dark;
+  /* El fondo va en la raíz y no en el cuerpo: así el lienzo del agua queda encima de él. */
+  background: linear-gradient(180deg, var(--iluminada) 0%, #0B4250 16%, var(--crepusculo) 34%, #061B26 56%, var(--abisal) 74%, var(--abisal) 100%) var(--abisal);
+  scroll-padding-top: calc(var(--alto-cabecera) + 12px);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html[data-estilo="descenso"] *,
+html[data-estilo="descenso"] *::before,
+html[data-estilo="descenso"] *::after { box-sizing: border-box; }
+
+html[data-estilo="descenso"] body {
+  margin: 0;
+  color: var(--claro);
+  font: 400 1.125rem/1.6 var(--lectura);
+  overflow-x: clip;
+  background: transparent;
+}
+
+html[data-estilo="descenso"] img { max-width: 100%; height: auto; display: block; }
+html[data-estilo="descenso"] a { color: inherit; }
+html[data-estilo="descenso"] h1,
+html[data-estilo="descenso"] h2,
+html[data-estilo="descenso"] h3,
+html[data-estilo="descenso"] h4 { font-family: var(--display); font-weight: 400; margin: 0; text-transform: uppercase; letter-spacing: 0.01em; line-height: 1.05; }
+html[data-estilo="descenso"] p,
+html[data-estilo="descenso"] ul,
+html[data-estilo="descenso"] ol,
+html[data-estilo="descenso"] dl,
+html[data-estilo="descenso"] dd,
+html[data-estilo="descenso"] figure { margin: 0; }
+html[data-estilo="descenso"] ul,
+html[data-estilo="descenso"] ol { padding: 0; list-style: none; }
+html[data-estilo="descenso"] :focus-visible { outline: 3px solid var(--bio); outline-offset: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+  html[data-estilo="descenso"] { scroll-behavior: smooth; }
+}
+
+html[data-estilo="descenso"] .saltar {
+  position: absolute; left: var(--margen); top: -100px; z-index: 70;
+  background: var(--claro); color: var(--abisal); padding: 12px 16px; min-height: 44px;
+  font-weight: 700; text-decoration: none;
+}
+html[data-estilo="descenso"] .saltar:focus { top: 8px; }
+html[data-estilo="descenso"] .envoltura { width: 100%; max-width: calc(var(--ancho) + 2 * var(--margen)); margin: 0 auto; padding-inline: var(--margen); }
+html[data-estilo="descenso"] .rotulo {
+  display: block; font-weight: 700; font-size: 0.875rem; line-height: 1.4;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--claro-suave);
+}
+
+/* ---------- El lienzo del agua ---------- */
+html[data-estilo="descenso"] .descenso-agua {
+  position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%;
+  display: block; pointer-events: none; opacity: 0;
+}
+html[data-estilo="descenso"] .descenso-agua.encendida { opacity: 1; }
+/* Con movimiento reducido el agua es una sola imagen fija pegada a la presentación. */
+html[data-estilo="descenso"] .descenso-agua.fija { position: absolute; inset: auto; top: 0; left: 0; height: auto; opacity: 1; }
+
+/* ---------- Cabecera fija con el medidor de profundidad ---------- */
+html[data-estilo="descenso"] .cabecera {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+  background: #0A1E28; color: var(--claro);
+  border-bottom: 1px solid var(--borde);
+}
+html[data-estilo="descenso"][data-descenso-zona="cielo"] .cabecera {
+  background: #EFF8F6; color: var(--tinta); border-bottom-color: rgba(7, 42, 51, 0.16);
+}
+html[data-estilo="descenso"] .cabecera .envoltura { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 64px; }
+html[data-estilo="descenso"] .marca { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; min-width: 44px; text-decoration: none; font-weight: 700; }
+html[data-estilo="descenso"] .marca svg { width: 34px; height: 34px; flex: none; }
+html[data-estilo="descenso"] .marca span { display: none; }
+html[data-estilo="descenso"] .menu { display: flex; gap: 2px; margin-left: auto; }
+html[data-estilo="descenso"] .menu a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px;
+  font-weight: 700; font-size: 0.9375rem; text-decoration: none;
+}
+html[data-estilo="descenso"] .menu a:hover { text-decoration: underline; text-underline-offset: 6px; }
+html[data-estilo="descenso"] .menu .solo-ancho { display: none; }
+html[data-estilo="descenso"] .ranura-estilo { display: flex; align-items: center; }
+html[data-estilo="descenso"] .selector-estilo select {
+  min-height: 44px; padding: 0 10px; border-radius: 8px; border: 1px solid currentColor;
+  background: transparent; color: inherit; font: 700 0.9375rem/1 var(--lectura);
+}
+html[data-estilo="descenso"] .selector-estilo option { color: #03111A; background: #F2FAF9; }
+
+/* El medidor es decoración: una franja pegada a la cabecera con la zona y los metros. */
+html[data-estilo="descenso"] .descenso-medidor {
+  position: fixed; left: 0; right: 0; top: 64px; z-index: 39; height: 32px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-inline: var(--margen);
+  background: #0A1E28; color: var(--claro);
+  border-bottom: 1px solid var(--borde);
+  font: 700 0.8125rem/1 var(--lectura); letter-spacing: 0.12em; text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+html[data-estilo="descenso"][data-descenso-zona="cielo"] .descenso-medidor { background: #EFF8F6; color: var(--tinta); border-bottom-color: rgba(7, 42, 51, 0.16); }
+html[data-estilo="descenso"] .descenso-medidor-cifra { letter-spacing: 0.06em; }
+html[data-estilo="descenso"] .descenso-medidor-barra {
+  position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%;
+  transform-origin: left center; transform: scaleX(var(--avance, 0));
+  background: var(--acento-medidor, var(--ambar));
+}
+
+/* ---------- Presentación: cielo arriba, el nombre en la línea de agua ---------- */
+html[data-estilo="descenso"] .inicio {
+  position: relative; padding-top: calc(var(--alto-cabecera) + 18px); padding-bottom: 72px;
+}
+/* Sin el agua viva, el cielo y la línea los pinta CSS. */
+html[data-estilo="descenso"]:not([data-descenso-agua="viva"]):not([data-descenso-agua="fija"]) .inicio {
+  background: linear-gradient(180deg, #A9D6D6 0%, #D3EBE8 30%, var(--cielo) 55%, var(--cielo) 100%);
+  background-size: 100% var(--linea-css, 62%);
+  background-repeat: no-repeat;
+}
+html[data-estilo="descenso"] .inicio-reja {
+  position: relative; display: grid; column-gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'lugar retrato'
+    'saludo retrato'
+    'nombre nombre'
+    'cargo cargo'
+    'resumen resumen'
+    'acciones acciones'
+    'datos datos';
+}
+/* El panel de lectura de la presentación ocupa las filas que quedan bajo el agua. */
+html[data-estilo="descenso"] .inicio-reja::after {
+  content: ''; grid-column: 1 / -1; grid-row: cargo-start / datos-end; z-index: 0;
+  margin: 150px -6px 0; border-radius: 18px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="descenso"] .inicio-reja > * { position: relative; z-index: 1; }
+html[data-estilo="descenso"] .retrato {
+  grid-area: retrato; align-self: start; width: 104px; height: 104px; margin: 0;
+  border-radius: 50%; overflow: hidden; background: #CFE8E5;
+  border: 2px solid var(--tinta); box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.55);
+}
+html[data-estilo="descenso"] .retrato img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 8%; }
+html[data-estilo="descenso"] .lugar {
+  grid-area: lugar; align-self: end; color: var(--tinta);
+  font-weight: 700; font-size: 0.875rem; letter-spacing: 0.14em; text-transform: uppercase;
+}
+html[data-estilo="descenso"] .saludo { grid-area: saludo; margin-top: 8px; color: var(--tinta); font-weight: 700; font-size: 1.25rem; }
+html[data-estilo="descenso"] .nombre {
+  grid-area: nombre; margin-top: 18px; color: var(--tinta);
+  font-size: clamp(3.9rem, 19vw, 11rem); line-height: 1.18; letter-spacing: 0.005em;
+}
+html[data-estilo="descenso"] .nombre span { display: block; }
+html[data-estilo="descenso"] .cargo {
+  grid-area: cargo; margin-top: 150px; padding: 26px 18px 0;
+  font-weight: 700; font-size: 1.125rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--claro);
+}
+html[data-estilo="descenso"] .resumen { grid-area: resumen; margin-top: 12px; padding: 0 18px; color: var(--claro); max-width: 40em; }
+html[data-estilo="descenso"] .acciones { grid-area: acciones; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; padding: 0 18px; }
+html[data-estilo="descenso"] .datos {
+  grid-area: datos; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+  margin-top: 28px; padding: 0 18px 20px;
+}
+html[data-estilo="descenso"] .dato { padding: 14px 14px 12px; border-radius: 12px; border: 1px solid var(--borde); background: var(--panel-hondo); }
+html[data-estilo="descenso"] .dato dt { font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--claro-suave); }
+html[data-estilo="descenso"] .dato dd { margin-top: 4px; font-size: 1.125rem; line-height: 1.35; }
+
+/* ---------- Botones: rectos, con el acento de la zona ---------- */
+html[data-estilo="descenso"] .boton,
+html[data-estilo="descenso"] .ver-video {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 48px; min-width: 44px; padding: 0 20px; border-radius: 6px;
+  border: 1px solid rgba(242, 250, 249, 0.55); background: transparent; color: var(--claro);
+  font: 700 1rem/1.2 var(--lectura); text-decoration: none; cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+html[data-estilo="descenso"] .boton:hover,
+html[data-estilo="descenso"] .ver-video:hover { border-color: var(--bio); background: rgba(77, 255, 210, 0.08); }
+html[data-estilo="descenso"] .boton-principal { background: var(--ambar); border-color: var(--ambar); color: var(--abisal); }
+html[data-estilo="descenso"] .boton-principal:hover { background: #FFB46E; border-color: #FFB46E; color: var(--abisal); }
+html[data-estilo="descenso"] .boton svg { width: 18px; height: 18px; flex: none; }
+
+/* ---------- Secciones bajo el agua ---------- */
+/* Todas se acomodan desde el principio: la profundidad depende de dónde queda cada una. */
+html[data-estilo="descenso"] .zona { position: relative; padding-block: 112px; content-visibility: visible; }
+html[data-estilo="descenso"] .zona-cabeza {
+  display: inline-block; max-width: 100%; margin-bottom: 36px; padding: 18px 20px 22px;
+  border-radius: 14px; background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="descenso"] .zona-cabeza h2 { margin-top: 8px; font-size: clamp(2.75rem, 12vw, 7rem); line-height: 1.02; color: var(--claro); }
+html[data-estilo="descenso"] .zona-cabeza p { margin-top: 14px; max-width: 36em; color: var(--claro); }
+/* De la investigación hacia abajo ya no llega el sol: los paneles se vuelven más oscuros y
+   el acento pasa de ámbar a bioluminiscente. */
+html[data-estilo="descenso"] #investigacion,
+html[data-estilo="descenso"] #habilidades,
+html[data-estilo="descenso"] #contacto { --panel: #0A1E28; --panel-hondo: #071820; --borde: rgba(77, 255, 210, 0.2); }
+html[data-estilo="descenso"] #investigacion .rotulo,
+html[data-estilo="descenso"] #habilidades .rotulo,
+html[data-estilo="descenso"] #contacto .rotulo { color: var(--bio); }
+
+/* Proyectos */
+html[data-estilo="descenso"] .proyectos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+html[data-estilo="descenso"] .proyecto {
+  position: relative; display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid var(--borde); border-radius: 18px; box-shadow: var(--sombra);
+}
+html[data-estilo="descenso"] .proyecto[data-destacado] { grid-column: 1 / -1; }
+html[data-estilo="descenso"] .proyecto-medio { position: relative; margin: 0; aspect-ratio: 16 / 10; border-radius: 17px 17px 0 0; background: var(--panel-hondo); }
+html[data-estilo="descenso"] .proyecto-medio > img { width: 100%; height: 100%; object-fit: cover; object-position: left top; border-radius: 17px 17px 0 0; }
+html[data-estilo="descenso"] .proyecto-medio figcaption {
+  position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; border-radius: 6px;
+  background: var(--panel-hondo); color: var(--claro); font-weight: 700; font-size: 0.875rem; line-height: 1.3;
+}
+/* La pieza que se sale del marco: un recorte de la propia interfaz del proyecto, delante. */
+html[data-estilo="descenso"] .descenso-pieza {
+  position: absolute; z-index: 2; pointer-events: none;
+  border-radius: 10px; background-repeat: no-repeat; background-color: #F7F7F5;
+  box-shadow: 0 22px 34px -14px rgba(1, 12, 20, 0.9), 0 0 0 1px rgba(3, 17, 26, 0.35);
+  transform: rotate(-2.5deg);
+}
+html[data-estilo="descenso"] .proyecto-cifra { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 22px; height: 100%; }
+html[data-estilo="descenso"] .proyecto-cifra .antes { font: 400 clamp(2.75rem, 12vw, 4.25rem)/0.9 var(--display); color: var(--claro-suave); text-decoration: line-through; text-decoration-thickness: 4px; }
+html[data-estilo="descenso"] .proyecto-cifra .despues { font: 400 clamp(4.25rem, 18vw, 6.5rem)/0.9 var(--display); color: var(--bio); }
+html[data-estilo="descenso"] .proyecto-cifra .nota,
+html[data-estilo="descenso"] .proyecto-esquema li:last-child { font-weight: 700; font-size: 0.875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--claro-suave); margin-top: 6px; }
+html[data-estilo="descenso"] .proyecto-esquema { display: flex; align-items: center; padding: 22px; }
+html[data-estilo="descenso"] .proyecto-esquema ol { display: grid; gap: 6px; }
+html[data-estilo="descenso"] .proyecto-esquema li { font: 400 clamp(1.75rem, 7vw, 2.5rem)/1 var(--display); text-transform: uppercase; color: var(--claro); }
+html[data-estilo="descenso"] .proyecto-esquema li:not(:last-child)::after { content: ''; display: block; width: 2px; height: 14px; margin: 6px 0 0 10px; background: var(--bio); }
+html[data-estilo="descenso"] .proyecto-videos { aspect-ratio: auto; padding: 14px; }
+html[data-estilo="descenso"] .proyecto-videos .videos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+html[data-estilo="descenso"] .video-marco { position: relative; aspect-ratio: 9 / 16; overflow: hidden; border-radius: 10px; background: #000; }
+html[data-estilo="descenso"] .video-marco img,
+html[data-estilo="descenso"] .video-marco video { width: 100%; height: 100%; object-fit: cover; display: block; }
+html[data-estilo="descenso"] .video-nombre { display: block; margin-top: 8px; font-weight: 700; font-size: 0.875rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--claro-suave); }
+html[data-estilo="descenso"] .proyecto-videos figcaption { position: static; display: inline-block; margin-top: 12px; padding: 0; background: none; }
+/* El botón para ver un comercial va encima del póster, abajo al centro, y todo el póster responde
+   al toque: el pseudoelemento del propio enlace lo cubre y el recorte del marco lo limita. */
+html[data-estilo="descenso"] .video-marco .ver-video {
+  position: absolute; left: 50%; bottom: 10px; z-index: 1; transform: translateX(-50%);
+  min-height: 44px; min-width: 44px; padding: 0 14px 0 12px; gap: 8px; border-radius: 6px; white-space: nowrap;
+  background: var(--claro); border-color: var(--claro); color: var(--abisal); font-size: 0.9375rem;
+  box-shadow: 0 8px 18px -8px rgba(1, 9, 16, 0.9);
+}
+html[data-estilo="descenso"] .video-marco .ver-video:hover { background: #FFFFFF; border-color: var(--bio); color: var(--abisal); }
+html[data-estilo="descenso"] .video-marco .ver-video::after { content: ''; position: absolute; inset: -2000px -1000px -20px; }
+html[data-estilo="descenso"] .video-marco .ver-video:focus-visible { outline-offset: 2px; }
+html[data-estilo="descenso"] .ver-video::before { content: ''; width: 0; height: 0; border-left: 10px solid currentColor; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+html[data-estilo="descenso"] .proyecto-texto { padding: 20px 20px 24px; display: flex; flex-direction: column; flex: 1; }
+html[data-estilo="descenso"] .proyecto-tipo { display: block; font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--claro-suave); }
+html[data-estilo="descenso"] .proyecto-titulo { font-size: 2.25rem; line-height: 1.02; margin-top: 6px; color: var(--claro); }
+html[data-estilo="descenso"] .proyecto-texto p { margin-top: 12px; color: var(--claro); }
+html[data-estilo="descenso"] .proyecto-cifras { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+html[data-estilo="descenso"] .proyecto-cifras li { font-weight: 700; font-size: 1.0625rem; line-height: 1.3; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--borde); background: var(--panel-hondo); }
+html[data-estilo="descenso"] .proyecto-stack { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+html[data-estilo="descenso"] .proyecto-stack li { font-size: 1rem; line-height: 1.3; padding: 4px 10px; border-radius: 6px; background: var(--panel-hondo); color: var(--claro); }
+html[data-estilo="descenso"] .proyecto-enlaces { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+html[data-estilo="descenso"] .mas-sitios {
+  margin-top: 40px; padding: 20px; border-radius: 14px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="descenso"] .mas-sitios p { color: var(--claro); }
+html[data-estilo="descenso"] .mas-sitios ul { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+/* Experiencia y formación */
+html[data-estilo="descenso"] .trayecto,
+html[data-estilo="descenso"] .grados { display: grid; gap: 22px; }
+html[data-estilo="descenso"] .puesto {
+  padding: 20px 20px 22px; border-radius: 14px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="descenso"] .puesto h3 { font-size: clamp(1.75rem, 6.4vw, 2.6rem); margin-top: 6px; color: var(--claro); }
+html[data-estilo="descenso"] .puesto h4 { font-size: clamp(1.5rem, 5.4vw, 2rem); margin-top: 6px; color: var(--claro); }
+html[data-estilo="descenso"] .meta,
+html[data-estilo="descenso"] .meta-chica { display: block; font-weight: 700; font-size: 0.875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--claro-suave); }
+html[data-estilo="descenso"] .lugar-puesto { display: block; margin-top: 6px; color: var(--claro-suave); }
+html[data-estilo="descenso"] .puesto ul { margin-top: 14px; display: grid; gap: 10px; }
+html[data-estilo="descenso"] .puesto ul li { position: relative; padding-left: 20px; }
+html[data-estilo="descenso"] .puesto ul li::before { content: ''; position: absolute; left: 2px; top: 0.7em; width: 7px; height: 7px; border-radius: 50%; background: var(--ambar); }
+html[data-estilo="descenso"] .subtitulo {
+  display: inline-block; margin: 72px 0 24px; padding: 14px 18px; border-radius: 12px;
+  font-size: clamp(2rem, 8vw, 3.5rem); color: var(--claro);
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="descenso"] .idiomas {
+  margin-top: 22px; display: grid; gap: 8px; padding: 20px; border-radius: 14px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="descenso"] .idiomas strong { color: var(--claro); }
+
+/* Investigación: la zona más oscura con texto largo */
+html[data-estilo="descenso"] .tesis {
+  display: grid; gap: 22px; padding: 24px 20px; border-radius: 16px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra), 0 0 70px -30px rgba(77, 255, 210, 0.35);
+}
+html[data-estilo="descenso"] .tesis-texto { font-size: 1.25rem; line-height: 1.55; color: var(--claro); max-width: 38em; }
+html[data-estilo="descenso"] .tesis-datos { display: grid; gap: 12px; }
+html[data-estilo="descenso"] .tesis-datos li { padding-top: 12px; border-top: 1px solid var(--borde); }
+html[data-estilo="descenso"] .tesis-datos strong { display: block; font-size: 0.875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--bio); }
+
+/* Habilidades */
+html[data-estilo="descenso"] .grupos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+html[data-estilo="descenso"] .grupo {
+  padding: 18px 18px 20px; border-radius: 14px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="descenso"] .grupo h3 { font-size: 1.75rem; color: var(--claro); }
+html[data-estilo="descenso"] .etiquetas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+html[data-estilo="descenso"] .etiquetas li { font-size: 1rem; line-height: 1.3; padding: 5px 10px; border-radius: 6px; background: var(--panel-hondo); border: 1px solid var(--borde); color: var(--claro); }
+
+/* Contacto y pie: el fondo del mar */
+html[data-estilo="descenso"] .contacto { padding-bottom: 260px; }
+html[data-estilo="descenso"] .canales { display: grid; gap: 12px; }
+html[data-estilo="descenso"] .canal {
+  display: flex; flex-direction: column; gap: 4px; min-height: 64px; padding: 14px 18px; border-radius: 12px;
+  text-decoration: none; background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+  transition: border-color 0.2s;
+}
+html[data-estilo="descenso"] .canal:hover { border-color: var(--bio); }
+html[data-estilo="descenso"] .canal-tipo { font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--bio); }
+html[data-estilo="descenso"] .canal-dato { font-size: 1.0625rem; color: var(--claro); overflow-wrap: anywhere; }
+html[data-estilo="descenso"] .pie { position: relative; padding: 0 0 28px; }
+html[data-estilo="descenso"] .pie p {
+  display: inline-block; padding: 10px 14px; border-radius: 8px;
+  background: var(--panel-hondo); color: var(--claro-suave); font-size: 1rem;
+}
+
+@media (min-width: 600px) {
+  html[data-estilo="descenso"] { --margen: 28px; }
+  html[data-estilo="descenso"] .grupos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-estilo="descenso"] .canales { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  html[data-estilo="descenso"] .retrato { width: 140px; height: 140px; }
+}
+@media (min-width: 768px) {
+  html[data-estilo="descenso"] .menu .solo-ancho { display: inline-flex; }
+  html[data-estilo="descenso"] .proyectos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Escalón: en cada par de proyectos, el de la derecha va más hondo. */
+  html[data-estilo="descenso"] .proyecto:not([data-destacado]):nth-child(even) { margin-top: 64px; }
+  html[data-estilo="descenso"] .zona { padding-block: 150px; }
+}
+@media (min-width: 1024px) {
+  html[data-estilo="descenso"] .marca span { display: inline; }
+  html[data-estilo="descenso"] .inicio-reja {
+    column-gap: 28px;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas:
+      'lugar retrato'
+      'saludo retrato'
+      'nombre nombre'
+      'cargo acciones'
+      'resumen datos';
+  }
+  html[data-estilo="descenso"] .retrato { justify-self: end; width: 168px; height: 168px; }
+  html[data-estilo="descenso"] .nombre { font-size: clamp(6rem, 10.5vw, 10.5rem); }
+  html[data-estilo="descenso"] .nombre span { display: inline; }
+  html[data-estilo="descenso"] .inicio-reja::after { grid-row: cargo-start / resumen-end; margin: 190px -10px 0; }
+  html[data-estilo="descenso"] .cargo { margin-top: 190px; }
+  html[data-estilo="descenso"] .nombre { line-height: 1.04; }
+  html[data-estilo="descenso"] .cargo { padding: 28px 28px 0; }
+  html[data-estilo="descenso"] .resumen { padding: 0 28px 28px; }
+  html[data-estilo="descenso"] .acciones { grid-row: cargo; align-self: start; margin-top: 190px; padding: 28px 28px 0; }
+  html[data-estilo="descenso"] .datos { grid-row: resumen; align-self: start; padding: 0 28px 28px; margin-top: 18px; }
+  html[data-estilo="descenso"] .proyecto[data-destacado] { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  html[data-estilo="descenso"] .proyecto[data-destacado] .proyecto-medio { aspect-ratio: auto; min-height: 100%; border-radius: 17px 0 0 17px; }
+  html[data-estilo="descenso"] .proyecto[data-destacado] .proyecto-medio > img { border-radius: 17px 0 0 17px; }
+  html[data-estilo="descenso"] .proyecto[data-destacado] .proyecto-texto { padding: 32px; justify-content: center; }
+  html[data-estilo="descenso"] .proyecto[data-destacado] .proyecto-titulo { font-size: 3.25rem; }
+  html[data-estilo="descenso"] .grupos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  html[data-estilo="descenso"] .tesis { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); padding: 36px; }
+  html[data-estilo="descenso"] .trayecto { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-estilo="descenso"] .trayecto .puesto:nth-child(even) { margin-top: 64px; }
+}
+
+@media print {
+  html[data-estilo="descenso"] .descenso-agua,
+  html[data-estilo="descenso"] .descenso-medidor { display: none !important; }
+  html[data-estilo="descenso"] .cabecera { position: static; }
+  html[data-estilo="descenso"] .nombre { clip-path: none !important; }
+}

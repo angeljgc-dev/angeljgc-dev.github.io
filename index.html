@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="es-MX" data-estilo="cursores">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ángel García Canteros · Desarrollador full-stack</title>
+<meta name="description" content="Desarrollador full-stack en Matías Romero, Oaxaca. TypeScript, Node.js, React, Python, PHP/Laravel y SQL. Diseñé y opero Recepción IA, en producción desde septiembre de 2026.">
+<meta name="theme-color" content="#0A0A0A">
+<meta property="og:title" content="Ángel García Canteros · Desarrollador full-stack">
+<meta property="og:description" content="TypeScript, Node.js, React, Python, PHP/Laravel y SQL. Recepción IA en producción desde septiembre de 2026.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230A0A0A'/%3E%3Cpath d='M4 26h6v-6h6v-6h6V8h6' fill='none' stroke='%23F2F2F2' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preload" as="image" href="img/angel-620.webp" imagesrcset="img/angel-360.webp 360w, img/angel-620.webp 620w" imagesizes="(min-width: 1024px) 44vw, (min-width: 600px) 440px, 92vw" fetchpriority="high">
+<!-- El estilo de base va enlazado aquí para que sin JavaScript la página ya tenga su forma. -->
+<link rel="stylesheet" href="estilos/cursores/estilo.css" data-hoja="cursores">
+<script src="nucleo/registro.js"></script>
+<script>
+  // Antes del primer pintado: qué estilo está activo y si su entrada es completa o corta.
+  // La lista de estilos está en nucleo/registro.js y el cargador en nucleo/nucleo.js. Abierto
+  // con doble clic (file://) los módulos no cargan: la página se queda con el estilo de base,
+  // terminada.
+  (function () {
+    var raiz = document.documentElement;
+    var registro = window.RegistroEstilos || [];
+    var registrado = function (id) { return registro.some(function (e) { return e.id === id; }); };
+    var disponible = function (id) { return registro.some(function (e) { return e.id === id && e.disponible; }); };
+    if (window.location.protocol.indexOf('http') !== 0) return;
+    function leer(almacen, clave) {
+      try {
+        return window[almacen].getItem(clave);
+      } catch (e) {
+        // Almacenamiento bloqueado: se sigue como si no hubiera nada guardado.
+        return null;
+      }
+    }
+    // Lo guardado solo vale si el estilo está publicado; la URL puede pedir cualquiera registrado.
+    var elegido = 'cursores';
+    var guardado = leer('localStorage', 'estilo');
+    if (disponible(guardado)) elegido = guardado;
+    var enUrl = /[?&]estilo=([a-z0-9-]+)(&|$)/i.exec(window.location.search);
+    if (enUrl && registrado(enUrl[1].toLowerCase())) elegido = enUrl[1].toLowerCase();
+    raiz.dataset.estilo = elegido;
+    if (elegido !== 'cursores') {
+      // Otro estilo: su hoja se pide ya, para que el primer pintado salga con su forma.
+      var hoja = document.createElement('link');
+      hoja.rel = 'stylesheet';
+      hoja.href = 'estilos/' + elegido + '/estilo.css';
+      hoja.dataset.hoja = elegido;
+      document.head.appendChild(hoja);
+      var base = document.querySelector('link[data-hoja="cursores"]');
+      if (base) base.disabled = true;
+    }
+    var precarga = document.createElement('link');
+    precarga.rel = 'modulepreload';
+    precarga.href = 'estilos/' + elegido + '/estilo.js';
+    document.head.appendChild(precarga);
+    var reducido = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var visto = leer('sessionStorage', 'visto:' + elegido) === '1';
+    if (!reducido && 'IntersectionObserver' in window) raiz.classList.add('anima', visto ? 'entrada-corta' : 'entrada-completa');
+    // Si el núcleo no llega a montar el estilo, el contenido aparece de todos modos.
+    setTimeout(function () {
+      if (raiz.dataset.montado !== 'si') raiz.classList.remove('anima', 'entrada-completa', 'entrada-corta');
+    }, 3500);
+  })();
+</script>
+<style>
+  /* Base del núcleo, común a todos los estilos: utilidades, el selector y la impresión. */
+  .solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .selector-estilo { display: inline-flex; align-items: center; }
+  .selector-estilo select { min-height: 44px; min-width: 44px; font: inherit; }
+  .selector-flotante { position: fixed; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 1000; }
+  .selector-flotante[hidden] { display: none; }
+  .selector-flotante select { background: #111111; color: #F2F2F2; border: 1px solid #F2F2F2; border-radius: 999px; padding: 0 14px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
+  /* Al imprimir o guardar como PDF todo sale completo, sin importar el estilo ni la construcción. */
+  @media print {
+    [data-pieza], [data-pieza] * { opacity: 1 !important; transform: none !important; filter: none !important; }
+    [data-seccion] { content-visibility: visible !important; }
+    .obra, .selector-estilo { display: none !important; }
+  }
+</style>
+<script type="module" src="nucleo/nucleo.js"></script>
+</head>
+<body>
+<a class="saltar" href="#contenido">Ir al contenido</a>
+
+<header class="cabecera">
+  <div class="envoltura">
+    <a class="marca" href="#contenido" aria-label="Ángel García Canteros, inicio">
+      <svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="6" fill="#F2F2F2"/><path d="M5 27h6v-6h6v-6h6V9h6" fill="none" stroke="#0A0A0A" stroke-width="3"/></svg>
+      <span>Ángel García</span>
+    </a>
+    <nav class="menu" aria-label="Secciones">
+      <a class="solo-ancho" href="#proyectos">Proyectos</a>
+      <a class="solo-ancho" href="#experiencia">Experiencia</a>
+      <a class="solo-ancho" href="#investigacion">Investigación</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <div class="ranura-estilo" data-ranura="selector"></div>
+  </div>
+</header>
+
+<main id="contenido">
+  <section class="inicio" id="presentacion" data-seccion="presentacion" aria-labelledby="nombre">
+    <div class="envoltura inicio-reja">
+      <figure class="retrato" data-pieza="retrato">
+        <img src="img/angel-620.webp" srcset="img/angel-360.webp 360w, img/angel-620.webp 620w" sizes="(min-width: 1024px) 44vw, (min-width: 600px) 440px, 92vw" width="620" height="673" alt="Ángel García Canteros" fetchpriority="high">
+      </figure>
+      <div class="lugar" data-pieza="lugar" data-teclea>Matías Romero, Oaxaca</div>
+      <p class="saludo" data-pieza="saludo" data-teclea>Hola, soy</p>
+      <h1 class="nombre" id="nombre" data-pieza="nombre"><span>Ángel</span> <span>García Canteros</span></h1>
+      <p class="cargo" data-pieza="cargo" data-teclea>Desarrollador full-stack</p>
+      <p class="resumen" data-pieza="resumen">Tengo un año de experiencia profesional en TypeScript, Node.js, React, Python, PHP/Laravel y SQL. Diseñé y opero Recepción IA, una recepcionista con IA para negocios pequeños, en producción desde septiembre de 2026 con un piloto real en una veterinaria. En una fintech programé el back-end de una wallet conectada a APIs bancarias.</p>
+      <ul class="acciones" data-pieza="acciones">
+        <li><a class="boton boton-principal" href="mailto:garciacanterosangeljosue057@gmail.com">Escríbeme</a></li>
+        <li><a class="boton" href="https://www.linkedin.com/in/angel-garcia-canteros">LinkedIn</a></li>
+        <li><a class="boton" href="https://github.com/angeljgc-dev">GitHub</a></li>
+      </ul>
+      <dl class="datos">
+        <div class="dato" data-pieza="dato-experiencia"><dt>Experiencia</dt><dd>Un año profesional</dd></div>
+        <div class="dato" data-pieza="dato-produccion"><dt>En producción</dt><dd>Recepción IA, desde septiembre de 2026</dd></div>
+        <div class="dato" data-pieza="dato-maestria"><dt>Maestría en IA</dt><dd>UTM, finaliza en noviembre de 2026</dd></div>
+        <div class="dato" data-pieza="dato-trabajo"><dt>Modalidad</dt><dd>Remoto o reubicación a Monterrey</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="zona" id="proyectos" data-seccion="proyectos" aria-labelledby="t-proyectos">
+    <div class="envoltura">
+      <header class="zona-cabeza">
+        <span class="rotulo" data-pieza="proy-rotulo" data-teclea>01 · Proyectos</span>
+        <h2 id="t-proyectos" data-pieza="proy-titulo" data-teclea>Lo que he construido</h2>
+      </header>
+      <!-- Los proyectos salen de datos/proyectos.json; para agregar o cambiar uno se edita ese
+           archivo y se corre node datos/generar.mjs. Cada uno es un <article data-proyecto> con la misma
+           forma: tipo, título, descripción, rol, cifras, stack, medio visual y enlaces. -->
+      <div class="proyectos" data-rejilla>
+<!-- proyectos:inicio -->
+        <article class="proyecto" data-proyecto="recepcion-ia" data-pieza="proy-recepcion-ia" data-destacado aria-labelledby="titulo-recepcion-ia">
+          <figure class="proyecto-medio" data-cae>
+            <img src="img/proyectos/recepcion-agenda-960.webp" srcset="img/proyectos/recepcion-agenda-560.webp 560w, img/proyectos/recepcion-agenda-960.webp 960w" sizes="(min-width: 1024px) 760px, 92vw" width="960" height="600" alt="Panel de Recepción IA: agenda del día de un negocio de demostración" loading="lazy" decoding="async">
+            <figcaption>Panel real, datos de demostración</figcaption>
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Producto propio · piloto</span>
+            <h3 class="proyecto-titulo" id="titulo-recepcion-ia" data-teclea>Recepción IA</h3>
+            <p class="proyecto-descripcion">Una recepcionista con IA para negocios pequeños: contesta por WhatsApp y Telegram, agenda, reagenda y cancela sin dobles reservas. Dos asistentes de IA con tool calling trabajan sobre la agenda, las colas y las reglas de negocio en PostgreSQL. El asistente del dueño tiene más de 30 herramientas y nunca cambia nada solo: propone y el dueño aprueba con un clic. Evaluado con el modelo real por estado de la base de datos: 0 errores de cita, 21/21 ataques bloqueados. En producción desde septiembre de 2026, con un piloto real en una veterinaria.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> Diseñé el producto, definí la arquitectura y los contratos de API, dirigí la construcción y opero el piloto en producción.</p>
+            <ul class="proyecto-cifras" aria-label="Cifras"><li>73 migraciones</li><li>Más de 3,300 pruebas automatizadas</li></ul>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>TypeScript</li><li>Node 24</li><li>Fastify</li><li>pg-boss</li><li>PostgreSQL 18 (multi-tenant, RLS)</li><li>React 19 (PWA)</li></ul>
+            <ul class="proyecto-enlaces"><li><a class="boton" href="https://app.recepcionia.com.mx">app.recepcionia.com.mx<span class="solo-lector"> de Recepción IA</span></a></li></ul>
+          </div>
+        </article>
+        <article class="proyecto" data-proyecto="medibot" data-pieza="proy-medibot" data-destacado aria-labelledby="titulo-medibot">
+          <figure class="proyecto-medio" data-cae>
+            <img src="img/proyectos/medibot-960.webp" srcset="img/proyectos/medibot-560.webp 560w, img/proyectos/medibot-960.webp 960w" sizes="(min-width: 1024px) 760px, 92vw" width="960" height="600" alt="Pantalla de bienvenida de MediBot con pulso y oxígeno, temperatura y peso" loading="lazy" decoding="async">
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Prototipo escolar · software y hardware</span>
+            <h3 class="proyecto-titulo" id="titulo-medibot" data-teclea>MediBot</h3>
+            <p class="proyecto-descripcion">Un quiosco que orienta en salud a comunidades rurales: mide pulso, oxígeno, temperatura y peso con sensores, hace preguntas de señales de alarma y responde con un semáforo verde, ámbar o rojo, con la fuente de cada número. No diagnostica y no guarda nada.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> Desarrollé el software de un prototipo escolar del grupo de Medirobot: la app de escritorio, el motor de reglas, la comunicación serial con el ESP32 y el firmware, que todavía no se prueba en hardware real.</p>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>JavaScript sin framework</li><li>Web Serial</li><li>Electron</li><li>ESP32</li><li>node --test</li><li>Playwright</li></ul>
+            <ul class="proyecto-enlaces"><li><a class="boton" href="https://github.com/angeljgc-dev/medibot">Código en GitHub<span class="solo-lector"> de MediBot</span></a></li></ul>
+          </div>
+        </article>
+        <article class="proyecto" data-proyecto="comerciales" data-pieza="proy-comerciales" aria-labelledby="titulo-comerciales">
+          <figure class="proyecto-medio proyecto-videos" data-cae>
+            <ul class="videos">
+              <li>
+                <div class="video-marco">
+                  <img src="img/proyectos/comercial-diorama-poster.webp" width="360" height="640" alt="Diorama 3D de una barbería con la conversación del bot" loading="lazy" decoding="async">
+                  <a class="ver-video" href="videos/comercial-diorama.mp4" data-video>Ver<span class="solo-lector"> el video diorama</span></a>
+                </div>
+                <span class="video-nombre">diorama</span>
+              </li>
+              <li>
+                <div class="video-marco">
+                  <img src="img/proyectos/comercial-fluidos-poster.webp" width="360" height="640" alt="Gota azul de fluido bajo la pregunta: ¿Y si quiero contestar yo?" loading="lazy" decoding="async">
+                  <a class="ver-video" href="videos/comercial-fluidos.mp4" data-video>Ver<span class="solo-lector"> el video fluidos</span></a>
+                </div>
+                <span class="video-nombre">fluidos</span>
+              </li>
+              <li>
+                <div class="video-marco">
+                  <img src="img/proyectos/comercial-plastilina-poster.webp" width="360" height="640" alt="Teléfono y objetos de plastilina 3D sobre fondo amarillo" loading="lazy" decoding="async">
+                  <a class="ver-video" href="videos/comercial-plastilina.mp4" data-video>Ver<span class="solo-lector"> el video plastilina</span></a>
+                </div>
+                <span class="video-nombre">plastilina</span>
+              </li>
+            </ul>
+            <figcaption>Modelos 3D de Kenney (CC0)</figcaption>
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Video hecho en código</span>
+            <h3 class="proyecto-titulo" id="titulo-comerciales" data-teclea>Comerciales de Recepción IA</h3>
+            <p class="proyecto-descripcion">Una serie de comerciales verticales para mi producto, programados de principio a fin, cada uno con un estilo distinto: dioramas 3D, fluidos y plastilina 3D, entre otros. La música y la mezcla también se generan en código.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> Dirigí y produje la serie: definí el mensaje de cada pieza y revisé y aprobé cada corte.</p>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>Remotion</li><li>React 19</li><li>Three.js</li><li>React Three Fiber</li><li>TypeScript</li><li>Python para el audio</li></ul>
+          </div>
+        </article>
+        <article class="proyecto" data-proyecto="bot-whatsapp-clinica" data-pieza="proy-bot-whatsapp-clinica" aria-labelledby="titulo-bot-whatsapp-clinica">
+          <figure class="proyecto-medio proyecto-cifra" data-cae aria-hidden="true">
+            <span class="antes">600 MB</span>
+            <span class="despues">50 MB</span>
+            <span class="nota">Memoria al pasar a Baileys</span>
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Clínica · puesto en producción</span>
+            <h3 class="proyecto-titulo" id="titulo-bot-whatsapp-clinica" data-teclea>Bot de WhatsApp para una clínica</h3>
+            <p class="proyecto-descripcion">Recepcionista de WhatsApp para un consultorio: registra pacientes, agenda en Google Calendar, manda recordatorios y avisa al médico cuando el caso necesita a una persona.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> Lo construí y lo puse en producción. Lo migré de whatsappweb.js a Baileys y la memoria bajó de 600 MB a 50 MB.</p>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>Node.js</li><li>Baileys</li><li>SQLite</li><li>Express</li><li>Google Calendar API</li><li>Groq (Llama 3.1)</li></ul>
+            <ul class="proyecto-enlaces"><li><a class="boton" href="https://github.com/angeljgc-dev/bot-asistente-medica-whatsapp">Código en GitHub<span class="solo-lector"> de Bot de WhatsApp para una clínica</span></a></li></ul>
+          </div>
+        </article>
+        <article class="proyecto" data-proyecto="surco" data-pieza="proy-surco" aria-labelledby="titulo-surco">
+          <figure class="proyecto-medio" data-cae>
+            <img src="img/proyectos/surco-960.webp" srcset="img/proyectos/surco-560.webp 560w, img/proyectos/surco-960.webp 960w" sizes="(min-width: 1200px) 420px, (min-width: 768px) 46vw, 92vw" width="960" height="600" alt="Portada de Surco con la tornamesa 3D" loading="lazy" decoding="async">
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Sitio · marca ficticia</span>
+            <h3 class="proyecto-titulo" id="titulo-surco" data-teclea>Surco</h3>
+            <p class="proyecto-descripcion">Landing de una disquera ficticia con una tornamesa 3D modelada en código; el disco suena con audio sintetizado en el navegador, sin archivos de sonido.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> La diseñé, la construí y la publiqué.</p>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>React 19</li><li>React Compiler</li><li>React Three Fiber</li><li>CSG</li><li>Motion</li><li>Web Audio</li><li>Tailwind 4</li><li>Vite</li></ul>
+            <ul class="proyecto-enlaces"><li><a class="boton" href="https://angeljgc-dev.github.io/surco-disquera/">Ver sitio<span class="solo-lector"> de Surco</span></a></li><li><a class="boton" href="https://github.com/angeljgc-dev/surco-disquera">Código<span class="solo-lector"> de Surco</span></a></li></ul>
+          </div>
+        </article>
+        <article class="proyecto" data-proyecto="ultravioleta" data-pieza="proy-ultravioleta" aria-labelledby="titulo-ultravioleta">
+          <figure class="proyecto-medio" data-cae>
+            <img src="img/proyectos/ultravioleta-960.webp" srcset="img/proyectos/ultravioleta-560.webp 560w, img/proyectos/ultravioleta-960.webp 960w" sizes="(min-width: 1200px) 420px, (min-width: 768px) 46vw, 92vw" width="960" height="600" alt="Portada de Ultravioleta con el shader de neón" loading="lazy" decoding="async">
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Sitio · marca ficticia</span>
+            <h3 class="proyecto-titulo" id="titulo-ultravioleta" data-teclea>Ultravioleta</h3>
+            <p class="proyecto-descripcion">Landing de un bar arcade ficticio con un shader GLSL propio y animación con Motion.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> La diseñé, la construí y la publiqué.</p>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>React 19</li><li>Three.js</li><li>React Three Fiber</li><li>GLSL</li><li>Motion</li><li>Tailwind 4</li><li>Vite</li><li>TypeScript</li></ul>
+            <ul class="proyecto-enlaces"><li><a class="boton" href="https://angeljgc-dev.github.io/ultravioleta/">Ver sitio<span class="solo-lector"> de Ultravioleta</span></a></li><li><a class="boton" href="https://github.com/angeljgc-dev/ultravioleta">Código<span class="solo-lector"> de Ultravioleta</span></a></li></ul>
+          </div>
+        </article>
+        <article class="proyecto" data-proyecto="halley" data-pieza="proy-halley" aria-labelledby="titulo-halley">
+          <figure class="proyecto-medio" data-cae>
+            <img src="img/proyectos/halley-960.webp" srcset="img/proyectos/halley-560.webp 560w, img/proyectos/halley-960.webp 960w" sizes="(min-width: 1200px) 420px, (min-width: 768px) 46vw, 92vw" width="960" height="600" alt="Portada de Halley con el campo de estrellas y la luna" loading="lazy" decoding="async">
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Sitio · marca ficticia</span>
+            <h3 class="proyecto-titulo" id="titulo-halley" data-teclea>Halley</h3>
+            <p class="proyecto-descripcion">Landing de un planetario ficticio: un campo de estrellas infinito y una luna con brillo de borde.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> La diseñé, la construí y la publiqué.</p>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>Three.js</li><li>GSAP</li></ul>
+            <ul class="proyecto-enlaces"><li><a class="boton" href="https://angeljgc-dev.github.io/halley-planetario/">Ver sitio<span class="solo-lector"> de Halley</span></a></li><li><a class="boton" href="https://github.com/angeljgc-dev/halley-planetario">Código<span class="solo-lector"> de Halley</span></a></li></ul>
+          </div>
+        </article>
+        <article class="proyecto" data-proyecto="madrigal" data-pieza="proy-madrigal" aria-labelledby="titulo-madrigal">
+          <figure class="proyecto-medio" data-cae>
+            <img src="img/proyectos/madrigal-960.webp" srcset="img/proyectos/madrigal-560.webp 560w, img/proyectos/madrigal-960.webp 960w" sizes="(min-width: 1200px) 420px, (min-width: 768px) 46vw, 92vw" width="960" height="600" alt="Portada de Madrigal con flores en relieve" loading="lazy" decoding="async">
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Sitio · marca ficticia</span>
+            <h3 class="proyecto-titulo" id="titulo-madrigal" data-teclea>Madrigal</h3>
+            <p class="proyecto-descripcion">Landing de una florería ficticia donde las fotos ganan relieve 3D con mapas de profundidad, en WebGL sin librería.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> La diseñé, la construí y la publiqué.</p>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>WebGL</li><li>GSAP</li></ul>
+            <ul class="proyecto-enlaces"><li><a class="boton" href="https://angeljgc-dev.github.io/madrigal-floreria/">Ver sitio<span class="solo-lector"> de Madrigal</span></a></li><li><a class="boton" href="https://github.com/angeljgc-dev/madrigal-floreria">Código<span class="solo-lector"> de Madrigal</span></a></li></ul>
+          </div>
+        </article>
+        <article class="proyecto" data-proyecto="mi-kinder" data-pieza="proy-mi-kinder" aria-labelledby="titulo-mi-kinder">
+          <figure class="proyecto-medio" data-cae>
+            <img src="img/proyectos/mi-kinder-960.webp" srcset="img/proyectos/mi-kinder-560.webp 560w, img/proyectos/mi-kinder-960.webp 960w" sizes="(min-width: 1200px) 420px, (min-width: 768px) 46vw, 92vw" width="960" height="599" alt="Resumen del sistema Mi Kinder con alumnos, grupos y maestras de demostración" loading="lazy" decoding="async">
+            <figcaption>Datos de demostración</figcaption>
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Sistema web</span>
+            <h3 class="proyecto-titulo" id="titulo-mi-kinder" data-teclea>Mi Kinder</h3>
+            <p class="proyecto-descripcion">Sistema de gestión escolar para un preescolar: roles de directora y maestra, grupos, evaluaciones por área, asistencia y boletas en PDF.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> Lo construí y lo publiqué.</p>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>Python</li><li>Flask</li><li>Flask-Login</li><li>bcrypt</li><li>SQLite</li><li>fpdf2</li><li>matplotlib</li><li>HTML/Jinja</li></ul>
+            <ul class="proyecto-enlaces"><li><a class="boton" href="https://github.com/angeljgc-dev/mi-kinder-gestion-escolar">Código<span class="solo-lector"> de Mi Kinder</span></a></li></ul>
+          </div>
+        </article>
+        <article class="proyecto" data-proyecto="bot-vial" data-pieza="proy-bot-vial" aria-labelledby="titulo-bot-vial">
+          <figure class="proyecto-medio proyecto-esquema" data-cae aria-hidden="true">
+            <ol><li>RSS · X · TomTom</li><li>LLM</li><li>Calles alternas</li></ol>
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Prototipo</span>
+            <h3 class="proyecto-titulo" id="titulo-bot-vial" data-teclea>Bot vial Huajuapan</h3>
+            <p class="proyecto-descripcion">Bot de WhatsApp que junta reportes viales de medios locales, X y TomTom, los ordena con un LLM y sugiere calles alternas.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> Lo construí.</p>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>Node.js</li><li>Baileys</li><li>SQLite</li><li>Groq</li><li>RSS</li><li>TomTom</li><li>Google Maps</li></ul>
+            <ul class="proyecto-enlaces"><li><a class="boton" href="https://github.com/angeljgc-dev/bot-vial-huajuapan">Código<span class="solo-lector"> de Bot vial Huajuapan</span></a></li></ul>
+          </div>
+        </article>
+        <article class="proyecto" data-proyecto="cotizador" data-pieza="proy-cotizador" aria-labelledby="titulo-cotizador">
+          <figure class="proyecto-medio" data-cae>
+            <img src="img/proyectos/cotizador-960.webp" srcset="img/proyectos/cotizador-560.webp 560w, img/proyectos/cotizador-960.webp 960w" sizes="(min-width: 1200px) 420px, (min-width: 768px) 46vw, 92vw" width="960" height="570" alt="Cotización de un PDF de prueba con el desglose de tinta por página" loading="lazy" decoding="async">
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">App de escritorio</span>
+            <h3 class="proyecto-titulo" id="titulo-cotizador" data-teclea>Cotizador de impresiones</h3>
+            <p class="proyecto-descripcion">Aplicación de escritorio hecha para cotizar impresiones en una papelería: mide cuánta tinta lleva cada página de un PDF, Word o imagen, sugiere el precio y manda a imprimir desde la misma ventana.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> La diseñé, la construí y la probé.</p>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>Python</li><li>CustomTkinter</li><li>pypdfium2</li><li>numpy</li><li>Word COM</li><li>reportlab</li><li>PyInstaller</li><li>pytest</li></ul>
+          </div>
+        </article>
+<!-- proyectos:fin -->
+      </div>
+<!-- mas-sitios:inicio -->
+      <div class="mas-sitios" data-pieza="proy-mas-sitios">
+        <p>Más sitios, con marcas ficticias:</p>
+        <ul><li><a class="boton" href="https://angeljgc-dev.github.io/laca-estudio-unas/">Laca</a></li><li><a class="boton" href="https://angeljgc-dev.github.io/fermento-pizzeria/">Fermento</a></li><li><a class="boton" href="https://angeljgc-dev.github.io/volcan-tostaduria/">Volcán</a></li><li><a class="boton" href="https://angeljgc-dev.github.io/doce-rounds/">Doce Rounds</a></li><li><a class="boton" href="https://angeljgc-dev.github.io/gloss-club/">Gloss Club</a></li><li><a class="boton" href="https://angeljgc-dev.github.io/navaja-barberia/">Navaja</a></li><li><a class="boton" href="https://angeljgc-dev.github.io/remolino-heladeria/">Remolino</a></li><li><a class="boton" href="https://github.com/angeljgc-dev">Todo el código en GitHub</a></li></ul>
+      </div>
+<!-- mas-sitios:fin -->
+    </div>
+  </section>
+
+  <section class="zona" id="experiencia" data-seccion="experiencia" aria-labelledby="t-experiencia">
+    <div class="envoltura">
+      <header class="zona-cabeza">
+        <span class="rotulo" data-pieza="exp-rotulo" data-teclea>02 · Experiencia</span>
+        <h2 id="t-experiencia" data-pieza="exp-titulo" data-teclea>Dónde he trabajado</h2>
+      </header>
+      <ol class="trayecto">
+        <li class="puesto" data-pieza="exp-cashabroad">
+          <span class="meta">2023</span>
+          <h3 data-teclea>Desarrollador Full-Stack · CashAbroad</h3>
+          <span class="lugar-puesto">Fintech · Coatzacoalcos, Veracruz · 6 meses</span>
+          <ul>
+            <li>Programé los endpoints REST de la wallet y los conecté con APIs bancarias reales para transferencias y consulta de saldos.</li>
+            <li>Diseñé los permisos por rol, usuario y administrador, y los validé en cada endpoint antes de tocar la base de datos.</li>
+            <li>Documenté cada integración y la probé con Postman antes de entregarla al front, que hice en Vue.js y Tailwind.</li>
+          </ul>
+        </li>
+        <li class="puesto" data-pieza="exp-intekel">
+          <span class="meta">2022</span>
+          <h3 data-teclea>Desarrollador Front-end y QA · Intekel Automatización</h3>
+          <span class="lugar-puesto">Coatzacoalcos, Veracruz · 6 meses</span>
+          <ul>
+            <li>Programé vistas y módulos front-end de una aplicación Laravel siguiendo los diseños del equipo.</li>
+            <li>Probé cada release antes de publicarla y registré los bugs en el tracker hasta verlos cerrados.</li>
+            <li>Llevé el flujo de Git del equipo: ramas, pull requests y revisión de cambios antes del merge.</li>
+          </ul>
+        </li>
+      </ol>
+      <h3 class="subtitulo" data-pieza="for-titulo" data-teclea>Estudios e idiomas</h3>
+      <ol class="grados">
+        <li class="puesto" data-pieza="for-maestria">
+          <span class="meta-chica">En curso · finaliza en noviembre de 2026</span>
+          <h4>Maestría en Inteligencia Artificial</h4>
+          <span class="lugar-puesto">Universidad Tecnológica de la Mixteca</span>
+        </li>
+        <li class="puesto" data-pieza="for-ingenieria">
+          <span class="meta-chica">2022 a 2024</span>
+          <h4>Ingeniería en Desarrollo y Gestión de Software</h4>
+          <span class="lugar-puesto">Universidad Tecnológica del Sureste de Veracruz</span>
+        </li>
+        <li class="puesto" data-pieza="for-tsu">
+          <span class="meta-chica">2020 a 2022</span>
+          <h4>TSU en Tecnologías de la Información y la Comunicación</h4>
+          <span class="lugar-puesto">Universidad Tecnológica del Sureste de Veracruz</span>
+        </li>
+      </ol>
+      <ul class="idiomas" data-pieza="for-idiomas">
+        <li><strong>Inglés:</strong> B1-B2 técnico. Leo documentación y escribo en inglés a diario.</li>
+        <li><strong>Español:</strong> Nativo.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="zona" id="investigacion" data-seccion="investigacion" aria-labelledby="t-investigacion">
+    <div class="envoltura">
+      <header class="zona-cabeza">
+        <span class="rotulo" data-pieza="inv-rotulo" data-teclea>03 · Investigación</span>
+        <h2 id="t-investigacion" data-pieza="inv-titulo" data-teclea>Tesis de maestría</h2>
+      </header>
+      <div class="tesis">
+        <p class="tesis-texto" data-pieza="inv-texto">Procesamiento de lenguaje natural: optimización de una medida de similitud léxica parametrizada con metaheurísticas de cómputo evolutivo, para detectar nombres confundibles (LASA) en inglés y árabe y record linkage.</p>
+        <ul class="tesis-datos" data-pieza="inv-datos">
+          <li><strong>Publicación</strong>Primer autor, COMIA 2026</li>
+          <li><strong>Método</strong>Python, validación k-fold</li>
+          <li><strong>Programa</strong>Maestría en Inteligencia Artificial, Universidad Tecnológica de la Mixteca</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="zona" id="habilidades" data-seccion="habilidades" aria-labelledby="t-habilidades">
+    <div class="envoltura">
+      <header class="zona-cabeza">
+        <span class="rotulo" data-pieza="hab-rotulo" data-teclea>04 · Habilidades</span>
+        <h2 id="t-habilidades" data-pieza="hab-titulo" data-teclea>Con qué trabajo</h2>
+      </header>
+      <!-- data-familia dice de qué tipo es cada grupo (cada estilo elige su color); data-corto es
+           el nombre de una o dos palabras para cuando el completo no cabe. -->
+      <ul class="grupos" data-rejilla>
+        <li class="grupo" data-pieza="hab-lenguajes" data-familia="lenguajes">
+          <h3 data-teclea>Lenguajes</h3>
+          <ul class="etiquetas"><li>TypeScript</li><li>JavaScript</li><li>Python</li><li>SQL</li><li>PHP</li><li>HTML/CSS</li></ul>
+        </li>
+        <li class="grupo" data-pieza="hab-front" data-familia="frontend">
+          <h3 data-teclea>Front-end</h3>
+          <ul class="etiquetas"><li>React 19 (PWA)</li><li>Vue.js</li><li>Vite</li><li data-corto="TanStack">TanStack Query</li><li>Tailwind CSS</li><li>GSAP</li><li>Figma</li></ul>
+        </li>
+        <li class="grupo" data-pieza="hab-back" data-familia="backend">
+          <h3 data-teclea>Back-end y APIs</h3>
+          <ul class="etiquetas"><li>Node.js</li><li>Fastify</li><li>Express</li><li>Laravel</li><li>Flask</li><li>APIs REST</li><li>webhooks</li><li>SSE</li><li data-corto="Permisos">Autenticación y permisos por rol</li></ul>
+        </li>
+        <li class="grupo" data-pieza="hab-datos" data-familia="datos">
+          <h3 data-teclea>Datos</h3>
+          <ul class="etiquetas"><li>PostgreSQL 18 (multi-tenant, RLS)</li><li>MySQL</li><li>SQLite</li><li>MongoDB</li><li>Kysely</li><li data-corto="pg-boss">Colas y tareas programadas con pg-boss</li></ul>
+        </li>
+        <li class="grupo" data-pieza="hab-ia" data-familia="ia">
+          <h3 data-teclea>IA aplicada</h3>
+          <ul class="etiquetas"><li data-corto="APIs de IA">APIs de OpenAI, Groq y Anthropic</li><li>Tool calling</li><li data-corto="Aprobación humana">Human-in-the-loop</li><li data-corto="Evaluaciones">Evaluaciones con el modelo real</li><li data-corto="Anti-inyección">Defensas contra inyección de prompts</li><li>Whisper</li></ul>
+        </li>
+        <li class="grupo" data-pieza="hab-calidad" data-familia="operacion">
+          <h3 data-teclea>Calidad y operación</h3>
+          <ul class="etiquetas"><li>Vitest</li><li>pytest</li><li>Pruebas E2E</li><li data-corto="CI">CI (lint, tipos, pruebas, gitleaks)</li><li>Git/GitHub</li><li>Linux</li><li>Caddy</li><li>Cloudflare</li><li data-corto="Docker">Docker (básico)</li></ul>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="zona contacto" id="contacto" data-seccion="contacto" aria-labelledby="t-contacto">
+    <div class="envoltura">
+      <header class="zona-cabeza">
+        <span class="rotulo" data-pieza="con-rotulo" data-teclea>05 · Contacto</span>
+        <h2 id="t-contacto" data-pieza="con-titulo" data-teclea>Escríbeme</h2>
+        <p data-pieza="con-texto">Vivo en Matías Romero, Oaxaca. Busco trabajo remoto o con reubicación a Monterrey.</p>
+      </header>
+      <ul class="canales" data-pieza="con-canales">
+        <li><a class="canal" href="mailto:garciacanterosangeljosue057@gmail.com"><span class="canal-tipo">Correo</span><span class="canal-dato">garciacanterosangeljosue057@<wbr>gmail.com</span></a></li>
+        <li><a class="canal" href="https://www.linkedin.com/in/angel-garcia-canteros"><span class="canal-tipo">LinkedIn</span><span class="canal-dato">linkedin.com/in/angel-garcia-canteros</span></a></li>
+        <li><a class="canal" href="https://github.com/angeljgc-dev"><span class="canal-tipo">GitHub</span><span class="canal-dato">github.com/angeljgc-dev</span></a></li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="pie">
+  <div class="envoltura"><p>Ángel Josué García Canteros, 2026.</p></div>
+</footer>
+</body>
+</html>

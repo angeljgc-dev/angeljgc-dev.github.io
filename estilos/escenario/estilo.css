@@ -1,0 +1,353 @@
+/* Estilo "escenario": un escenario negro, una sola luz lima y los proyectos como pantallas que
+   salen a escena. Todo vive bajo html[data-estilo="escenario"]; nada toca a los demás estilos.
+   Sin JavaScript (o con movimiento reducido) la página se lee lineal: placas oscuras sobre el
+   negro, la luz quieta como un degradado y los paneles con su lente curvo hecho en CSS. Con
+   JavaScript, el módulo agrega la clase esc-vivo y las escenas: la línea de luz, la pantalla
+   abombada en WebGL y la pila de tarjetas en 3D. */
+
+/* La niebla de cada tarjeta no se hereda: cambiarla no obliga a recalcular todo lo de adentro. */
+@property --niebla { syntax: '<number>'; inherits: false; initial-value: 0; }
+
+@font-face { font-family: 'Escenario Titulo'; src: url(../../fuentes/anton.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Escenario Texto'; src: url(../../fuentes/atkinson-400.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Escenario Texto'; src: url(../../fuentes/atkinson-700.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+
+html[data-estilo="escenario"] {
+  /* Paleta: negro con un punto de azul, blanco roto, lima como única luz y violeta solo como
+     luz de ambiente (nunca en texto). Los pares de texto pasan 7:1 incluso con la luz detrás
+     de una placa: la placa deja pasar 8 % de lo que tiene atrás. */
+  --e-fondo: #0A0A0F;
+  --e-sup: #15151D;
+  --e-placa: rgba(16, 16, 23, 0.92);
+  --e-texto: #F3F1EC;
+  --e-suave: #B6B5C0;
+  --e-lima: #C6FF3A;
+  --e-violeta: #7A5CFF;
+  --e-borde: rgba(243, 241, 236, 0.1);
+  --e-borde-luz: rgba(198, 255, 58, 0.22);
+  --e-titulo: 'Escenario Titulo', Impact, 'Arial Narrow Bold', sans-serif;
+  --e-lectura: 'Escenario Texto', Arial, sans-serif;
+  --e-m: 16px;
+  --e-ancho: 1240px;
+  --e-sale: cubic-bezier(0.16, 1, 0.3, 1);
+  /* El lente: los cuatro bordes hacia afuera, como un vidrio abombado. */
+  --e-lente: polygon(7% 4.07%,15.6% 2.6%,24.2% 1.46%,32.8% 0.65%,41.4% 0.16%,50% 0%,58.6% 0.16%,67.2% 0.65%,75.8% 1.46%,84.4% 2.6%,93% 4.07%,97.63% 7%,98.49% 15.6%,99.15% 24.2%,99.62% 32.8%,99.91% 41.4%,100% 50%,99.91% 58.6%,99.62% 67.2%,99.15% 75.8%,98.49% 84.4%,97.63% 93%,93% 95.93%,84.4% 97.4%,75.8% 98.54%,67.2% 99.35%,58.6% 99.84%,50% 100%,41.4% 99.84%,32.8% 99.35%,24.2% 98.54%,15.6% 97.4%,7% 95.93%,2.37% 93%,1.51% 84.4%,0.85% 75.8%,0.38% 67.2%,0.09% 58.6%,0% 50%,0.09% 41.4%,0.38% 32.8%,0.85% 24.2%,1.51% 15.6%,2.37% 7%);
+  color-scheme: dark;
+  background: var(--e-fondo);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+
+  /* Luz quieta: la misma banda diagonal, pintada una vez. Solo cuando no hay lienzo. */
+  &:not(.esc-vivo) {
+    background:
+      linear-gradient(118deg, transparent 28%, rgba(122, 92, 255, 0.14) 44%, rgba(198, 255, 58, 0.06) 50%, rgba(122, 92, 255, 0.1) 57%, transparent 72%) fixed,
+      var(--e-fondo);
+  }
+
+  & *, & *::before, & *::after { box-sizing: border-box; }
+  & body {
+    margin: 0;
+    background: transparent;
+    color: var(--e-texto);
+    font: 400 1.125rem/1.6 var(--e-lectura);
+    overflow-x: clip;
+  }
+  & img { max-width: 100%; height: auto; display: block; }
+  & a { color: inherit; }
+  & h1, & h2, & h3 { margin: 0; font-weight: 400; }
+  & p, & ul, & ol, & dl, & dd, & figure { margin: 0; }
+  & ul, & ol { padding: 0; list-style: none; }
+  & :focus-visible { outline: 3px solid var(--e-lima); outline-offset: 3px; }
+
+  & .saltar {
+    position: absolute; left: var(--e-m); top: -120px; z-index: 60;
+    background: var(--e-lima); color: var(--e-fondo); padding: 12px 18px; min-height: 44px;
+    font-weight: 700; text-decoration: none; border-radius: 999px;
+  }
+  & .saltar:focus { top: 8px; }
+  & .envoltura { width: 100%; max-width: calc(var(--e-ancho) + 2 * var(--e-m)); margin: 0 auto; padding-inline: var(--e-m); }
+  & main, & .cabecera, & .pie { position: relative; z-index: 1; }
+
+  /* Rótulos: lima, pequeños, espaciados. Son el único texto de color. */
+  & .rotulo, & .lugar, & .meta, & .canal-tipo, & .tesis-datos strong {
+    display: block; color: var(--e-lima); font-weight: 700; font-size: 0.875rem; line-height: 1.4;
+    letter-spacing: 0.16em; text-transform: uppercase;
+  }
+
+  /* Cabecera */
+  & .cabecera .envoltura { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 68px; }
+  & .marca { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; min-width: 44px; text-decoration: none; font-weight: 700; }
+  & .marca svg { width: 34px; height: 34px; flex: none; }
+  & .marca svg rect { fill: var(--e-lima); }
+  & .marca svg path { stroke: var(--e-fondo); }
+  & .marca span { display: none; }
+  & .menu { display: flex; gap: 2px; }
+  & .menu a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; font-weight: 700; font-size: 0.9375rem; text-decoration: none; color: var(--e-suave); }
+  & .menu a:hover { color: var(--e-texto); }
+  & .menu .solo-ancho { display: none; }
+  & .cabecera .envoltura { flex-wrap: wrap; }
+  & .selector-estilo select {
+    min-height: 44px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--e-borde-luz);
+    background: var(--e-sup); color: var(--e-texto); font: 700 0.9375rem var(--e-lectura);
+  }
+
+  /* Botones: el principal es la luz; los demás, vidrio oscuro con orilla. */
+  & .boton {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: 52px; padding: 0 24px; border-radius: 999px; border: 1px solid rgba(243, 241, 236, 0.3);
+    font-weight: 700; font-size: 1rem; line-height: 1.2; text-decoration: none; color: var(--e-texto);
+    background: var(--e-placa); transition: border-color 0.2s, background-color 0.2s;
+  }
+  & .boton:hover { border-color: var(--e-lima); }
+  & .boton-principal { background: var(--e-lima); color: var(--e-fondo); border-color: var(--e-lima); }
+  & .boton-principal:hover { background: #D8FF73; }
+
+  /* Placas: toda la lectura va sobre una superficie que tapa la luz de atrás. */
+  & .resumen, & .dato, & .proyecto, & .puesto, & .tesis, & .grupo, & .idiomas li, & .canal, & .contacto .zona-cabeza p {
+    background: var(--e-placa); border: 1px solid var(--e-borde); border-radius: 18px;
+  }
+
+  /* ---------- Presentación ---------- */
+  & .inicio { position: relative; isolation: isolate; overflow: clip; padding: 20px 0 72px; }
+  & .inicio-reja {
+    position: relative; display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 48px;
+    grid-template-areas: 'lugar' 'saludo' 'nombre' 'cargo' 'retrato' 'resumen' 'acciones' 'datos';
+  }
+  & .lugar { grid-area: lugar; margin-bottom: 18px; }
+  & .saludo { grid-area: saludo; color: var(--e-suave); font-size: 1.125rem; }
+  & .nombre {
+    grid-area: nombre; font: 400 clamp(3.25rem, 16vw, 8.75rem)/0.92 var(--e-titulo);
+    text-transform: uppercase; letter-spacing: 0.004em; margin: 0 0 10px; padding-top: 0.36em;
+  }
+  & .nombre > span { display: block; }
+  & .cargo { grid-area: cargo; font-weight: 700; font-size: 1.3125rem; line-height: 1.3; }
+  & .retrato {
+    grid-area: retrato; margin: 28px 0 24px; max-width: 300px; border-radius: 22px; overflow: hidden;
+    background: var(--e-sup); box-shadow: 0 0 0 1px var(--e-borde-luz), 0 40px 70px -30px rgba(122, 92, 255, 0.55);
+  }
+  & .resumen { grid-area: resumen; padding: 20px; }
+  & .acciones { grid-area: acciones; display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+  & .datos { grid-area: datos; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 28px; }
+  & .dato { padding: 14px 16px; }
+  & .dato dt { color: var(--e-suave); font-size: 0.9375rem; font-weight: 700; }
+  & .dato dd { font-size: 1.0625rem; line-height: 1.4; }
+
+  /* ---------- Secciones ---------- */
+  & .zona { position: relative; padding: 88px 0 24px; }
+  & .zona-cabeza { margin-bottom: 32px; }
+  & .zona-cabeza h2 {
+    font: 400 clamp(2.5rem, 11vw, 5.5rem)/0.95 var(--e-titulo); text-transform: uppercase; margin-top: 10px;
+  }
+  & .contacto .zona-cabeza p { margin-top: 20px; padding: 18px 20px; max-width: 44rem; }
+  & h3 { font-weight: 700; font-size: 1.3125rem; line-height: 1.3; }
+
+  /* Proyectos */
+  & .proyectos { display: grid; gap: 24px; }
+  & .proyecto { position: relative; overflow: hidden; }
+  & .proyecto-medio { position: relative; margin: 14px 14px 0; }
+  /* El respaldo del panel: el lente curvo en CSS, con brillo arriba y orillas oscuras. */
+  & .proyecto-medio:not(.proyecto-videos) { clip-path: var(--e-lente); background: var(--e-sup); }
+  & .proyecto-medio:not(.proyecto-videos) > img, & .proyecto-cifra, & .proyecto-esquema { aspect-ratio: 16 / 10; width: 100%; object-fit: cover; }
+  & .proyecto-medio:not(.proyecto-videos)::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(120% 90% at 28% 12%, rgba(255, 255, 255, 0.16), transparent 42%),
+      radial-gradient(140% 120% at 50% 50%, transparent 58%, rgba(10, 10, 15, 0.7) 100%);
+    box-shadow: inset 0 0 0 1px rgba(198, 255, 58, 0.28);
+  }
+  & .proyecto-medio:not(.proyecto-videos) figcaption {
+    position: absolute; left: 12%; bottom: 9%; z-index: 1; padding: 4px 10px; border-radius: 999px;
+    background: rgba(10, 10, 15, 0.92); color: var(--e-texto); font-size: 0.875rem; font-weight: 700;
+  }
+  & .proyecto-cifra { display: grid; place-content: center; gap: 4px; text-align: center; padding: 16px; }
+  & .proyecto-cifra .antes { font: 400 clamp(1.75rem, 8vw, 3rem)/1 var(--e-titulo); color: var(--e-suave); text-decoration: line-through; text-decoration-thickness: 3px; }
+  & .proyecto-cifra .despues { font: 400 clamp(3rem, 15vw, 6rem)/1 var(--e-titulo); color: var(--e-lima); }
+  & .proyecto-cifra .nota { font-size: 0.9375rem; color: var(--e-suave); }
+  & .proyecto-esquema { display: grid; place-content: center; padding: 16px; }
+  & .proyecto-esquema ol { display: grid; gap: 10px; justify-items: center; }
+  & .proyecto-esquema li { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--e-borde-luz); font-weight: 700; }
+  & .proyecto-esquema li + li::before { content: ''; display: block; width: 1px; height: 10px; margin: -17px auto 7px; background: var(--e-lima); }
+  /* Los comerciales: tres pósteres verticales que se tocan para ver el video. */
+  & .proyecto-videos .videos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  & .video-marco { position: relative; border-radius: 14px; overflow: hidden; background: var(--e-sup); box-shadow: 0 0 0 1px var(--e-borde-luz); }
+  & .video-marco img, & .video-marco video { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; display: block; }
+  & .ver-video {
+    position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
+    display: inline-flex; align-items: center; justify-content: center; min-width: 64px; min-height: 44px; padding: 0 14px;
+    border-radius: 999px; background: var(--e-lima); color: var(--e-fondo); font-weight: 700; text-decoration: none;
+  }
+  & .video-nombre { display: block; margin-top: 6px; text-align: center; color: var(--e-suave); font-size: 0.9375rem; }
+  & .proyecto-videos figcaption { margin-top: 10px; color: var(--e-suave); font-size: 0.9375rem; }
+  & .proyecto-texto { padding: 20px; display: grid; gap: 12px; }
+  & .proyecto-tipo { display: block; color: var(--e-lima); font-weight: 700; font-size: 0.875rem; letter-spacing: 0.14em; text-transform: uppercase; }
+  & .proyecto-titulo { font: 400 clamp(1.75rem, 7vw, 2.5rem)/1 var(--e-titulo); text-transform: uppercase; }
+  & .proyecto-rol { color: var(--e-suave); }
+  & .proyecto-rol strong { color: var(--e-texto); }
+  & .proyecto-cifras, & .proyecto-stack, & .etiquetas, & .proyecto-enlaces { display: flex; flex-wrap: wrap; gap: 8px; }
+  & .proyecto-cifras li { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--e-borde-luz); font-weight: 700; font-size: 0.9375rem; }
+  & .proyecto-stack li, & .etiquetas li { padding: 4px 10px; border-radius: 8px; background: rgba(243, 241, 236, 0.07); font-size: 0.9375rem; }
+  & .proyecto-enlaces { gap: 10px; margin-top: 4px; }
+  & .mas-sitios { margin-top: 40px; display: grid; gap: 14px; }
+  & .mas-sitios p { color: var(--e-texto); }
+  & .mas-sitios ul { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  /* Experiencia y formación */
+  & .trayecto, & .grados { display: grid; gap: 18px; }
+  & .subtitulo { font: 400 clamp(1.9rem, 8vw, 3rem)/1 var(--e-titulo); text-transform: uppercase; margin: 64px 0 24px; }
+  & h4 { margin: 0; font-weight: 700; font-size: 1.1875rem; line-height: 1.35; }
+  & .meta-chica { display: block; color: var(--e-lima); font-weight: 700; font-size: 0.875rem; letter-spacing: 0.08em; }
+  & .puesto { padding: 22px 20px; display: grid; gap: 8px; }
+  & .lugar-puesto { color: var(--e-suave); font-size: 1rem; }
+  & .puesto ul { display: grid; gap: 8px; margin-top: 6px; }
+  & .puesto ul li { position: relative; padding-left: 20px; }
+  & .puesto ul li::before { content: ''; position: absolute; left: 2px; top: 0.7em; width: 7px; height: 7px; border-radius: 2px; background: var(--e-lima); }
+  & .idiomas { display: grid; gap: 12px; margin-top: 18px; }
+  & .idiomas li { padding: 16px 20px; }
+
+  /* Investigación */
+  & .tesis { padding: 24px 20px; display: grid; gap: 22px; }
+  & .tesis-texto { font-size: 1.25rem; line-height: 1.55; }
+  & .tesis-datos { display: grid; gap: 14px; }
+  & .tesis-datos li { display: grid; gap: 2px; }
+
+  /* Habilidades: en la página lineal, una rejilla de placas con el halo fijo en la primera. */
+  & .grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+  & .grupo { position: relative; padding: 22px 20px; display: grid; gap: 14px; align-content: start; background: var(--e-sup); }
+  & .grupo::after {
+    content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; opacity: 0;
+    box-shadow: 0 0 0 1px var(--e-lima), 0 0 26px rgba(198, 255, 58, 0.5), 0 0 90px rgba(198, 255, 58, 0.24);
+    transition: opacity 0.35s ease;
+  }
+  &:not(.esc-pila) .grupo:first-child::after { opacity: 1; }
+
+  /* Contacto */
+  & .canales { display: grid; gap: 12px; }
+  & .canal { display: grid; gap: 4px; min-height: 64px; padding: 14px 20px; text-decoration: none; transition: border-color 0.2s; }
+  & .canal:hover { border-color: var(--e-lima); }
+  & .canal-dato { font-weight: 700; overflow-wrap: anywhere; }
+  & .pie { padding: 56px 0 40px; color: var(--e-texto); font-size: 1rem; }
+
+  /* ---------- Escenas (solo con el módulo montado) ---------- */
+  & .esc-luz, & .esc-ambiente, & .esc-golpe { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  & .esc-luz, & .esc-ambiente { z-index: 0; }
+  /* Golpe de exposición: la luz sube a casi blanco 90 ms y regresa. Se suma, no invierte. */
+  & .esc-golpe {
+    z-index: 50; opacity: 0; mix-blend-mode: screen; visibility: hidden; /* solo existe durante el destello: así no se compone en cada cuadro */
+    background: radial-gradient(130% 90% at 50% 45%, #F6FFE0 0%, #C6FF3A 55%, #6B8A1F 100%);
+  }
+
+  /* Guías de herramienta de diseño alrededor del nombre: recuadro punteado, líneas que lo
+     prolongan por toda la pantalla y franjas de achurado a los lados. */
+  & .esc-guias {
+    position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    --x: 0px; --y: 0px; --w: 0px; --h: 0px;
+  }
+  & .esc-guias > * { position: absolute; }
+  & .esc-recuadro { left: var(--x); top: var(--y); width: var(--w); height: var(--h); border: 1px dashed rgba(243, 241, 236, 0.42); transform-origin: 0 100%; }
+  & .esc-recuadro::before, & .esc-recuadro::after {
+    content: ''; position: absolute; width: 7px; height: 7px; background: var(--e-fondo); border: 1px solid var(--e-lima);
+  }
+  & .esc-recuadro::before { left: -4px; top: -4px; }
+  & .esc-recuadro::after { right: -4px; bottom: -4px; }
+  & .esc-guia-h { left: 0; right: 0; height: 0; border-top: 1px dashed rgba(243, 241, 236, 0.16); }
+  & .esc-guia-v { top: 0; bottom: 0; width: 0; border-left: 1px dashed rgba(243, 241, 236, 0.16); }
+  & .esc-guia-h.esc-a { top: var(--y); }
+  & .esc-guia-h.esc-b { top: calc(var(--y) + var(--h)); }
+  & .esc-guia-v.esc-a { left: var(--x); }
+  & .esc-guia-v.esc-b { left: calc(var(--x) + var(--w)); }
+  & .esc-achurado {
+    top: calc(var(--y) - 28px); height: calc(var(--h) + 56px); width: 12px;
+    background: repeating-linear-gradient(-45deg, rgba(198, 255, 58, 0.34) 0 1px, transparent 1px 6px);
+  }
+  & .esc-achurado.esc-a { left: calc(var(--x) - 20px); }
+  & .esc-achurado.esc-b { left: calc(var(--x) + var(--w) + 8px); }
+  /* La franja donde vive la línea de luz en la presentación: espacio vacío a propósito. */
+  & .esc-franja { grid-area: franja; height: 104px; }
+  &.esc-vivo .inicio-reja { grid-template-areas: 'lugar' 'saludo' 'nombre' 'cargo' 'franja' 'retrato' 'resumen' 'acciones' 'datos'; }
+  &.esc-vivo .retrato { margin-top: 0; }
+
+  /* La pantalla abombada: franja pegada arriba mientras pasan los proyectos. */
+  & .esc-pantalla {
+    position: sticky; top: 0; z-index: 3; height: clamp(250px, 44svh, 440px);
+    margin: 0 calc(-1 * var(--e-m)) 8px; transition: transform 0.6s var(--e-sale);
+  }
+  & .esc-pantalla canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  & .esc-pantalla[data-modo="mosaico"] { transform: rotate(-1.6deg) scale(0.96); }
+  /* Con la pantalla encendida, la captura o la cifra de cada proyecto se ve en ella; en la
+     tarjeta queda para el lector de pantalla y su pie sigue a la vista. Los videos se quedan en
+     la tarjeta porque se tocan. */
+  &.esc-gl .proyecto-medio:not(.proyecto-videos) { clip-path: none; margin: 0; background: none; }
+  &.esc-gl .proyecto-medio:not(.proyecto-videos)::after { display: none; }
+  &.esc-gl .proyecto-medio:not(.proyecto-videos) > img {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+  &.esc-gl .proyecto-cifra, &.esc-gl .proyecto-esquema { display: none; }
+  &.esc-gl .proyecto-medio:not(.proyecto-videos) figcaption { position: static; display: inline-block; margin: 18px 20px 0; background: none; padding: 0; color: var(--e-suave); }
+  &.esc-gl .proyecto-medio:not(.proyecto-videos):not(:has(figcaption)) {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+
+  /* En un ancho angosto la pantalla va sobre la figura del proyecto activo y nunca encima del
+     texto; las demás figuras se ven con su lente CSS. El mosaico tiene su propio marco al final. */
+  & .esc-final { display: none; }
+  &.esc-gl-tarjeta .esc-final { display: block; position: relative; aspect-ratio: 16 / 10; margin-top: 40px; }
+  &.esc-gl-tarjeta .esc-pantalla { position: absolute; top: 0; left: 0; z-index: 2; height: auto; margin: 0; pointer-events: none; }
+  &.esc-gl-tarjeta .esc-pantalla[data-modo="mosaico"] { transform: rotate(-1.2deg) scale(0.97); }
+  &.esc-gl-tarjeta .proyecto-medio:not(.proyecto-videos) { clip-path: none; background: none; }
+  &.esc-gl-tarjeta .proyecto-medio:not(.proyecto-videos)::after { display: none; }
+  &.esc-gl-tarjeta .proyecto-medio:not(.proyecto-videos) > img, &.esc-gl-tarjeta .proyecto-medio.proyecto-cifra, &.esc-gl-tarjeta .proyecto-medio.proyecto-esquema {
+    clip-path: var(--e-lente); background: var(--e-sup); transition: opacity 0.25s ease;
+  }
+  &.esc-gl-tarjeta .proyecto-medio:not(.proyecto-videos) figcaption { position: static; display: inline-block; margin: 12px 6px 0; background: none; padding: 0; color: var(--e-suave); }
+  &.esc-gl-tarjeta .esc-en-pantalla > img, &.esc-gl-tarjeta .esc-en-pantalla.proyecto-cifra, &.esc-gl-tarjeta .esc-en-pantalla.proyecto-esquema { opacity: 0; }
+
+  /* La pila de tarjetas en 3D: la lista se queda quieta en pantalla y la cámara la recorre. */
+  &.esc-pila #habilidades .envoltura { min-height: calc(var(--esc-n, 6) * 36svh + 74svh); }
+  &.esc-pila .grupos {
+    position: sticky; top: 13svh; height: 74svh; display: block;
+    perspective: 1100px; perspective-origin: 50% 46%; transform-style: preserve-3d;
+  }
+  &.esc-pila #habilidades { overflow: clip; }
+  &.esc-pila .grupo {
+    position: absolute; left: 50%; top: 50%; width: min(86vw, 460px); transform: translate(-50%, -50%);
+    border-color: var(--e-borde-luz); will-change: transform;
+  }
+  /* La niebla tapa el contenido de las tarjetas de atrás con su propia superficie: quedan como
+     placas con la orilla iluminada, sin texto a medias. */
+  &.esc-pila .grupo::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; z-index: 2; pointer-events: none;
+    background: var(--e-sup); opacity: var(--niebla, 0);
+  }
+  &.esc-pila .grupo.esc-activa::after { opacity: 1; }
+
+  @media (min-width: 600px) {
+    & { --e-m: 24px; }
+    & .marca span { display: inline; }
+    & .resumen { max-width: 40rem; }
+  }
+  @media (min-width: 768px) {
+    & .menu .solo-ancho { display: inline-flex; }
+    & .proyecto-texto, & .puesto, & .tesis { padding: 28px; }
+    & .tesis { grid-template-columns: 3fr 2fr; align-items: start; }
+  }
+  @media (min-width: 1024px) {
+    & { --e-m: 40px; }
+    & .inicio { padding-top: 48px; }
+    & .inicio-reja, &.esc-vivo .inicio-reja {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      grid-template-areas: 'lugar retrato' 'saludo retrato' 'nombre retrato' 'cargo retrato' 'franja retrato' 'resumen retrato' 'acciones retrato' 'datos datos';
+    }
+    & .retrato { margin: 0; max-width: 460px; justify-self: end; align-self: center; }
+    & .datos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    & .zona { padding-top: 120px; }
+    &.esc-gl #proyectos .envoltura { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); column-gap: 48px; }
+    &.esc-gl #proyectos .zona-cabeza { grid-column: 1 / -1; margin-bottom: 72px; }
+    &.esc-gl .esc-pantalla { grid-column: 1; grid-row: 2 / span 2; top: 9svh; height: 82svh; margin: 0; align-self: start; }
+    &.esc-gl .proyectos { grid-column: 2; grid-row: 2; gap: 22svh; padding-top: 18svh; }
+    &.esc-gl .mas-sitios { grid-column: 2; grid-row: 3; padding-bottom: 14svh; }
+    &.esc-pila .grupo { width: 520px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & .boton, & .canal, & .grupo::after, & .esc-pantalla { transition: none; }
+  }
+}
