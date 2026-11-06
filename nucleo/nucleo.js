@@ -162,17 +162,16 @@ function vigilarMontaje() {
   };
 }
 
-async function montar(id, cambio, seccion) {
+// Con "completa", el estilo se monta como en su primera visita: el cambio en vivo deja ver la
+// entrada entera de cada estilo, desde arriba de la página.
+async function montar(id, completa) {
   const modulo = await cargarModulo(id);
-  const primeraVez = leer('sessionStorage', 'visto:' + id) !== '1';
+  const primeraVez = completa || leer('sessionStorage', 'visto:' + id) !== '1';
   const ctx = {
     raiz: document,
     reducido,
     primeraVez,
-    cambio: !!cambio,
-    // La sección donde estaba el visitante antes del cambio. Se mide antes de desmontar el
-    // estilo anterior, porque después las alturas ya no son las mismas.
-    seccion: seccion || null,
+    cambio: false,
     secciones,
     al,
   };
@@ -203,37 +202,16 @@ async function desmontar() {
   raiz.classList.remove('anima', 'entrada-completa', 'entrada-corta', 'entrada-cambio');
 }
 
-// El primer texto que se ve desde arriba de la pantalla sirve de ancla: después del cambio se
-// deja a la misma altura, así el visitante sigue donde estaba aunque cambien las alturas.
-function lugarActual() {
-  const candidatos = document.querySelectorAll('main h2, main h3, main h4, main p, main li, main dd, main figure');
-  for (const el of candidatos) {
-    const r = el.getBoundingClientRect();
-    if (r.height > 0 && r.top >= 0 && r.top < window.innerHeight) {
-      // Hasta arriba y leyendo la presentación, el lugar es el principio de la página, mida lo
-      // que mida la cabecera del estilo. Un estilo de una pantalla a la vez puede estar arriba
-      // mostrando otra sección; ahí manda el ancla.
-      if (window.scrollY < 1 && secciones[0] && secciones[0].contains(el)) return { inicio: true, el };
-      return { el, arriba: r.top };
-    }
+// Al cambiar de estilo el visitante vuelve al principio de la página: cada estilo se ve desde su
+// portada. Se sube antes de montar el nuevo, porque un scroll después saltaría su entrada. El
+// #sección de la URL se quita para que ningún estilo abra otra sección por el enlace.
+function irAlInicio() {
+  if (window.location.hash) {
+    const url = new URL(window.location.href);
+    url.hash = '';
+    window.history.replaceState(null, '', url);
   }
-  const seccion = secciones.find((s) => s.getBoundingClientRect().bottom > 0);
-  return seccion ? { el: seccion, arriba: seccion.getBoundingClientRect().top } : null;
-}
-// El lugar se restaura cuando el estilo nuevo ya está montado y acomodado: su hoja cargada, sus
-// fuentes listas y lo que agregó al montar ya en la página. Sin cuadros de animación, para no
-// romper el movimiento reducido: basta una vuelta de la cola de tareas.
-async function acomodoListo() {
-  if (document.fonts && document.fonts.ready) {
-    await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 800))]);
-  }
-  await new Promise((r) => setTimeout(r, 0));
-}
-function volverAl(lugar) {
-  if (!lugar) return;
-  if (lugar.inicio) { window.scrollTo({ top: 0, behavior: 'instant' }); return; }
-  const r = lugar.el.getBoundingClientRect();
-  window.scrollTo({ top: Math.max(0, window.scrollY + r.top - lugar.arriba), behavior: 'instant' });
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 // Los cambios van en fila: cada uno espera a que termine el anterior y, si llegan varios
@@ -252,22 +230,15 @@ function cambiar(pedido) {
 
 async function aplicarCambio(id) {
   const anterior = activo;
-  const lugar = lugarActual();
-  // Al final de la página el visitante está en la última sección, aunque el primer texto que se
-  // ve desde arriba sea de la anterior.
-  const alFinal = window.scrollY > 0 && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
-  const conAncla = lugar && lugar.el.closest('[data-seccion]');
-  const seccion = alFinal && secciones.length ? secciones[secciones.length - 1].dataset.seccion : conAncla ? conAncla.dataset.seccion : null;
   await desmontar();
+  irAlInicio();
   try {
     await encenderHoja(id);
     if (id !== anterior) apagarHoja(anterior);
     raiz.dataset.estilo = id;
     activo = id;
-    marcarEntrada('cambio');
-    await montar(id, true, seccion);
-    await acomodoListo();
-    volverAl(lugar);
+    marcarEntrada('completa');
+    await montar(id, true);
   } catch (e) {
     // Si el estilo nuevo falla, se vuelve al anterior sin dejar la página rota, y el que
     // falló deja de ofrecerse en el selector.
@@ -280,10 +251,9 @@ async function aplicarCambio(id) {
     await encenderHoja(anterior);
     raiz.dataset.estilo = anterior;
     activo = anterior;
-    marcarEntrada('cambio');
-    await montar(anterior, true, seccion);
-    await acomodoListo();
-    volverAl(lugar);
+    irAlInicio();
+    marcarEntrada('completa');
+    await montar(anterior, true);
     actualizarSelector();
     throw e;
   }

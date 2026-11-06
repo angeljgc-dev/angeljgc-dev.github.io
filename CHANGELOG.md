@@ -2,6 +2,7 @@
 
 ## 1.1.0 · noviembre de 2026
 
+- Al cambiar de estilo la página sube al principio y el estilo nuevo corre su entrada completa.
 - Cursores: la construcción va más pausada para que se aprecie; se sigue saltando con clic, tecla o scroll.
 - Pausa: un retrato distinto por pantalla, con silueta en trama, sombra dura y transición que rompe la foto.
 - Descenso: tiburón, mantarraya, pez espada y un rape con su señuelo encendido en lo profundo.
