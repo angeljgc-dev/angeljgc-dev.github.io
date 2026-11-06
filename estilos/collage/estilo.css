@@ -434,22 +434,16 @@ html[data-estilo="collage"] .c-tablero-css {
   position: absolute; inset: 0; perspective: 900px; transition: opacity 0.4s;
 }
 html[data-estilo="collage"] .c-tablero.c-listo .c-tablero-css { opacity: 0; visibility: hidden; }
+/* Fichas en CSS (respaldo sin WebGL y movimiento reducido). Su lugar y tamaño los pone el
+   acomodo en rejilla del guion, el mismo que usan las tarjetas en WebGL. */
 html[data-estilo="collage"] .c-ficha {
-  position: absolute; width: 30%; max-width: 210px; aspect-ratio: 11 / 14; overflow: hidden; border-radius: 10px;
-  background: var(--superficie);
+  position: absolute; overflow: hidden; border-radius: 10px; background: var(--superficie);
   box-shadow: 1px 1px 0 #1B1F36, 2px 2px 0 #181B31, 3px 3px 0 #15182C, 4px 4px 0 #121527, 5px 5px 0 #0F1222,
     0 0 0 1px rgba(91, 120, 255, 0.45), 0 0 34px -6px rgba(91, 120, 255, 0.5), 18px 30px 40px -20px rgba(0, 0, 0, 0.9);
 }
-html[data-estilo="collage"] .c-ficha img { position: absolute; max-width: none; width: 634%; height: auto; }
-html[data-estilo="collage"] .c-ficha-1 { left: 6%; top: 8%; transform: rotateY(18deg) rotateZ(-6deg); }
-html[data-estilo="collage"] .c-ficha-2 { left: 38%; top: 2%; transform: translateZ(-120px) rotateY(-10deg) rotateZ(4deg); }
-html[data-estilo="collage"] .c-ficha-3 { right: 5%; top: 14%; transform: rotateY(-22deg) rotateZ(5deg); }
-html[data-estilo="collage"] .c-ficha-4 { left: 14%; bottom: 6%; transform: translateZ(-60px) rotateY(14deg) rotateZ(3deg); }
-html[data-estilo="collage"] .c-ficha-5 {
-  left: 46%; bottom: 10%; transform: rotateY(-12deg) rotateZ(-5deg);
-  background: linear-gradient(140deg, var(--lima), var(--coral) 55%, var(--cobalto));
-}
-html[data-estilo="collage"] .c-ficha-6 { right: 2%; bottom: 4%; box-shadow: 0 0 0 3px var(--cobalto-claro), 0 0 30px 6px rgba(91, 120, 255, 0.7), 18px 30px 40px -20px rgba(0, 0, 0, 0.9); transform: translateZ(-90px) rotateY(-16deg) rotateZ(6deg); }
+html[data-estilo="collage"] .c-ficha img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+html[data-estilo="collage"] .c-ficha-degradado { background: linear-gradient(140deg, var(--lima), var(--coral) 55%, var(--cobalto)); }
+html[data-estilo="collage"] .c-ficha-neon { box-shadow: 0 0 0 3px var(--cobalto-claro), 0 0 30px 6px rgba(91, 120, 255, 0.7), 18px 30px 40px -20px rgba(0, 0, 0, 0.9); }
 
 /* ---------- Cierre: carteles verticales de los comerciales ---------- */
 html[data-estilo="collage"] .c-cierre {

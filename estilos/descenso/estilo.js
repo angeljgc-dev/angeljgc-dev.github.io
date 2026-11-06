@@ -837,7 +837,11 @@ export default {
       manta: { cuadro: [256, 173], ancho: [150, 230], vel: 30, ciclo: 2.6, zona: 'luz' },
       'pez-espada': { cuadro: [240, 146], ancho: [120, 180], vel: 58, ciclo: 0.9, zona: 'luz' },
       rape: { cuadro: [200, 123], ancho: [104, 140], vel: 16, ciclo: 1.6, zona: 'honda', senuelo: [0.93, 0.46] },
+      // La medusa la modelé en Blender: su luz es la campana entera.
+      medusa: { cuadro: [104, 160], ancho: [62, 84], vel: 10, ciclo: 1.8, zona: 'honda', senuelo: [0.5, 0.22] },
     };
+    // Cada zona tiene su turno de especies: nunca la misma dos veces seguidas ni dos iguales a la vista.
+    const turnos = { luz: 0, honda: 0 };
     const MAX_ANIMALES = esTelefono ? 3 : 4;
     const animales = [];
     const luces = new Float32Array(16);
@@ -926,17 +930,23 @@ export default {
       }
       const metros = Math.max(0, mArriba + (mAbajo - mArriba) * (y / m.alto));
       const zona = metros > 1300 ? 'honda' : 'luz';
-      const posibles = Object.keys(ESPECIES).filter((k) => ESPECIES[k].zona === zona && hojaLista(k));
-      if (!posibles.length) return;
-      const cuenta = (k) => animales.filter((x) => x.especie === k).length;
-      posibles.sort((p, q) => cuenta(p) - cuenta(q) || Math.random() - 0.5);
-      const especie = posibles[0];
+      const orden = Object.keys(ESPECIES).filter((k) => ESPECIES[k].zona === zona);
+      let especie = null;
+      for (let i = 0; i < orden.length && !especie; i++) {
+        const k = orden[(turnos[zona] + i) % orden.length];
+        if (hojaLista(k) && !animales.some((x) => x.especie === k)) {
+          especie = k;
+          turnos[zona] = (turnos[zona] + i + 1) % orden.length;
+        }
+      }
+      if (!especie) return;
       const e = ESPECIES[especie];
       const lejos = Math.random() * 0.5;
       const tam = e.ancho[esTelefono ? 0 : 1] * (0.85 + Math.random() * 0.3) * (1 - lejos * 0.4);
       const vel = e.vel * (0.85 + Math.random() * 0.3) * (1 - lejos * 0.3);
       const dir = Math.random() < 0.5 ? 1 : -1;
-      const x = enPantalla ? m.ancho * (0.2 + Math.random() * 0.6) : dir > 0 ? -tam * 0.6 : m.ancho + tam * 0.6;
+      // La medusa es lenta: aparece ya en el agua, con su fundido, en lugar de entrar por un lado.
+      const x = enPantalla || especie === 'medusa' ? m.ancho * (0.2 + Math.random() * 0.6) : dir > 0 ? -tam * 0.6 : m.ancho + tam * 0.6;
       animales.push({ especie, x, y, dir, vel, tam, lejos, fase: Math.random(), edad: 0, apto: 1 });
       animales.sort((p, q) => q.lejos - p.lejos);
     }
@@ -955,6 +965,8 @@ export default {
         a.fase += (dt / e.ciclo) * (a.vel / e.vel);
         if (a.especie === 'manta') a.y += Math.cos(a.fase * 6.283) * 6 * dt;
         if (a.especie === 'rape') a.y += Math.sin(a.fase * 3.1) * 3 * dt;
+        // La medusa avanza a empujones: sube cuando la campana se cierra.
+        if (a.especie === 'medusa') a.y -= (3 + 12 * Math.max(0, Math.sin(a.fase * 6.283))) * dt;
         const fuera = a.x < -a.tam || a.x > m.ancho + a.tam || a.y > m.alto + a.tam || a.y < Math.max(linea, 0) - a.tam;
         if (fuera || (a.apto < 0.02 && a.edad > 1.5)) animales.splice(i, 1);
       }
@@ -982,12 +994,14 @@ export default {
         const caja = [a.x - a.tam / 2, a.y - alto / 2, a.x + a.tam / 2, a.y + alto / 2];
         if (e.senuelo && nl < 4) {
           const lx = a.dir > 0 ? caja[0] + e.senuelo[0] * a.tam : caja[2] - e.senuelo[0] * a.tam;
-          luces.set([lx, caja[1] + e.senuelo[1] * alto, a.tam * 0.32, 0.75 * alfa], nl * 4);
+          luces.set([lx, caja[1] + e.senuelo[1] * alto, a.tam * (a.especie === 'medusa' ? 0.6 : 0.32), 0.75 * alfa], nl * 4);
           nl++;
         }
         // En lo hondo ya no hay sol que los oscurezca: los alumbra su propio señuelo, y se ven más.
         const hondo = e.zona === 'honda';
-        lista.push({ a, caja, alfa, agua: rampaJS(metros), luz: hondo ? 0.85 : 0.42 + 0.58 * sol, niebla: hondo ? 0.12 + a.lejos * 0.3 : Math.min(0.8, 0.14 + a.lejos * 0.5 + (1 - sol) * 0.25) });
+        // La medusa es pura luz: no se oscurece ni se vela.
+        const propia = a.especie === 'medusa';
+        lista.push({ a, caja, alfa, agua: rampaJS(metros), luz: propia ? 1.15 : hondo ? 0.85 : 0.42 + 0.58 * sol, niebla: propia ? 0.04 : hondo ? 0.12 + a.lejos * 0.3 : Math.min(0.8, 0.14 + a.lejos * 0.5 + (1 - sol) * 0.25) });
       }
       return lista;
     }
@@ -1076,7 +1090,7 @@ export default {
         nacer(linea, mArriba, mAbajo, true);
         nacer(linea, mArriba, mAbajo, true);
       }
-      if (mAbajo > 700) pedirHoja('rape');
+      if (mAbajo > 700) { pedirHoja('rape'); pedirHoja('medusa'); }
       moverAnimales(dt, linea, mArriba, mAbajo, desp);
       const grandes = prepararAnimales(linea, mArriba, mAbajo, m.alto);
       const metros = perdido ? null : pintar(t + 2, desp, linea, m.alto);
@@ -1119,8 +1133,127 @@ export default {
       actualizarMedidor(m.superficie - ventana.scrollY, ventana.scrollY);
     }
 
+    // ---------- el coral alrededor de las tarjetas ----------
+    // Piezas modeladas en Blender (abanicos, cerebros, cuernos de ciervo, tubos, anémonas y, en lo
+    // hondo, esponjas y coral que da su propia luz). Cada tarjeta lleva su combinación, que sale de
+    // su índice: no cambia al recargar, ninguna se repite y dos tarjetas seguidas no comparten pieza.
+    // Van detrás de la tarjeta, asomándose por arriba y por abajo, nunca encima del texto.
+    const CORALES = {
+      'abanico-naranja': [200, 126], 'abanico-violeta': [200, 114], 'anemona-coral': [200, 165], 'anemona-rosa': [200, 157],
+      'cerebro-ocre': [200, 109], 'cerebro-verde': [200, 112], 'ciervo-lila': [174, 200], 'ciervo-ocre': [200, 187],
+      'tubos-amarillo': [139, 200], 'tubos-naranja': [66, 200],
+      'esponja-barril': [169, 200], 'esponja-vidrio': [110, 200], 'esponja-luz': [169, 200], 'ciervo-luz': [200, 152],
+    };
+    const SOMERO = ['abanico-naranja', 'abanico-violeta', 'anemona-coral', 'anemona-rosa', 'cerebro-ocre', 'cerebro-verde', 'ciervo-lila', 'ciervo-ocre', 'tubos-amarillo', 'tubos-naranja'];
+    const MEDIANOCHE = ['esponja-barril', 'esponja-vidrio', 'esponja-luz', 'ciervo-luz'];
+    const ABISMO = ['esponja-luz', 'ciervo-luz', 'esponja-vidrio', 'esponja-barril'];
+    const LUGARES = ['cima-izq', 'cima-der', 'cima-centro', 'base-izq', 'base-der'];
+    const SELECTOR_TARJETAS = '.zona-cabeza, .proyecto, .mas-sitios, .puesto, .subtitulo, .idiomas, .tesis, .grupo, .canal';
+    let arrecife = [];
+    let anchoCoral = 0;
+    const vigiaCoral = 'IntersectionObserver' in ventana ? new ventana.IntersectionObserver((entradas) => {
+      for (const en of entradas) {
+        if (!en.isIntersecting) continue;
+        for (const p of en.target.querySelectorAll('[data-coral]')) p.style.backgroundImage = 'url("' + new URL('./recursos/coral/' + p.dataset.coral + '.webp', import.meta.url).href + '")';
+        vigiaCoral.unobserve(en.target);
+      }
+    }, { rootMargin: '900px 0px' }) : null;
+
+    // Azar con semilla: el mismo índice da siempre la misma combinación.
+    function azarDe(semilla) {
+      let a = semilla >>> 0;
+      return () => {
+        a = (a + 0x6d2b79f5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function armarCoral() {
+      for (const caja of arrecife) { if (vigiaCoral) vigiaCoral.unobserve(caja); caja.remove(); }
+      arrecife = [];
+      anchoCoral = m.ancho;
+      const desp = ventana.scrollY;
+      const tarjetas = [];
+      if (rejilla && cargo) tarjetas.push({ el: rejilla, inicio: true });
+      for (const el of principal.querySelectorAll(SELECTOR_TARJETAS)) tarjetas.push({ el, inicio: false });
+      const usadas = new Set();
+      let anteriores = [];
+      tarjetas.forEach(({ el, inicio: esInicio }, i) => {
+        const r = (esInicio ? cargo : el).getBoundingClientRect();
+        const metros = metrosDe(r.top + desp + r.height / 2);
+        const banco = metros < 1000 ? SOMERO : metros < 4000 ? MEDIANOCHE : ABISMO;
+        // Más coral en lo somero; al bajar ralea.
+        const cuantas = metros < 200 ? 3 + (i % 2) : metros < 1000 ? 2 + (i % 2) : 1 + (i % 2);
+        let elegido = null;
+        for (let intento = 0; intento < 60 && !elegido; intento++) {
+          const azar = azarDe(i * 7919 + intento * 104729 + 17);
+          // Nunca una pieza de la tarjeta anterior: si no alcanzan, esta lleva menos.
+          const fuente = banco.filter((n) => !anteriores.includes(n));
+          const piezas = [];
+          while (piezas.length < Math.min(cuantas, fuente.length)) {
+            const n = fuente[Math.floor(azar() * fuente.length)];
+            if (!piezas.includes(n)) piezas.push(n);
+          }
+          const lugares = [];
+          while (lugares.length < piezas.length) {
+            const l = LUGARES[Math.floor(azar() * LUGARES.length)];
+            if (!lugares.includes(l)) lugares.push(l);
+          }
+          const firma = piezas.map((n, k) => n + '@' + lugares[k]).sort().join('|');
+          if (!usadas.has(firma)) elegido = { piezas, lugares, firma, azar };
+        }
+        if (!elegido) return;
+        usadas.add(elegido.firma);
+        anteriores = elegido.piezas;
+        const caja = doc.createElement('span');
+        caja.className = 'descenso-coral' + (esInicio ? ' en-inicio' : '');
+        caja.setAttribute('data-descenso', '');
+        caja.setAttribute('aria-hidden', 'true');
+        caja.dataset.firma = elegido.firma;
+        const ancho = r.width;
+        // Las cabeceras de sección tienen más agua alrededor: su coral es más grande.
+        const grande = el.classList.contains('zona-cabeza') || esInicio ? 1.35 : 1;
+        const oscuro = banco === SOMERO ? limitar((metros - 150) / 850, 0, 1) : 0;
+        elegido.piezas.forEach((n, k) => {
+          const [w0, h0] = CORALES[n];
+          const alto = Math.round((esTelefono ? 56 + elegido.azar() * 30 : 84 + elegido.azar() * 60) * grande);
+          const anchoP = Math.min(Math.round(alto * w0 / h0), Math.round(ancho * 0.5));
+          const p = doc.createElement('i');
+          p.className = 'descenso-coral-pieza';
+          p.dataset.coral = n;
+          p.dataset.lugar = elegido.lugares[k];
+          p.style.width = anchoP + 'px';
+          p.style.height = alto + 'px';
+          const lugar = elegido.lugares[k];
+          const corrida = Math.round(elegido.azar() * Math.max(0, ancho * 0.28 - anchoP * 0.2));
+          if (lugar.startsWith('cima')) p.style.bottom = 'calc(100% - ' + Math.round(alto * 0.22) + 'px)';
+          else p.style.top = 'calc(100% - ' + Math.round(alto * 0.38) + 'px)';
+          if (lugar.endsWith('izq')) p.style.left = (6 + corrida) + 'px';
+          else if (lugar.endsWith('der')) p.style.right = (6 + corrida) + 'px';
+          else p.style.left = Math.round((ancho - anchoP) * (0.35 + elegido.azar() * 0.3)) + 'px';
+          if (elegido.azar() < 0.5) p.style.transform = 'scaleX(-1)';
+          // En lo menos somero el coral se apaga un poco, como todo lo que está más hondo.
+          if (oscuro > 0) p.style.filter = 'brightness(' + (1 - 0.45 * oscuro).toFixed(2) + ') saturate(' + (1 - 0.35 * oscuro).toFixed(2) + ')';
+          caja.appendChild(p);
+        });
+        el.insertBefore(caja, el.firstChild);
+        arrecife.push(caja);
+        if (vigiaCoral) vigiaCoral.observe(caja);
+        else for (const p of caja.querySelectorAll('[data-coral]')) p.style.backgroundImage = 'url("' + new URL('./recursos/coral/' + p.dataset.coral + '.webp', import.meta.url).href + '")';
+      });
+    }
+    limpiezas.push(() => {
+      if (vigiaCoral) vigiaCoral.disconnect();
+      for (const caja of arrecife) caja.remove();
+      arrecife = [];
+    });
+
     // ---------- arranque y respuesta a cambios ----------
     medir();
+    armarCoral();
     // Sin el shader el nombre no se recorta: el cielo de CSS baja hasta debajo del nombre completo.
     const lineaCss = () => Math.round(m.nombre ? m.nombre.caja.y + m.nombre.caja.h + 28 : m.superficie) + 'px';
     tocar(raiz, '--linea-css', lineaCss());
@@ -1134,6 +1267,8 @@ export default {
         if (!vivo) return;
         medir();
         tocar(raiz, '--linea-css', lineaCss());
+        // Si cambió el ancho, cambian las tarjetas y su profundidad: el coral se vuelve a armar.
+        if (Math.abs(m.ancho - anchoCoral) > 1) armarCoral();
         if (!gl || perdido) { actualizarMedidor(m.superficie - ventana.scrollY, ventana.scrollY); return; }
         if (reducido) pintarFijo();
         else ajustarLienzo(m.alto);

@@ -241,7 +241,8 @@ html[data-estilo="descenso"] #habilidades .rotulo,
 html[data-estilo="descenso"] #contacto .rotulo { color: var(--bio); }
 
 /* Proyectos */
-html[data-estilo="descenso"] .proyectos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+/* Entre tarjetas queda agua para que el coral se vea. */
+html[data-estilo="descenso"] .proyectos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 60px; }
 html[data-estilo="descenso"] .proyecto {
   position: relative; display: flex; flex-direction: column;
   background: var(--panel); border: 1px solid var(--borde); border-radius: 18px; box-shadow: var(--sombra);
@@ -304,9 +305,23 @@ html[data-estilo="descenso"] .mas-sitios {
 html[data-estilo="descenso"] .mas-sitios p { color: var(--claro); }
 html[data-estilo="descenso"] .mas-sitios ul { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 
+/* El coral crece detrás de cada tarjeta y se asoma por arriba y por abajo; nunca va encima del texto. */
+html[data-estilo="descenso"] .zona-cabeza,
+html[data-estilo="descenso"] .mas-sitios,
+html[data-estilo="descenso"] .puesto,
+html[data-estilo="descenso"] .subtitulo,
+html[data-estilo="descenso"] .idiomas,
+html[data-estilo="descenso"] .tesis,
+html[data-estilo="descenso"] .grupo,
+html[data-estilo="descenso"] .canal { position: relative; }
+html[data-estilo="descenso"] .descenso-coral { position: absolute; inset: 0; z-index: -1; display: block; pointer-events: none; }
+html[data-estilo="descenso"] .descenso-coral-pieza { position: absolute; display: block; background: no-repeat center bottom / contain; }
+html[data-estilo="descenso"] .inicio-reja > .descenso-coral.en-inicio {
+  position: relative; inset: auto; z-index: 0; grid-column: 1 / -1; grid-row: cargo-start / datos-end; margin: 150px -6px 0;
+}
 /* Experiencia y formación */
 html[data-estilo="descenso"] .trayecto,
-html[data-estilo="descenso"] .grados { display: grid; gap: 22px; }
+html[data-estilo="descenso"] .grados { display: grid; gap: 52px; }
 html[data-estilo="descenso"] .puesto {
   padding: 20px 20px 22px; border-radius: 14px;
   background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
@@ -341,7 +356,7 @@ html[data-estilo="descenso"] .tesis-datos li { padding-top: 12px; border-top: 1p
 html[data-estilo="descenso"] .tesis-datos strong { display: block; font-size: 0.875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--bio); }
 
 /* Habilidades */
-html[data-estilo="descenso"] .grupos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+html[data-estilo="descenso"] .grupos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; }
 html[data-estilo="descenso"] .grupo {
   padding: 18px 18px 20px; border-radius: 14px;
   background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
@@ -352,7 +367,7 @@ html[data-estilo="descenso"] .etiquetas li { font-size: 1rem; line-height: 1.3; 
 
 /* Contacto y pie: el fondo del mar */
 html[data-estilo="descenso"] .contacto { padding-bottom: 260px; }
-html[data-estilo="descenso"] .canales { display: grid; gap: 12px; }
+html[data-estilo="descenso"] .canales { display: grid; gap: 44px; }
 html[data-estilo="descenso"] .canal {
   display: flex; flex-direction: column; gap: 4px; min-height: 64px; padding: 14px 18px; border-radius: 12px;
   text-decoration: none; background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
@@ -396,6 +411,7 @@ html[data-estilo="descenso"] .pie p {
   html[data-estilo="descenso"] .nombre { font-size: clamp(6rem, 10.5vw, 10.5rem); }
   html[data-estilo="descenso"] .nombre span { display: inline; }
   html[data-estilo="descenso"] .inicio-reja::after { grid-row: cargo-start / resumen-end; margin: 190px -10px 0; }
+  html[data-estilo="descenso"] .inicio-reja > .descenso-coral.en-inicio { grid-row: cargo-start / resumen-end; margin: 190px -10px 0; }
   html[data-estilo="descenso"] .cargo { margin-top: 190px; }
   html[data-estilo="descenso"] .nombre { line-height: 1.04; }
   html[data-estilo="descenso"] .cargo { padding: 28px 28px 0; }

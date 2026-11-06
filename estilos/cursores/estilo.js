@@ -629,52 +629,16 @@ function montar(ctx) {
         llenar(p, t + 0.16, cur);
       });
 
-      // Rejilla de tarjetas: la primera se dibuja, la segunda se enmarca, y las demás nacen
-      // como copias de la primera que se arrastran a su lugar, se vacían y reciben lo suyo.
+      // Rejilla de tarjetas: cada una se construye una sola vez, en su lugar. Los tres cursores
+      // se turnan: dibujan el recuadro, cae la imagen y se teclea el título. Nada se duplica ni
+      // se arrastra: una copia de un contenedor completo se leía como ruido (pedido de Ángel).
       if (tarjetas.length) {
-        var tA = 0.16;
-        var primera = tarjetas[0];
-        var r1 = cajaDe(primera);
-        cajasDom.push(dibujar(primera, cursores[0], tA, 0.2));
-        llenar(primera, tA + 0.18, null);
-        if (tarjetas[1]) cajasDom.push(dibujar(tarjetas[1], cursores[1], tA + 0.12, 0.2));
-        var arrastre = cursores[2];
-        var tC = tA + 0.36;
-        tl.to(arrastre, { x: r1.x + r1.w * 0.5, y: r1.y + 24, duration: 0.14, ease: 'power2.out' }, tC - 0.16);
-        tl.add(function () { arrastre.dataset.glifo = 'flecha'; }, tC - 0.02);
-        tarjetas.slice(1).forEach(function (p, j) {
-          var r = cajaDe(p);
-          var t = tC + j * 0.05;
-          var copia = primera.cloneNode(true);
-          copia.removeAttribute('data-pieza');
-          copia.removeAttribute('style');
-          [].forEach.call(copia.querySelectorAll('[data-pieza],[id],[style]'), function (n) { n.removeAttribute('data-pieza'); n.removeAttribute('id'); n.removeAttribute('style'); });
-          [].forEach.call(copia.querySelectorAll('.letra'), function (n) { n.className = ''; });
-          [].forEach.call(copia.querySelectorAll('.tecleando'), function (n) { n.classList.remove('tecleando'); });
-          [].forEach.call(copia.querySelectorAll('a'), function (n) { n.setAttribute('tabindex', '-1'); });
-          copia.classList.add('copia');
-          copia.style.cssText = 'left:' + r1.x + 'px;top:' + r1.y + 'px;width:' + r1.w + 'px;height:' + r1.h + 'px;opacity:0';
-          var estelas = [0.35, 0.18].map(function (o) {
-            var e = document.createElement('div');
-            e.className = 'estela';
-            e.style.cssText = 'left:' + r1.x + 'px;top:' + r1.y + 'px;width:' + r1.w + 'px;height:' + r1.h + 'px;opacity:0';
-            capa.appendChild(e);
-            return { e: e, o: o };
-          });
-          capa.appendChild(copia);
-          tl.set(copia, { opacity: 1 }, t);
-          var viaje = { x: r.x - r1.x, y: r.y - r1.y, scaleX: r.w / r1.w, scaleY: r.h / r1.h, transformOrigin: '0 0', duration: 0.24, ease: 'power2.inOut' };
-          tl.to(copia, viaje, t);
-          estelas.forEach(function (s, k) {
-            tl.set(s.e, { opacity: s.o }, t + 0.03 * (k + 1));
-            tl.to(s.e, viaje, t + 0.03 * (k + 1));
-            tl.to(s.e, { opacity: 0, duration: 0.06 }, t + 0.24 + 0.03 * (k + 1));
-          });
-          if (j === 0) tl.to(arrastre, { x: r.x + r.w * 0.5, y: r.y + 24, duration: 0.24, ease: 'power2.inOut' }, t);
-          var llega = t + 0.24;
-          tl.add(function () { copia.classList.add('vacia'); }, llega);
-          llenar(p, llega + 0.06, null);
-          tl.to(copia, { opacity: 0, duration: 0.08 }, llega + 0.1);
+        var pasoTarjeta = Math.min(0.14, 0.62 / Math.max(1, tarjetas.length));
+        tarjetas.forEach(function (p, j) {
+          var t = 0.16 + j * pasoTarjeta;
+          var cur = cursores[j % cursores.length];
+          cajasDom.push(dibujar(p, cur, t, 0.2));
+          llenar(p, t + 0.18, null);
         });
       }
 

@@ -14,6 +14,32 @@ const SRCSET_MURO = ' srcset="' + RECURSOS + 'muro-640.webp 640w, ' + RECURSOS +
 const HOJA = { ancho: 1196, alto: 1020, lado: 240 };
 const toma = (i) => ({ x: 34 + Math.floor(i / 4) * 296, y: 12 + (i % 4) * 252 });
 
+// Tarjetas con grosor: capturas de proyectos sin cifras de demostración. La vacía lleva el
+// degradado que cambia de color; la de Ultravioleta, el marco de neón.
+const FICHAS = ['surco', 'medibot', '', 'halley', 'ultravioleta', 'madrigal'];
+const NEON = 4;
+// Apaisadas como las capturas: se ve la pantalla completa, con el nombre de cada sitio entero.
+const PROPORCION = 16 / 10;
+
+// Rejilla del tablero: dos columnas en vertical, tres en horizontal, con huecos que absorben
+// el giro y el vaivén de cada tarjeta. Así nunca se enciman, a cualquier ancho.
+function acomodo(W, H) {
+  const columnas = W >= 700 ? 3 : 2;
+  const filas = FICHAS.length / columnas;
+  const minimo = Math.max(18, Math.min(W, H) * 0.05);
+  const ancho = Math.max(40, Math.min((W - (columnas + 1) * minimo) / columnas, (H - (filas + 1) * minimo * 1.6) / filas * PROPORCION, 300));
+  const alto = ancho / PROPORCION;
+  const sx = (W - columnas * ancho) / (columnas + 1);
+  const sy = (H - filas * alto) / (filas + 1);
+  const lugares = FICHAS.map((_, i) => {
+    const c = i % columnas, f = Math.floor(i / columnas);
+    // Escalonado por columna: no cambia la distancia vertical dentro de la misma columna.
+    const desfase = (c % 2 ? 1 : -1) * sy * 0.25;
+    return { x: sx * (c + 1) + ancho * c + ancho / 2, y: sy * (f + 1) + alto * f + alto / 2 + desfase };
+  });
+  return { ancho, alto, lugares, hueco: Math.min(sx, sy), W, H };
+}
+
 const sujetar = (v, a, b) => (v < a ? a : v > b ? b : v);
 const tramo = (v, a, b) => sujetar((v - a) / (b - a), 0, 1);
 const suave = (t) => t * t * (3 - 2 * t);
@@ -139,24 +165,37 @@ export default {
     // ---------- Tablero de tarjetas con grosor ----------
     let tablero = null;
     if (secHabilidades) {
-      const fichas = [0, 5, 1, 7, -1, 4].map((t, i) => {
-        if (t < 0) return '<div class="c-ficha c-ficha-' + (i + 1) + '"></div>';
-        return '<div class="c-ficha c-ficha-' + (i + 1) + '" data-toma="' + t + '">' + imagen('muro-1196.webp', 1196, 1020, ' loading="lazy"' + SRCSET_MURO) + '</div>';
+      // Cada ficha lleva la captura del proyecto con srcset: el navegador elige 560 o 960 px
+      // según el tamaño en pantalla por la densidad. WebGL usa esa misma imagen ya cargada.
+      const fichas = FICHAS.map((nombre, i) => {
+        const clase = 'c-ficha' + (nombre === '' ? ' c-ficha-degradado' : '') + (i === NEON ? ' c-ficha-neon' : '');
+        if (nombre === '') return '<div class="' + clase + '"></div>';
+        return '<div class="' + clase + '"><img src="' + PROYECTOS + nombre + '-960.webp" srcset="' + PROYECTOS + nombre + '-560.webp 560w, ' + PROYECTOS + nombre + '-960.webp 960w" sizes="300px" width="960" height="600" alt="" decoding="async" loading="lazy"></div>';
       }).join('');
       const nodo = crear(doc, '<div class="c-tablero"><div class="c-tablero-css">' + fichas + '</div></div>');
       const cabeza = cabezaDe(secHabilidades);
       poner(nodo, cabeza ? cabeza.parentNode : secHabilidades, cabeza ? cabeza.nextSibling : secHabilidades.firstChild);
-      // Recorte de cada ficha sobre la hoja: la toma es cuadrada y la ficha mide 11 por 14.
-      const usado = HOJA.lado * 11 / 14;
-      nodo.querySelectorAll('[data-toma]').forEach((f) => {
-        const { x, y } = toma(+f.dataset.toma);
-        const im = f.firstElementChild;
-        im.style.width = (HOJA.ancho / usado * 100) + '%';
-        im.style.left = (-(x + (HOJA.lado - usado) / 2) / usado * 100) + '%';
-        im.style.top = (-y / HOJA.lado * 100) + '%';
-      });
-      tablero = { nodo, escena: null, visible: false, pedido: false };
+      tablero = { nodo, fichas: [...nodo.querySelectorAll('.c-ficha')], escena: null, visible: false, pedido: false, acomodo: null };
     }
+    // Coloca las fichas en su rejilla y ajusta sizes a lo que mide cada imagen en pantalla.
+    const acomodarTablero = () => {
+      if (!tablero) return;
+      const a = acomodo(tablero.nodo.clientWidth || 1, tablero.nodo.clientHeight || 1);
+      tablero.acomodo = a;
+      tablero.fichas.forEach((f, i) => {
+        const s = tocarEstilo(f);
+        const c = a.lugares[i];
+        s.left = (c.x - a.ancho / 2).toFixed(1) + 'px';
+        s.top = (c.y - a.alto / 2).toFixed(1) + 'px';
+        s.width = a.ancho.toFixed(1) + 'px';
+        s.height = a.alto.toFixed(1) + 'px';
+        s.transform = 'rotate(' + (i % 2 ? 1.5 : -1.5) + 'deg)';
+        const im = f.querySelector('img');
+        if (im) im.sizes = Math.ceil(a.alto * 960 / 600) + 'px';
+      });
+      if (tablero.escena) tablero.escena.tamano();
+    };
+    acomodarTablero();
 
     // ---------- Cierre: carteles verticales que llegan girados ----------
     let cierre = null;
@@ -176,6 +215,7 @@ export default {
 
     // ---------- Movimiento reducido: estado final quieto ----------
     if (reducido) {
+      if (tablero) escuchar(ventana, 'resize', acomodarTablero, { passive: true });
       if (muro) {
         // La toma marcada es la del producto principal, ya enfocada y con su círculo.
         const { x, y } = toma(0);
@@ -209,13 +249,12 @@ export default {
         medidas.tituloMuro = muro.cabeza ? arribaEnDocumento(muro.cabeza) : 0;
         medidas.plano = muro.plano.offsetWidth;
       }
-      if (tablero) { medidas.tablero = arribaEnDocumento(tablero.nodo); medidas.tableroAlto = tablero.nodo.offsetHeight || 1; }
+      if (tablero) { medidas.tablero = arribaEnDocumento(tablero.nodo); medidas.tableroAlto = tablero.nodo.offsetHeight || 1; acomodarTablero(); }
       if (secHabilidades) medidas.habilidades = arribaEnDocumento(secHabilidades);
       if (secContacto) medidas.contacto = arribaEnDocumento(secContacto);
       if (cierre) cierre.ancho = cierre.fila.scrollWidth / 2;
       medidas.titulos = titulos.map(arribaEnDocumento);
       medidas.tarjetas = tarjetas.map(arribaEnDocumento);
-      if (tablero && tablero.escena) tablero.escena.tamano();
     }
     let pendienteMedir = true;
     escuchar(ventana, 'resize', () => { pendienteMedir = true; }, { passive: true });
@@ -234,6 +273,8 @@ export default {
           tablero.visible = e.isIntersecting;
           if (e.isIntersecting && !tablero.pedido) {
             tablero.pedido = true;
+            // Las capturas se piden ya: los frentes de WebGL salen de ellas.
+            tablero.fichas.forEach((f) => { const im = f.querySelector('img'); if (im) im.loading = 'eager'; });
             iniciarTablero(tablero, doc, ventana, () => vivo).then((escena) => {
               if (!escena) return;
               if (!vivo) { escena.liberar(); return; }
@@ -510,19 +551,26 @@ function rasgado(semilla, pasos) {
 }
 
 // Escena WebGL: seis tarjetas extruidas con la captura real al frente, una con degradado que
-// cambia de color y otra con marco de neón. Three.js se descarga aquí, no antes.
+// cambia de color y otra con marco de neón. Three.js se descarga aquí, no antes. Las tarjetas
+// ocupan los mismos lugares que las fichas en CSS, así que tampoco se enciman.
 async function iniciarTablero(tablero, doc, ventana, sigueVivo) {
   // Sin WebGL en el navegador se quedan las fichas en CSS.
   if (!ventana.WebGLRenderingContext) return null;
   const T = await import(r('three-min.js'));
   if (!sigueVivo()) return null;
-  const fuente = tablero.nodo.querySelector('img');
-  const foto = new ventana.Image();
-  foto.decoding = 'async';
-  foto.src = fuente && fuente.currentSrc ? fuente.currentSrc : r('muro-1196.webp');
-  // Sin la hoja de tomas no hay frentes que pintar: se quedan las fichas en CSS.
-  const lista = await foto.decode().then(() => true, () => false);
-  if (!lista || !sigueVivo()) return null;
+  // La misma captura que eligió srcset para este tamaño y esta densidad, pero cargada sin
+  // srcset: así la textura sube con todos sus píxeles (sale del caché, sin bytes extra).
+  const fichasImg = tablero.fichas.map((f) => f.querySelector('img'));
+  await Promise.all(fichasImg.map((im) => (im ? im.decode().then(() => true, () => false) : true)));
+  const fotos = fichasImg.map((im) => {
+    if (!im) return null;
+    const foto = new ventana.Image();
+    foto.decoding = 'async';
+    foto.src = im.currentSrc || im.src;
+    return foto;
+  });
+  const listas = await Promise.all(fotos.map((f) => (f ? f.decode().then(() => true, () => false) : true)));
+  if (listas.includes(false) || !sigueVivo()) return null;
 
   const lienzo = doc.createElement('canvas');
   lienzo.setAttribute('aria-hidden', 'true');
@@ -537,10 +585,11 @@ async function iniciarTablero(tablero, doc, ventana, sigueVivo) {
   }
   render.outputColorSpace = T.SRGBColorSpace;
   render.setClearColor(0x000000, 0);
+  const anisotropia = render.capabilities.getMaxAnisotropy();
 
   const escena = new T.Scene();
-  const camara = new T.PerspectiveCamera(34, 1, 0.1, 60);
-  camara.position.set(0, 0, 8);
+  const CAMPO = 34, DISTANCIA = 7;
+  const camara = new T.PerspectiveCamera(CAMPO, 1, 0.1, 60);
   escena.add(new T.AmbientLight(0x9aa6e0, 1.1));
   const llave = new T.DirectionalLight(0xfff1dc, 2.2);
   llave.position.set(3, 4, 6);
@@ -550,11 +599,8 @@ async function iniciarTablero(tablero, doc, ventana, sigueVivo) {
 
   const liberables = [];
   const guardar = (x) => { liberables.push(x); return x; };
-  const textura = guardar(new T.Texture(foto));
-  textura.colorSpace = T.SRGBColorSpace;
-  textura.needsUpdate = true;
 
-  const ANCHO = 1.1, ALTO = 1.4, RADIO = 0.1, GROSOR = 0.12, BISEL = 0.03;
+  const ANCHO = 1.1, ALTO = ANCHO / PROPORCION, RADIO = 0.1, GROSOR = 0.12, BISEL = 0.03, MARCO = 0.05;
   const forma = (w, h, rr) => {
     const s = new T.Shape();
     const x = -w / 2, y = -h / 2;
@@ -570,24 +616,20 @@ async function iniciarTablero(tablero, doc, ventana, sigueVivo) {
   const tapa = guardar(new T.MeshPhongMaterial({ color: 0x151827, specular: 0x333a66, shininess: 40 }));
   const canto = guardar(new T.MeshPhongMaterial({ color: 0x1b2038, specular: 0x9aabff, shininess: 90 }));
 
-  // Frente con la toma: las coordenadas de textura salen de la posición sobre la hoja.
-  const frente = (indice) => {
-    const g = guardar(new T.ShapeGeometry(forma(ANCHO, ALTO, RADIO), 6));
-    const { x, y } = toma(indice);
-    const usado = HOJA.lado * ANCHO / ALTO;
-    const x0 = x + (HOJA.lado - usado) / 2;
+  // Frente recortado al centro de la imagen, igual que object-fit: cover en las fichas CSS.
+  const frente = (u0, u1, v0, v1) => {
+    const g = guardar(new T.ShapeGeometry(forma(ANCHO, ALTO, RADIO), 8));
     const pos = g.attributes.position;
     const uv = g.attributes.uv;
     for (let k = 0; k < pos.count; k++) {
       const u = (pos.getX(k) + ANCHO / 2) / ANCHO;
       const v = (pos.getY(k) + ALTO / 2) / ALTO;
-      uv.setXY(k, (x0 + u * usado) / HOJA.ancho, 1 - (y + (1 - v) * HOJA.lado) / HOJA.alto);
+      uv.setXY(k, u0 + u * (u1 - u0), v0 + v * (v1 - v0));
     }
     uv.needsUpdate = true;
     g.translate(0, 0, BISEL + 0.002);
     return g;
   };
-  const conFoto = guardar(new T.MeshBasicMaterial({ map: textura }));
   const degradado = guardar(new T.ShaderMaterial({
     uniforms: { t: { value: 0 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
@@ -602,9 +644,8 @@ async function iniciarTablero(tablero, doc, ventana, sigueVivo) {
     ].join('\n'),
   }));
   const neon = guardar(new T.MeshBasicMaterial({ color: 0x9aabff }));
-  const marcoForma = forma(ANCHO + 0.1, ALTO + 0.1, RADIO + 0.05);
-  const hueco = forma(ANCHO + 0.02, ALTO + 0.02, RADIO + 0.01);
-  marcoForma.holes.push(hueco);
+  const marcoForma = forma(ANCHO + MARCO * 2, ALTO + MARCO * 2, RADIO + 0.05);
+  marcoForma.holes.push(forma(ANCHO + 0.02, ALTO + 0.02, RADIO + 0.01));
   const marco = guardar(new T.ShapeGeometry(marcoForma, 6));
   marco.translate(0, 0, BISEL + 0.004);
   // Halo del neón: un degradado radial dibujado una vez en un lienzo, sumado a la escena.
@@ -619,63 +660,101 @@ async function iniciarTablero(tablero, doc, ventana, sigueVivo) {
   h2d.fillRect(0, 0, 128, 128);
   const haloTex = guardar(new T.CanvasTexture(halo));
   const haloMat = guardar(new T.MeshBasicMaterial({ map: haloTex, transparent: true, blending: T.AdditiveBlending, depthWrite: false }));
-  const haloGeo = guardar(new T.PlaneGeometry(2.6, 3.0));
+  const haloGeo = guardar(new T.PlaneGeometry(ANCHO * 1.9, ALTO * 1.7));
 
-  const grupo = new T.Group();
-  escena.add(grupo);
-  const disposicion = [
-    { toma: 0, p: [-1.55, 0.75, 0.2], r: [0.05, 0.35, -0.1] },
-    { toma: 5, p: [0.15, 1.05, -1.3], r: [-0.08, -0.2, 0.06] },
-    { toma: 1, p: [1.6, 0.35, -0.2], r: [0.04, -0.42, 0.08] },
-    { toma: 7, p: [-0.95, -0.95, -0.7], r: [0.1, 0.28, 0.05] },
-    { toma: -1, p: [0.75, -0.95, 0.5], r: [-0.06, -0.25, -0.08] },
-    { toma: 4, p: [2.25, -0.55, -1.8], r: [0.06, -0.3, 0.1], neon: true },
-  ];
-  const tarjetas = disposicion.map((d, i) => {
+  // Giros chicos y profundidades casi iguales: dan volumen sin que una tape a otra.
+  const giros = [[0.05, 0.22, -0.03], [-0.06, -0.18, 0.03], [0.04, 0.16, 0.02], [-0.05, -0.2, -0.02], [0.06, 0.18, 0.03], [-0.04, -0.16, -0.03]];
+  const fondos = [0.1, -0.12, 0.05, -0.08, 0.12, -0.06];
+  const tarjetas = FICHAS.map((nombre, i) => {
     const pieza = new T.Group();
     pieza.add(new T.Mesh(cuerpo, [tapa, canto]));
-    pieza.add(new T.Mesh(d.toma < 0 ? guardar(frente(0)) : frente(d.toma), d.toma < 0 ? degradado : conFoto));
-    if (d.neon) {
+    let fuente = 0;
+    if (nombre === '') {
+      pieza.add(new T.Mesh(frente(0, 1, 0, 1), degradado));
+    } else {
+      const im = fotos[i];
+      const tex = guardar(new T.Texture(im));
+      tex.colorSpace = T.SRGBColorSpace;
+      tex.anisotropy = anisotropia;
+      tex.needsUpdate = true;
+      const a = im.naturalWidth / im.naturalHeight;
+      const corte = a > PROPORCION ? PROPORCION / a : 1;
+      const alto = a > PROPORCION ? 1 : a / PROPORCION;
+      fuente = im.naturalWidth * corte;
+      pieza.add(new T.Mesh(frente((1 - corte) / 2, (1 + corte) / 2, (1 - alto) / 2, (1 + alto) / 2), guardar(new T.MeshBasicMaterial({ map: tex }))));
+    }
+    if (i === NEON) {
       pieza.add(new T.Mesh(marco, neon));
       const h = new T.Mesh(haloGeo, haloMat);
       h.position.z = -0.2;
       pieza.add(h);
     }
-    pieza.position.set(d.p[0], d.p[1], d.p[2]);
-    pieza.rotation.set(d.r[0], d.r[1], d.r[2]);
-    grupo.add(pieza);
-    return { pieza, base: d, fase: i * 1.7 };
+    escena.add(pieza);
+    return { pieza, giro: giros[i], fondo: fondos[i], fase: i * 1.7, fuente, neon: i === NEON, x: 0, y: 0, escala: 1 };
   });
 
-  let ancho = 0, alto = 0;
+  let ancho = 1, alto = 1, porPx = 0.01;
   let filtro = '';
+  const esquina = new T.Vector3();
+  const cajas = () => {
+    const rc = lienzo.getBoundingClientRect();
+    return tarjetas.map((c) => {
+      const m = c.neon ? MARCO : 0;
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+        esquina.set(sx * (ANCHO / 2 + m), sy * (ALTO / 2 + m), BISEL).applyMatrix4(c.pieza.matrixWorld).project(camara);
+        const px = rc.left + (esquina.x + 1) / 2 * rc.width;
+        const py = rc.top + (1 - esquina.y) / 2 * rc.height;
+        x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+      }
+      // Ancho en pantalla a lo largo del eje de la tarjeta: de su borde izquierdo al derecho.
+      const izq = esquina.set(-ANCHO / 2, 0, BISEL).applyMatrix4(c.pieza.matrixWorld).project(camara).clone();
+      const der = esquina.set(ANCHO / 2, 0, BISEL).applyMatrix4(c.pieza.matrixWorld).project(camara);
+      const ancho = Math.hypot((der.x - izq.x) / 2 * rc.width, (der.y - izq.y) / 2 * rc.height);
+      return { x: x0, y: y0, w: x1 - x0, h: y1 - y0, fuente: c.fuente, ancho };
+    });
+  };
+  // Cajas en pantalla de cada tarjeta y resolución de su imagen, para medir el acomodo.
+  lienzo.collageCajas = () => ({ cajas: cajas(), escala: lienzo.width / (lienzo.clientWidth || 1), filtro: lienzo.style.filter });
   return {
     lienzo,
     tamano() {
-      const caja = tablero.nodo;
-      ancho = caja.clientWidth || 1;
-      alto = caja.clientHeight || 1;
-      render.setPixelRatio(Math.min(ventana.devicePixelRatio || 1, 1.5));
+      const a = tablero.acomodo;
+      if (!a) return;
+      ancho = a.W;
+      alto = a.H;
+      // Resolución del lienzo: la densidad real de la pantalla, con un tope de píxeles.
+      const densidad = Math.min(ventana.devicePixelRatio || 1, 3, Math.sqrt(3.2e6 / (ancho * alto)));
+      render.setPixelRatio(densidad);
       render.setSize(ancho, alto, false);
       camara.aspect = ancho / alto;
       camara.updateProjectionMatrix();
-      // En vertical las tarjetas se juntan en x y se abren en y.
-      const fx = sujetar(camara.aspect / 1.7, 0.42, 1);
-      tarjetas.forEach((c) => { c.fx = fx; c.fy = 1 / Math.sqrt(fx); });
+      // Unidades del mundo por píxel en el plano de las tarjetas, a la distancia de reposo.
+      porPx = 2 * DISTANCIA * Math.tan((CAMPO / 2) * Math.PI / 180) / alto;
+      tarjetas.forEach((c, i) => {
+        const l = a.lugares[i];
+        c.x = (l.x - ancho / 2) * porPx;
+        c.y = -(l.y - alto / 2) * porPx;
+        c.escala = a.ancho * porPx / ANCHO;
+        c.vaiven = a.hueco * 0.18 * porPx;
+      });
     },
     dibujar(t, p) {
-      // p va de 0 (la sección asoma) a 1 (ya pasó): la cámara se acerca y baja con el scroll.
+      // p va de 0 (la sección asoma) a 1 (ya pasó). La cámara llega desde lejos y luego se
+      // queda a su distancia de reposo, con un vaivén leve que mueve a todas por igual.
       const llegada = salidaCubica(tramo(p, 0.05, 0.42));
-      camara.position.set(Math.sin(t * 0.17) * 0.25, mezcla(0.9, -0.5, p), mezcla(13, camara.aspect > 1.2 ? 6.3 : 7.4, llegada) - p * 0.6);
-      camara.lookAt(0, mezcla(0.4, -0.2, p), 0);
+      const cy = (0.5 - p) * alto * 0.03 * porPx;
+      camara.position.set(Math.sin(t * 0.17) * 6 * porPx, cy, DISTANCIA + (1 - llegada) * 7);
+      camara.lookAt(Math.sin(t * 0.17) * 6 * porPx, cy, 0);
       borde.position.set(Math.cos(t * 0.5) * 3, Math.sin(t * 0.4) * 2, 2.5);
       degradado.uniforms.t.value = t;
       for (const c of tarjetas) {
-        const b = c.base;
-        c.pieza.position.set(b.p[0] * c.fx, b.p[1] * c.fy + Math.sin(t * 0.6 + c.fase) * 0.07, b.p[2] - (1 - llegada) * 3);
-        c.pieza.rotation.set(b.r[0] + Math.sin(t * 0.4 + c.fase) * 0.05, b.r[1] + Math.sin(t * 0.3 + c.fase) * 0.12, b.r[2]);
+        const g = c.giro;
+        c.pieza.position.set(c.x, c.y + Math.sin(t * 0.6 + c.fase) * c.vaiven, c.fondo * c.escala);
+        c.pieza.rotation.set(g[0] + Math.sin(t * 0.4 + c.fase) * 0.04, g[1] + Math.sin(t * 0.3 + c.fase) * 0.08, g[2]);
+        c.pieza.scale.setScalar(c.escala);
       }
-      // Profundidad de campo en la llegada: el lienzo entra fuera de foco y se enfoca.
+      // Profundidad de campo solo en la llegada: en reposo el lienzo no lleva desenfoque.
       const d = (1 - llegada) * 9;
       const f = d > 0.3 ? 'blur(' + d.toFixed(1) + 'px)' : '';
       if (f !== filtro) { filtro = f; lienzo.style.filter = f; }
@@ -685,6 +764,7 @@ async function iniciarTablero(tablero, doc, ventana, sigueVivo) {
       for (const x of liberables) x.dispose();
       render.dispose();
       render.forceContextLoss();
+      delete lienzo.collageCajas;
       lienzo.remove();
     },
   };
