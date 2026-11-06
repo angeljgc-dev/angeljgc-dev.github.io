@@ -278,6 +278,14 @@ html[data-estilo="teclado"] .canal-tipo { font-weight: 700; font-size: 0.8125rem
 html[data-estilo="teclado"] .canal-dato { font-size: 1.125rem; line-height: 1.35; overflow-wrap: anywhere; }
 html[data-estilo="teclado"] .pie { padding-block: 28px 44px; background: rgba(11, 15, 26, 0.94); border-top: 1px solid var(--linea); color: var(--texto-2); }
 
+/* En teléfono el teclado no tiene un costado libre como en escritorio: cada sección abre con un
+   claro donde se ve completo cuando llega a su pose, y la presentación tiene el suyo bajo el
+   retrato. */
+@media (max-width: 719px) {
+  html[data-estilo="teclado"] .retrato { margin-bottom: calc(60px + 66vw); }
+  html[data-estilo="teclado"] .zona:not([data-seccion="habilidades"]) { padding-top: calc(72px + 72vw); }
+}
+
 /* ---------- el panel de la tecla elegida ---------- */
 html[data-estilo="teclado"] .tk-panel {
   position: fixed; z-index: 40; left: 12px; right: 12px; bottom: 12px; max-height: 56vh; max-height: 56svh; overflow: auto;

@@ -311,7 +311,9 @@ export async function crearEscena({ lienzo, teclas, columnas, filas, base, senal
   const renderer = new THREE.WebGLRenderer({ canvas: lienzo, antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setClearColor(0x000000, 0);
   renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  // En teléfono el teclado se ve más chico y sobre placas: va un poco más expuesto.
+  const enTelefono = telefono();
+  renderer.toneMappingExposure = enTelefono ? 1.22 : 1.05;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   // Los sombreadores ya se probaron; revisarlos en cada compilación solo cuesta tiempo.
   renderer.debug.checkShaderErrors = false;
@@ -326,7 +328,7 @@ export async function crearEscena({ lienzo, teclas, columnas, filas, base, senal
   const clave = new THREE.DirectionalLight('#fff0da', 2.4);
   clave.position.set(-6, 9, 9);
   escena.add(clave);
-  const contorno = new THREE.DirectionalLight('#7fdadd', 1.4);
+  const contorno = new THREE.DirectionalLight('#7fdadd', telefono() ? 2.2 : 1.4);
   contorno.position.set(8, 4, -7);
   escena.add(contorno);
 
@@ -335,7 +337,7 @@ export async function crearEscena({ lienzo, teclas, columnas, filas, base, senal
 
   texAo.colorSpace = THREE.NoColorSpace;
   texAo.flipY = false;
-  const matBase = new THREE.MeshStandardMaterial({ color: '#2a3144', roughness: 0.34, metalness: 0.25, aoMap: texAo, aoMapIntensity: 0.92, envMapIntensity: 0.9 });
+  const matBase = new THREE.MeshStandardMaterial({ color: enTelefono ? '#3a4560' : '#2a3144', roughness: 0.34, metalness: 0.25, aoMap: texAo, aoMapIntensity: 0.92, envMapIntensity: 0.9 });
   const chasis = new THREE.Mesh(mallas.base, matBase);
   const estirar = new THREE.Vector3((COLUMNAS + 0.6) / (MODELO_COLUMNAS + 0.6), 1, (FILAS + 0.6) / (MODELO_FILAS + 0.6));
   chasis.scale.copy(estirar);
@@ -353,7 +355,7 @@ export async function crearEscena({ lienzo, teclas, columnas, filas, base, senal
   const texCharco = hacerHalo();
   const geoCharco = new THREE.PlaneGeometry(1, 1);
   geoCharco.rotateX(-Math.PI / 2);
-  const matCharco = new THREE.MeshBasicMaterial({ map: texCharco, color: '#3a3346', transparent: true, opacity: 0.75, depthWrite: false });
+  const matCharco = new THREE.MeshBasicMaterial({ map: texCharco, color: enTelefono ? '#5a4f6e' : '#3a3346', transparent: true, opacity: 0.75, depthWrite: false });
   const charco = new THREE.Mesh(geoCharco, matCharco);
   charco.scale.set((MODELO_COLUMNAS + 7) * estirar.x, 1, (MODELO_FILAS + 7) * estirar.z);
   charco.position.y = -0.51;
@@ -573,6 +575,8 @@ export async function crearEscena({ lienzo, teclas, columnas, filas, base, senal
     const guardado = { p: grupo.position.clone(), q: grupo.quaternion.clone(), s: grupo.scale.clone() };
     aplicar({ ...hasta, giro: 0 });
     grupo.updateMatrixWorld();
+    // Antes del primer cuadro la cámara no tiene su matriz: sin esto la proyección sale corrida.
+    camara.updateMatrixWorld();
     let tope = Infinity;
     estado.forEach((e) => {
       for (const [a, , b] of esquinas) tope = Math.min(tope, proyectar(e.x + a * e.ancho, ALTO_TECLA, e.z + b).y);
@@ -670,7 +674,7 @@ export async function crearEscena({ lienzo, teclas, columnas, filas, base, senal
         actual.giro = 0;
         aplicar(actual);
         transicion = null;
-        deriva = { t0: t, dur: poseNombre === 'contacto' ? 4.5 : 2.4 };
+        deriva = { t0: t, dur: poseNombre === 'contacto' || enTelefono ? 4.5 : 2.4 };
         llegada = true;
       }
       sigue = true;
@@ -789,6 +793,7 @@ export async function crearEscena({ lienzo, teclas, columnas, filas, base, senal
     },
     tecla(x, y, tacto) {
       grupo.updateMatrixWorld();
+      camara.updateMatrixWorld();
       ndc.set((x / ancho) * 2 - 1, -(y / alto) * 2 + 1);
       rayo.setFromCamera(ndc, camara);
       const golpe = rayo.intersectObject(tapas, false)[0];
@@ -807,6 +812,7 @@ export async function crearEscena({ lienzo, teclas, columnas, filas, base, senal
     // Cajas de las caras superiores en pantalla, en reposo, y si el teclado mira de frente.
     cajas() {
       grupo.updateMatrixWorld();
+      camara.updateMatrixWorld();
       v3.set(0, 1, 0).applyQuaternion(grupo.quaternion);
       const deFrente = v3.z > 0.35;
       return {

@@ -231,7 +231,20 @@ function montar(ctx) {
     // de armarlas: todo se mide y se prepara mientras la parvada gira.
     var base = 0;
     var avisos = [];
-    function despues(seg, fn) { avisos.push([seg, fn]); }
+    // Ritmo del arranque. Las pistas se escriben con los tiempos de la coreografía base (1.9 s
+    // desde el estallido) y aquí se reparten para que se lea que son cursores: el estallido y
+    // el arrastre de cada recuadro se alargan más que el llenado y la salida. Es una curva
+    // creciente, así que el orden de todo se conserva. Pedido de Ángel: más pausado.
+    var NUDOS = [[0, 0], [0.26, 0.55], [0.5, 1.45], [0.9, 2.15], [1.26, 2.7], [1.9, 3.35]];
+    function ritmo(t) {
+      for (var i = 1; i < NUDOS.length; i++) {
+        var a = NUDOS[i - 1], b = NUDOS[i];
+        if (t <= b[0]) return a[1] + (t - a[0]) * (b[1] - a[1]) / (b[0] - a[0]);
+      }
+      var ultimo = NUDOS[NUDOS.length - 1];
+      return ultimo[1] + (t - ultimo[0]);
+    }
+    function despues(seg, fn) { avisos.push([ritmo(seg), fn]); }
     function programarAvisos() {
       avisos.forEach(function (a) { relojes.push(setTimeout(a[1], (base + a[0]) * 1000)); });
       avisos = [];
@@ -242,7 +255,9 @@ function montar(ctx) {
       return p;
     }
     // Mantiene el valor actual hasta t y de ahí lo lleva a "valores" en d segundos.
-    function tramo(p, t, d, valores, curva) {
+    function tramo(p, t0, d0, valores, curva) {
+      var t = ritmo(t0);
+      var d = ritmo(t0 + d0) - t;
       var ultimo = p.marcos[p.marcos.length - 1].t;
       if (t < ultimo) t = ultimo;
       p.marcos.push({ t: t, v: Object.assign({}, p.v), curva: curva || 'linear' });
@@ -530,7 +545,7 @@ function montar(ctx) {
       // los cursores. Las fuentes van incrustadas, así que las medidas ya son las definitivas.
       window.requestAnimationFrame(function () {
         if (arranqueCerrado) return;
-        var listo = performance.now() + 400;
+        var listo = performance.now() + 1000;
         try {
           armarArranque();
         } catch (e) {
@@ -677,7 +692,9 @@ function montar(ctx) {
       }
       // Ninguna sección pasa de 1.35 s de animación, aunque tenga muchas tarjetas: deja margen
       // para que llegue a su estado final antes de 1.5 s también en un equipo lento.
-      if (tl.duration() > 1.35) tl.timeScale(tl.duration() / 1.35);
+      // Cada sección dura 2.5 s, pausada en proporción al arranque para que se lea que son
+      // cursores (pedido de Ángel). Sea cual sea su número de piezas, termina a tiempo.
+      tl.timeScale(tl.duration() / 2.5);
     }
 
     // Si algo falla o el motor no llega, la sección queda en su estado final.

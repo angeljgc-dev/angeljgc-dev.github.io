@@ -45,12 +45,12 @@ const POSES = {
     contacto: { x: 0.2, y: -0.5, rx: 50, ry: 24, rz: 8, s: 0.8, giro: -1, dur: 0.46 },
   },
   telefono: {
-    presentacion: { x: 0.5, y: 0.64, z: -2, rx: 72, rz: -8, s: 0.44 },
-    proyectos: { x: 0, y: 0.02, rx: 44, ry: -26, s: 0.88, giro: -1, dur: 0.56 },
-    experiencia: { x: 0.68, y: -0.6, rx: 18, ry: -60, s: 0.8 },
-    investigacion: { x: -0.6, y: -0.58, z: -1, rx: 62, ry: 26, rz: -10, s: 0.72 },
+    presentacion: { x: 0, arriba: 236, z: 1, rx: 58, ry: -22, rz: -4, s: 0.8 },
+    proyectos: { x: 0, y: 0.02, z: 1, rx: 46, ry: 24, s: 0.82, giro: -1, dur: 0.56 },
+    experiencia: { x: 0, y: 0.03, z: 1, rx: 22, ry: -48, rz: 4, s: 0.84, giro: 1, dur: 0.6 },
+    investigacion: { x: 0, y: 0.02, z: 1, rx: 64, ry: 30, rz: -8, s: 0.86, giro: -1, dur: 0.56 },
     habilidades: { x: 0, arriba: 60, z: 1, rx: 66, ry: 90, leyenda: -90, s: 1.3, giro: 1, dur: 0.78 },
-    contacto: { x: 0.08, y: -0.48, rx: 50, ry: 24, rz: 8, s: 0.84, giro: -1, dur: 0.46 },
+    contacto: { x: 0, y: 0.02, z: 1, rx: 50, ry: -26, rz: 6, s: 0.82, giro: -1, dur: 0.5 },
   },
 };
 // De 1024 a 1279 px el contenido deja menos lugar a la derecha: el teclado de habilidades se

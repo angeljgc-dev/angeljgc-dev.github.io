@@ -265,8 +265,8 @@ html[data-estilo="cursores"] .palabra-en-obra {
 html[data-estilo="cursores"] .tecleando .letra { opacity: 0; }
 html[data-estilo="cursores"] .tecleando .letra.vista { opacity: 1; }
 html[data-estilo="cursores"] .inicial { position: absolute; transform: translate(-50%, -50%); font: 400 9rem/1 var(--display); color: rgba(255, 255, 255, 0.08); }
-html[data-estilo="cursores"] .parvada { position: absolute; width: 0; height: 0; animation: cursores-orbita 1.15s linear infinite; }
-html[data-estilo="cursores"] .parvada-1 { animation-delay: -0.575s; }
+html[data-estilo="cursores"] .parvada { position: absolute; width: 0; height: 0; animation: cursores-orbita 1.7s linear infinite; }
+html[data-estilo="cursores"] .parvada-1 { animation-delay: -0.85s; }
 @keyframes cursores-orbita { to { transform: rotate(360deg); } }
 html[data-estilo="cursores"] .parvada .g { animation: cursores-aleteo 0.42s ease-in-out infinite alternate; }
 @keyframes cursores-aleteo { to { translate: 2px -3px; } }

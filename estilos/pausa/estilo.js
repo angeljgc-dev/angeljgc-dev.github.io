@@ -8,6 +8,30 @@ const memoria = { destino: null };
 
 const RECURSOS = new URL('./recursos/', import.meta.url).href;
 
+// Los retratos de Ángel: cada uno en dos anchos, su proporción y, si está recortado del fondo,
+// su silueta (para el contorno, la sombra dura, los ecos y la trama).
+const ARCHIVOS = {
+  'retrato-frente': { anchos: [420, 760], proporcion: '760 / 716', silueta: 'retrato-frente-silueta.webp' },
+  'retrato-perfil': { anchos: [420, 760], proporcion: '760 / 926', silueta: 'retrato-perfil-silueta.webp' },
+  'retrato-de-pie': { anchos: [420, 760], proporcion: '760 / 743', silueta: 'retrato-de-pie-silueta.webp' },
+  'retrato-recargado': { anchos: [420, 760], proporcion: '760 / 1221', silueta: 'retrato-recargado-silueta.webp' },
+  'angel-duo': { anchos: [440, 820], proporcion: '820 / 890', silueta: 'angel-silueta-fundida.webp' },
+  'mirada-lentes': { anchos: [420, 720], proporcion: '720 / 447' },
+  'mirada-camara': { anchos: [420, 720], proporcion: '720 / 447' },
+};
+// Qué retrato tiene cada pantalla, como el personaje que cambia de pose en cada menú de un juego:
+// foto (recortada, al frente), fantasma (su silueta en trama, detrás) y marco (una mirada de
+// cerca en una tarjeta inclinada).
+const RETRATOS = {
+  menu: { foto: 'retrato-frente', fantasma: 'retrato-de-pie' },
+  proyectos: { foto: 'retrato-perfil' },
+  experiencia: { foto: 'retrato-de-pie' },
+  investigacion: { fantasma: 'retrato-recargado', marco: 'mirada-lentes' },
+  habilidades: { foto: 'retrato-recargado', fantasma: 'retrato-perfil' },
+  contacto: { foto: 'angel-duo', marco: 'mirada-camara' },
+};
+const ORDEN_RETRATOS = ['retrato-perfil', 'retrato-de-pie', 'retrato-recargado', 'angel-duo'];
+
 export default {
   id: 'pausa',
   nombre: 'Pausa',
@@ -93,6 +117,7 @@ function montarPausa(ctx) {
   crear('div', 'pausa-reticula', capa);
   crear('div', 'pausa-campos', capa);
   const lienzo = crear('canvas', 'pausa-ambiente', capa);
+  const fantasma = crear('div', 'pausa-fantasma', capa);
   const figura = crear('div', 'pausa-figura', capa);
   crear('i', 'pausa-eco pausa-eco-1', figura);
   crear('i', 'pausa-eco pausa-eco-2', figura);
@@ -101,12 +126,83 @@ function montarPausa(ctx) {
   const foto = crear('img', '', figura);
   foto.alt = '';
   foto.decoding = 'async';
-  foto.width = 820;
-  foto.height = 890;
-  foto.src = RECURSOS + 'angel-duo-820.webp';
-  foto.srcset = RECURSOS + 'angel-duo-440.webp 440w, ' + RECURSOS + 'angel-duo-820.webp 820w';
-  foto.sizes = '(min-width: 1024px) 70vh, 100vw';
   crear('i', 'pausa-pulso', figura);
+  const marco = crear('div', 'pausa-marco', capa);
+  const fotoMarco = crear('img', '', marco);
+  fotoMarco.alt = '';
+  fotoMarco.decoding = 'async';
+
+  // ---------- retratos: se piden cuando se van a necesitar, uno adelantado ----------
+  const grande = vent.innerWidth >= 600 || (vent.devicePixelRatio || 1) >= 2;
+  const fuenteDe = (n) => RECURSOS + n + '-' + ARCHIVOS[n].anchos[grande ? 1 : 0] + '.webp';
+  const siluetaDe = (n) => (ARCHIVOS[n].silueta ? RECURSOS + ARCHIVOS[n].silueta : '');
+  const pedidas = new Set();
+  function pedir(n) {
+    if (!n || pedidas.has(n)) return;
+    pedidas.add(n);
+    for (const u of [fuenteDe(n), siluetaDe(n)]) {
+      if (!u) continue;
+      const im = new Image();
+      im.decoding = 'async';
+      im.src = u;
+    }
+  }
+  function retratoDe(destino) {
+    if (RETRATOS[destino]) return RETRATOS[destino];
+    // Una sección sin retrato asignado toma uno de la lista, siempre el mismo para ella.
+    const i = Math.max(0, pantallas.findIndex((p) => p.id === destino));
+    return { foto: ORDEN_RETRATOS[i % ORDEN_RETRATOS.length] };
+  }
+  function pedirPantalla(destino) {
+    const r = retratoDe(destino);
+    pedir(r.foto); pedir(r.fantasma); pedir(r.marco);
+  }
+  function capaRetrato(el, img, n) {
+    el.dataset.foto = n || '';
+    if (!n) return;
+    pedir(n);
+    el.style.setProperty('--p-proporcion', ARCHIVOS[n].proporcion);
+    if (ARCHIVOS[n].silueta) el.style.setProperty('--p-sil', 'url("' + siluetaDe(n) + '")');
+    if (img && img.getAttribute('src') !== fuenteDe(n)) img.src = fuenteDe(n);
+  }
+  // La foto que se va se rompe en dos por la diagonal; la nueva entra por un corte y se asienta.
+  function romperRetrato() {
+    if (!figura.dataset.foto) return;
+    const cs = getComputedStyle(figura);
+    const base = 'left:' + figura.offsetLeft + 'px;top:' + figura.offsetTop + 'px;width:' + figura.offsetWidth + 'px;height:' + figura.offsetHeight + 'px;transform:' + cs.transform + ';rotate:' + cs.rotate + ';';
+    [['polygon(0 0, 100% 0, 100% 36%, 0 64%)', '-7% -5%'], ['polygon(0 64%, 100% 36%, 100% 100%, 0 100%)', '7% 6%']].forEach(([corte, rumbo]) => {
+      const pedazo = figura.cloneNode(true);
+      pedazo.className = 'pausa-figura pausa-roto';
+      pedazo.setAttribute('style', (figura.getAttribute('style') || '') + base + 'clip-path:' + corte);
+      capa.appendChild(pedazo);
+      const a = animar(pedazo, [{ translate: '0 0', opacity: 1 }, { translate: rumbo, opacity: 0 }], { duration: 210, easing: 'cubic-bezier(.5,0,.9,.5)', fill: 'forwards' });
+      const fuera = () => pedazo.remove();
+      a.finished.then(fuera, fuera);
+    });
+  }
+  function entradaRetrato(r) {
+    if (r.foto) {
+      animar(figura, [{ clipPath: 'polygon(30% 0, 30% 0, 0 100%, 0 100%)', translate: '9% 0' }, { clipPath: 'polygon(0 0, 140% 0, 110% 100%, -30% 100%)', translate: '-1.5% 0', offset: 0.8 }, { clipPath: 'polygon(0 0, 140% 0, 110% 100%, -30% 100%)', translate: '0 0' }],
+        { duration: 280, delay: 20, easing: 'cubic-bezier(.2,.9,.3,1)', fill: 'backwards' });
+    }
+    if (r.fantasma) animar(fantasma, [{ opacity: 0, scale: '1.08' }, { opacity: 1, scale: '1' }], { duration: 320, delay: 60, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
+    if (r.marco) {
+      animar(marco, [{ opacity: 0, scale: '0.6', translate: '-40px 30px' }, { opacity: 1, scale: '1.05', translate: '4px 0', offset: 0.7 }, { opacity: 1, scale: '1', translate: '0 0' }],
+        { duration: 300, delay: 110, easing: 'cubic-bezier(.2,.9,.3,1)', fill: 'backwards' });
+    }
+  }
+  function ponerRetrato(destino, conMovimiento) {
+    const r = retratoDe(destino);
+    const cambia = (figura.dataset.foto || '') !== (r.foto || '');
+    if (conMovimiento && cambia) romperRetrato();
+    capaRetrato(figura, foto, r.foto);
+    capaRetrato(fantasma, null, r.fantasma);
+    capaRetrato(marco, fotoMarco, r.marco);
+    if (conMovimiento) entradaRetrato(r);
+    // una adelantada: la pantalla siguiente
+    if (destino === 'menu') pedirPantalla(pantallas[elegido].id);
+    else pedirPantalla(pantallas[(pantallas.findIndex((p) => p.id === destino) + 1) % pantallas.length].id);
+  }
 
   // ---------- menú raíz ----------
   const menu = crear('nav', 'pausa-menu');
@@ -196,6 +292,7 @@ function montarPausa(ctx) {
     elegido = (i + enlaces.length) % enlaces.length;
     enlaces.forEach((a, k) => a.toggleAttribute('data-elegido', k === elegido));
     memoria.destino = pantallas[elegido].id;
+    pedirPantalla(memoria.destino);
     if (foco && doc.activeElement !== enlaces[elegido]) {
       enlaces[elegido].focus({ preventScroll: true });
       enlaces[elegido].scrollIntoView({ block: 'nearest' });
@@ -203,9 +300,11 @@ function montarPausa(ctx) {
   }
 
   // Pone una pantalla en su lugar en el mismo cuadro: sin desvanecido, sin deslizamiento.
-  function aplicar(destino) {
+  function aplicar(destino, conMovimiento = false) {
     if (desmontado) return;
+    ponerRetrato(destino, conMovimiento && actual !== null);
     actual = destino;
+    desplazado = 0;
     const activa = seccionDe(destino);
     secciones.forEach((s) => {
       s.classList.toggle('pausa-activa', s === activa);
@@ -263,8 +362,6 @@ function montarPausa(ctx) {
         animar(a.parentNode, [{ translate: '-48px 0', opacity: 0 }, { translate: '0 0', opacity: 1 }],
           { duration: 160, delay: retraso + i * pasoMenu, easing: 'cubic-bezier(.2,.9,.25,1)', fill: 'backwards' });
       });
-      animar(figura, [{ clipPath: 'polygon(0 0, 0 0, -30% 100%, -30% 100%)' }, { clipPath: 'polygon(0 0, 130% 0, 100% 100%, -30% 100%)' }],
-        { duration: 220, delay: retraso, easing: 'cubic-bezier(.6,0,.2,1)', fill: 'backwards' });
     }
     const { titulos, filas } = renglones(seccionDe(destino));
     titulos.forEach((t, i) => {
@@ -285,7 +382,7 @@ function montarPausa(ctx) {
 
   // Corte en diagonal: el cambio ocurre en un cuadro y un tajo de dos campos dura unos tres cuadros.
   function corteDiagonal(destino, foco) {
-    aplicar(destino);
+    aplicar(destino, true);
     if (foco) enfocar(destino);
     const tajo = crear('div', 'pausa-tajo', doc.body);
     tajo.setAttribute('aria-hidden', 'true');
@@ -303,6 +400,10 @@ function montarPausa(ctx) {
     const pista = crear('div', 'pausa-barrido-pista', barrido);
     crear('i', 'pausa-barrido-luz', pista);
     crear('i', 'pausa-barrido-sombra', pista);
+    const quien = retratoDe(destino).foto || 'retrato-frente';
+    const viajero = crear('img', 'pausa-barrido-foto', pista);
+    viajero.alt = '';
+    viajero.src = fuenteDe(quien);
     const vw = vent.innerWidth;
     const vh = vent.innerHeight;
     const ancho = pista.getBoundingClientRect().width;
@@ -314,7 +415,7 @@ function montarPausa(ctx) {
     const poner = () => {
       if (aplicado || desmontado) return;
       aplicado = true;
-      aplicar(destino);
+      aplicar(destino, true);
       if (foco) enfocar(destino);
     };
     const quitar = () => barrido.remove();
@@ -418,17 +519,27 @@ function montarPausa(ctx) {
   escuchar(doc, 'keydown', alTeclado);
 
   // Todo enlace interno (el menú, la cabecera, las páginas, saltar al contenido) abre su pantalla.
+  function abrirEnlace(a) {
+    const destino = destinoDeHash(a.getAttribute('href'));
+    if (destino === undefined) return false;
+    const entreHermanas = paginas.contains(a) && actual !== 'menu';
+    irA(destino, { como: entreHermanas ? 'diagonal' : 'auto', historia: entreHermanas ? 'reemplazar' : 'push' });
+    return true;
+  }
+  // Un toque en los controles propios responde al levantar el dedo: el navegador a veces se
+  // traga el clic de un toque que llega justo después de deslizar. El clic que llegue después
+  // de ese toque se ignora, aunque caiga en otro control (la pantalla ya cambió debajo del dedo).
+  const CONTROLES = '.pausa-regresar, .pausa-paginas a, .pausa-menu a';
+  let yaTocado = { hasta: 0 };
+  const repetido = (e) => !!(e.target.closest && e.target.closest(CONTROLES)) && e.timeStamp < yaTocado.hasta;
   escuchar(doc, 'click', (e) => {
     if (modo !== 'pantallas' || e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const a = e.target.closest && e.target.closest('a[href^="#"]');
     if (!a) return;
-    const destino = destinoDeHash(a.getAttribute('href'));
-    if (destino === undefined) return;
-    e.preventDefault();
-    const entreHermanas = paginas.contains(a) && actual !== 'menu';
-    irA(destino, { como: entreHermanas ? 'diagonal' : 'auto', historia: entreHermanas ? 'reemplazar' : 'push' });
+    if (repetido(e)) { e.preventDefault(); return; }
+    if (abrirEnlace(a)) e.preventDefault();
   });
-  escuchar(regresar, 'click', volver);
+  escuchar(regresar, 'click', (e) => { if (!repetido(e)) volver(); });
   escuchar(vent, 'popstate', () => {
     retrocediendo = false;
     const d = destinoDeHash(vent.location.hash);
@@ -454,15 +565,23 @@ function montarPausa(ctx) {
   // En el teléfono: deslizar a los lados cambia de pantalla.
   let toque = null;
   escuchar(doc, 'pointerdown', (e) => {
-    toque = e.pointerType === 'touch' && modo === 'pantallas' && actual !== 'menu' ? { x: e.clientX, y: e.clientY, t: e.timeStamp } : null;
+    const control = e.target.closest && e.target.closest(CONTROLES);
+    toque = e.pointerType === 'touch' && modo === 'pantallas' ? { x: e.clientX, y: e.clientY, t: e.timeStamp, control } : null;
   }, { passive: true });
   escuchar(doc, 'pointerup', (e) => {
     if (!toque) return;
     const dx = e.clientX - toque.x;
     const dy = e.clientY - toque.y;
     const rapido = e.timeStamp - toque.t < 800;
+    const { control } = toque;
     toque = null;
-    if (rapido && Math.abs(dx) > 64 && Math.abs(dx) > 1.8 * Math.abs(dy)) {
+    if (control && Math.hypot(dx, dy) < 12 && rapido) {
+      yaTocado = { hasta: e.timeStamp + 700 };
+      if (control === regresar) volver();
+      else abrirEnlace(control);
+      return;
+    }
+    if (actual !== 'menu' && rapido && Math.abs(dx) > 64 && Math.abs(dx) > 1.8 * Math.abs(dy)) {
       irA(vecina(dx < 0 ? 1 : -1), { como: 'diagonal', historia: 'reemplazar', foco: false });
     }
   }, { passive: true });
@@ -510,8 +629,30 @@ function montarPausa(ctx) {
   }
   let antes = 0;
   let proximaRaya = 0;
+  // Paralaje: cada capa sigue al ratón y al desplazamiento a su propio ritmo.
+  let desplazado = 0;
+  const meta = { x: 0, y: 0 };
+  const va = { x: 0, y: 0, s: 0 };
+  escuchar(doc, 'pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    meta.x = e.clientX / vent.innerWidth * 2 - 1;
+    meta.y = e.clientY / vent.innerHeight * 2 - 1;
+  }, { passive: true });
+  escuchar(doc, 'scroll', (e) => {
+    const t = e.target;
+    desplazado = t === doc || t === doc.documentElement ? vent.scrollY : (t.classList && t.classList.contains('pausa-activa') ? t.scrollTop : desplazado);
+  }, { passive: true, capture: true });
+  function paralaje() {
+    va.x += (meta.x - va.x) * 0.08;
+    va.y += (meta.y - va.y) * 0.08;
+    va.s += (desplazado - va.s) * 0.2;
+    capa.style.setProperty('--p-px', va.x.toFixed(3));
+    capa.style.setProperty('--p-py', va.y.toFixed(3));
+    capa.style.setProperty('--p-sy', va.s.toFixed(1));
+  }
   function cuadro(t) {
     raf = vent.requestAnimationFrame(cuadro);
+    paralaje();
     const dt = Math.min(64, antes ? t - antes : 16);
     antes = t;
     const w = vent.innerWidth;
@@ -586,6 +727,7 @@ function montarPausa(ctx) {
     todo.textContent = 'Ver todo';
     actual = null;
     aplicar(destino);
+    if (conEntrada) entradaRetrato(retratoDe(destino));
     if (conEntrada) {
       const lento = ctx.primeraVez !== false && !ctx.cambio;
       const tajo = crear('div', 'pausa-tajo', doc.body);
@@ -628,7 +770,7 @@ function montarPausa(ctx) {
     relojes.clear();
     pararAmbiente();
     limpiezas.forEach((f) => f());
-    doc.querySelectorAll('.pausa-tajo, .pausa-barrido').forEach((n) => n.remove());
+    doc.querySelectorAll('.pausa-tajo, .pausa-barrido, .pausa-roto').forEach((n) => n.remove());
     nodos.forEach((n) => n.remove());
     delete html.dataset.pausaPantalla;
     originales.forEach(({ el, atributo, valor }) => {

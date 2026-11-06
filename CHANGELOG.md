@@ -1,5 +1,15 @@
 # Cambios
 
+## 1.1.0 · noviembre de 2026
+
+- Cursores: la construcción va más pausada para que se aprecie; se sigue saltando con clic, tecla o scroll.
+- Pausa: un retrato distinto por pantalla, con silueta en trama, sombra dura y transición que rompe la foto.
+- Descenso: tiburón, mantarraya, pez espada y un rape con su señuelo encendido en lo profundo.
+- Teclado: se ve grande en el teléfono y cada tecla solo señala proyectos que de verdad usan esa habilidad.
+- Gafete: el cordón ya no se despega de la credencial al estirarla; menú opaco.
+- Escenario: las tarjetas de habilidades ya no se enciman al desplazarse.
+- Collage: el muro ya no muestra cifras de demostración.
+
 ## 1.0.0 · noviembre de 2026
 
 - Primera versión pública.

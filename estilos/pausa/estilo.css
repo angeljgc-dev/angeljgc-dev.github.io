@@ -360,14 +360,24 @@ html[data-estilo="pausa"] .pausa-reticula {
 html[data-estilo="pausa"] .pausa-campos { position: absolute; inset: 0; }
 html[data-estilo="pausa"] .pausa-ambiente { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-html[data-estilo="pausa"] .pausa-figura { position: absolute; left: 0; top: 0; height: 52vh; aspect-ratio: 820 / 890; }
+/* Las capas del retrato. Cada una sigue al ratón y al desplazamiento a su propio ritmo
+   (paralaje): la trama de atrás se mueve más, la foto menos. El módulo pone --p-px, --p-py y
+   --p-sy en la capa, y --p-proporcion y --p-sil (la silueta) en cada retrato. */
+html[data-estilo="pausa"] .pausa-figura,
+html[data-estilo="pausa"] .pausa-fantasma,
+html[data-estilo="pausa"] .pausa-marco { position: absolute; left: 0; top: 0; }
+html[data-estilo="pausa"] .pausa-figura { height: 52vh; aspect-ratio: var(--p-proporcion, 820 / 890); translate: calc(var(--p-px, 0) * 10px) calc(var(--p-py, 0) * 6px + var(--p-sy, 0) * -0.06px); }
+html[data-estilo="pausa"] .pausa-figura[data-foto=""],
+html[data-estilo="pausa"] .pausa-fantasma[data-foto=""],
+html[data-estilo="pausa"] .pausa-marco[data-foto=""] { display: none; }
 html[data-estilo="pausa"] .pausa-figura img { position: absolute; inset: 0; width: 100%; height: 100%; }
 html[data-estilo="pausa"] .pausa-figura > i { position: absolute; inset: 0; }
 html[data-estilo="pausa"] .pausa-figura-borde,
 html[data-estilo="pausa"] .pausa-figura-sombra,
-html[data-estilo="pausa"] .pausa-eco {
-  -webkit-mask: url('recursos/angel-silueta-fundida.webp') center / 100% 100% no-repeat;
-  mask: url('recursos/angel-silueta-fundida.webp') center / 100% 100% no-repeat;
+html[data-estilo="pausa"] .pausa-eco,
+html[data-estilo="pausa"] .pausa-fantasma {
+  -webkit-mask: var(--p-sil, url('recursos/angel-silueta-fundida.webp')) center / 100% 100% no-repeat;
+  mask: var(--p-sil, url('recursos/angel-silueta-fundida.webp')) center / 100% 100% no-repeat;
 }
 html[data-estilo="pausa"] .pausa-figura-borde { background: var(--p-acento); }
 html[data-estilo="pausa"] .pausa-figura-sombra { background: var(--p-acento-2); transform: translate(3.2%, 2.4%); }
@@ -378,22 +388,48 @@ html[data-estilo="pausa"] .pausa-pulso {
   animation: pausa-pulso 1.9s cubic-bezier(.2,.7,.3,1) infinite;
 }
 @keyframes pausa-pulso { from { scale: 0.72; opacity: 0.9; } to { scale: 1.3; opacity: 0; } }
+/* El fantasma: otra pose de Ángel en trama de puntos, detrás de la foto principal. */
+html[data-estilo="pausa"] .pausa-fantasma {
+  display: none; height: 60vh; aspect-ratio: var(--p-proporcion, 1);
+  background: radial-gradient(circle, #3a2b62 2.6px, transparent 3.2px) 0 0 / 9px 9px;
+  translate: calc(var(--p-px, 0) * -22px) calc(var(--p-py, 0) * -14px + var(--p-sy, 0) * -0.22px);
+}
+/* El marco: una mirada de cerca en una tarjeta inclinada, con borde lima, doble sombra dura y
+   una trama de puntos encima, como una imagen impresa. */
+html[data-estilo="pausa"] .pausa-marco {
+  display: none; width: 60vw; aspect-ratio: var(--p-proporcion, 720 / 447); rotate: -5deg;
+  border: 4px solid var(--p-acento); background: var(--p-superficie);
+  box-shadow: 12px 12px 0 var(--p-acento-2), 22px 22px 0 var(--p-hondo);
+  translate: calc(var(--p-px, 0) * -8px) calc(var(--p-py, 0) * -6px + var(--p-sy, 0) * -0.12px);
+}
+html[data-estilo="pausa"] .pausa-marco img { display: block; width: 100%; height: 100%; object-fit: cover; }
+html[data-estilo="pausa"] .pausa-marco::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle, rgba(15, 8, 30, 0.5) 1px, transparent 1.7px) 0 0 / 5px 5px;
+}
+html[data-estilo="pausa"] .pausa-campos { translate: calc(var(--p-px, 0) * 4px) 0; }
+html[data-estilo="pausa"] .pausa-roto { z-index: 2; }
 
-/* Un encuadre distinto en cada pantalla, cambiado de golpe: la única foto se vuelve varias. */
-html[data-estilo="pausa"][data-pausa-pantalla="menu"] .pausa-figura { left: 4vw; top: 6px; height: min(40vh, 100vw); }
+/* Una pose distinta en cada pantalla, cambiada con un corte: la foto que se va se rompe en
+   diagonal y la nueva entra por una ranura. Teléfono primero. */
+html[data-estilo="pausa"][data-pausa-pantalla="menu"] .pausa-figura { left: 2vw; top: 10px; height: min(36vh, 92vw); }
+html[data-estilo="pausa"][data-pausa-pantalla="menu"] .pausa-fantasma { display: block; left: auto; right: -16vw; top: 0; height: 44vh; }
 html[data-estilo="pausa"][data-pausa-pantalla="menu"] .pausa-campos { background: linear-gradient(172deg, var(--p-acento) 0 20%, transparent 20%); }
-html[data-estilo="pausa"][data-pausa-pantalla="proyectos"] .pausa-figura { left: auto; right: -10vw; top: 40px; height: 34vh; transform: scaleX(-1); }
-html[data-estilo="pausa"][data-pausa-pantalla="experiencia"] .pausa-figura { left: auto; right: -6vw; top: 48px; height: 30vh; }
+html[data-estilo="pausa"][data-pausa-pantalla="proyectos"] .pausa-figura { left: auto; right: -8vw; top: 40px; height: 36vh; transform: scaleX(-1); }
+html[data-estilo="pausa"][data-pausa-pantalla="experiencia"] .pausa-figura { left: auto; right: -10vw; top: 48px; height: 28vh; }
 html[data-estilo="pausa"][data-pausa-pantalla="experiencia"] .pausa-eco { display: block; }
 html[data-estilo="pausa"][data-pausa-pantalla="experiencia"] .pausa-eco-1 { background: var(--p-acento-2); transform: translate(-46%, 4%) scale(0.84); }
 html[data-estilo="pausa"][data-pausa-pantalla="experiencia"] .pausa-eco-2 { background: var(--p-linea); transform: translate(-84%, 8%) scale(0.7); }
-html[data-estilo="pausa"][data-pausa-pantalla="investigacion"] .pausa-figura { left: auto; right: -34vw; top: 8vh; height: 76vh; }
-html[data-estilo="pausa"][data-pausa-pantalla="investigacion"] .pausa-figura img,
-html[data-estilo="pausa"][data-pausa-pantalla="investigacion"] .pausa-figura-sombra { display: none; }
-html[data-estilo="pausa"][data-pausa-pantalla="investigacion"] .pausa-figura-borde { background: radial-gradient(circle, var(--p-acento) 1.7px, transparent 2.2px) 0 0 / 9px 9px; }
-html[data-estilo="pausa"][data-pausa-pantalla="habilidades"] .pausa-figura { left: auto; right: -78vw; top: -26vh; height: 128vh; rotate: 6deg; }
+/* En el teléfono, las pantallas con tarjeta dejan una franja arriba para que se vea. */
+html[data-estilo="pausa"].pausa-pantallas[data-pausa-pantalla="investigacion"] .pausa-activa,
+html[data-estilo="pausa"].pausa-pantallas[data-pausa-pantalla="contacto"] .pausa-activa { padding-top: calc(84px + 30vw); }
+html[data-estilo="pausa"][data-pausa-pantalla="investigacion"] .pausa-marco { display: block; left: auto; right: 6vw; top: 62px; width: 58vw; }
+html[data-estilo="pausa"][data-pausa-pantalla="investigacion"] .pausa-fantasma { display: block; top: auto; left: -26vw; bottom: -6vh; height: 72vh; }
+html[data-estilo="pausa"][data-pausa-pantalla="habilidades"] .pausa-figura { left: auto; right: -46vw; top: -10vh; height: 120vh; rotate: 6deg; }
+html[data-estilo="pausa"][data-pausa-pantalla="habilidades"] .pausa-fantasma { display: block; left: -30vw; top: 30vh; height: 70vh; transform: scaleX(-1); }
 html[data-estilo="pausa"][data-pausa-pantalla="contacto"] .pausa-figura { left: auto; right: -30vw; top: 4vh; height: 62vh; }
 html[data-estilo="pausa"][data-pausa-pantalla="contacto"] .pausa-pulso { display: block; }
+html[data-estilo="pausa"][data-pausa-pantalla="contacto"] .pausa-marco { display: block; left: 4vw; right: auto; top: 64px; width: 50vw; rotate: 4deg; }
 html[data-estilo="pausa"].pausa-pantallas:not([data-pausa-pantalla="menu"]) .pausa-campos {
   background:
     linear-gradient(98deg, transparent 0 63%, var(--p-acento) 63% 63.6%, transparent 63.6%),
@@ -552,6 +588,8 @@ html[data-estilo="pausa"] .pausa-barrido-pista i {
 }
 html[data-estilo="pausa"] .pausa-barrido-luz { left: 9vw; background: var(--p-acento); }
 html[data-estilo="pausa"] .pausa-barrido-sombra { left: 0; background: var(--p-panel); }
+/* La pose que llega cruza montada en el borde del barrido, con su sombra dura en lima. */
+html[data-estilo="pausa"] .pausa-barrido-foto { position: absolute; right: 6vh; bottom: 0; height: 86%; width: auto; filter: drop-shadow(14px 0 0 var(--p-acento)); }
 
 /* ---------- pantallas en escritorio ---------- */
 @media (min-width: 1024px) {
@@ -560,17 +598,23 @@ html[data-estilo="pausa"] .pausa-barrido-sombra { left: 0; background: var(--p-p
   html[data-estilo="pausa"].pausa-pantallas [data-seccion="proyectos"] .envoltura { max-width: calc(min(1180px, 80vw) + 2 * var(--p-margen)); }
   html[data-estilo="pausa"].pausa-pantallas .pausa-barra { padding: 22px 3vw 14px; }
 
-  html[data-estilo="pausa"][data-pausa-pantalla="menu"] .pausa-figura { left: -5vw; top: auto; bottom: -10vh; height: 112vh; }
+  html[data-estilo="pausa"][data-pausa-pantalla="menu"] .pausa-figura { left: calc(13vw - 62vh); top: auto; bottom: -22vh; height: 118vh; }
+  html[data-estilo="pausa"][data-pausa-pantalla="menu"] .pausa-fantasma { left: auto; right: -8vw; top: auto; bottom: -10vh; height: 110vh; }
   html[data-estilo="pausa"][data-pausa-pantalla="menu"] .pausa-campos {
     background:
       linear-gradient(98deg, transparent 0 18%, var(--p-acento) 18% 31%, transparent 31%),
       linear-gradient(98deg, transparent 0 64%, var(--p-superficie) 64%);
   }
-  html[data-estilo="pausa"][data-pausa-pantalla="proyectos"] .pausa-figura { right: 1vw; top: auto; bottom: -6vh; height: 58vh; }
-  html[data-estilo="pausa"][data-pausa-pantalla="experiencia"] .pausa-figura { right: 2vw; top: auto; bottom: -4vh; height: 80vh; }
-  html[data-estilo="pausa"][data-pausa-pantalla="investigacion"] .pausa-figura { right: -8vw; top: -6vh; height: 118vh; }
-  html[data-estilo="pausa"][data-pausa-pantalla="habilidades"] .pausa-figura { right: -30vw; top: -46vh; height: 190vh; }
+  html[data-estilo="pausa"][data-pausa-pantalla="proyectos"] .pausa-figura { right: 1vw; top: auto; bottom: -6vh; height: 60vh; }
+  html[data-estilo="pausa"][data-pausa-pantalla="experiencia"] .pausa-figura { right: 2vw; top: auto; bottom: -4vh; height: 82vh; }
+  html[data-estilo="pausa"][data-pausa-pantalla="investigacion"] .pausa-marco { right: 4vw; top: 16vh; width: 34vw; }
+  html[data-estilo="pausa"][data-pausa-pantalla="investigacion"] .pausa-fantasma { left: auto; right: -6vw; bottom: -10vh; height: 120vh; }
+  html[data-estilo="pausa"][data-pausa-pantalla="habilidades"] .pausa-figura { right: -24vw; top: -40vh; height: 180vh; }
+  html[data-estilo="pausa"][data-pausa-pantalla="habilidades"] .pausa-fantasma { left: 36vw; top: auto; bottom: -10vh; height: 100vh; }
   html[data-estilo="pausa"][data-pausa-pantalla="contacto"] .pausa-figura { right: -4vw; top: auto; bottom: -12vh; height: 112vh; }
+  html[data-estilo="pausa"][data-pausa-pantalla="contacto"] .pausa-marco { left: auto; right: 5vw; top: auto; bottom: 14vh; width: 22vw; }
+  html[data-estilo="pausa"].pausa-pantallas[data-pausa-pantalla="investigacion"] .pausa-activa,
+  html[data-estilo="pausa"].pausa-pantallas[data-pausa-pantalla="contacto"] .pausa-activa { padding-top: 84px; }
 
   html[data-estilo="pausa"].pausa-pantallas .pausa-menu {
     left: auto; right: 1.5vw; bottom: auto; top: 50%; width: 35vw; padding: 0; overflow: visible; background: none;

@@ -55,7 +55,14 @@
     precarga.href = 'estilos/' + elegido + '/estilo.js';
     document.head.appendChild(precarga);
     var reducido = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var visto = leer('sessionStorage', 'visto:' + elegido) === '1';
+    // Sin almacenamiento no se puede recordar la visita: mejor no repetir la entrada completa
+    // en cada recarga, y la página queda lista enseguida.
+    var visto;
+    try {
+      visto = window.sessionStorage.getItem('visto:' + elegido) === '1';
+    } catch (e) {
+      visto = true;
+    }
     if (!reducido && 'IntersectionObserver' in window) raiz.classList.add('anima', visto ? 'entrada-corta' : 'entrada-completa');
     // Si el núcleo no llega a montar el estilo, el contenido aparece de todos modos.
     setTimeout(function () {

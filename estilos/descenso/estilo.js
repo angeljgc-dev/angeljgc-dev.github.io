@@ -49,6 +49,7 @@ uniform float uHayNombre;
 uniform sampler2D uNombre;
 uniform float uCalidad;
 uniform float uCorte;
+uniform vec4 uLuces[4];
 
 float h11(float n) { return fract(sin(n) * 43758.5453); }
 float h21(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
@@ -185,6 +186,11 @@ void main() {
     float nieve = motas(vec2(p.x, p.y + uDesp * 0.45 - t * 7.0), 52.0, t, 3.0, 0.5, 1.3);
     if (uCalidad > 0.5) nieve += 0.6 * motas(vec2(p.x + 13.0, p.y + uDesp * 0.2 - t * 4.0), 27.0, t, 11.0, 0.45, 0.7);
     c += vec3(0.62, 0.82, 0.82) * nieve * (0.16 + 0.22 * sol);
+    // El halo de las medusas que pasan: la luz que hacen ellas mismas.
+    for (int i = 0; i < 4; i++) {
+      vec4 l = uLuces[i];
+      if (l.w > 0.0) c += vec3(0.30, 1.0, 0.82) * l.w * exp(-length(p - l.xy) / l.z);
+    }
     // Bioluminiscencia: luces verdes que parpadean, donde ya no llega el sol.
     if (bio > 0.01) {
       vec2 q = vec2(p.x, p.y + uDesp * 0.6);
@@ -252,6 +258,32 @@ void main() {
   vColor = aColor;
   vec2 c = aPos / uTam * 2.0 - 1.0;
   gl_Position = vec4(c.x, -c.y, 0.0, 1.0);
+}
+`;
+// Los animales: un rectángulo con su hoja de cuadros, oscurecido y velado por el agua que tiene delante.
+const SPRITE_VERTICES = `
+attribute vec2 aPos;
+attribute vec2 aUv;
+uniform vec2 uTam;
+varying vec2 vUv;
+void main() {
+  vUv = aUv;
+  vec2 c = aPos / uTam * 2.0 - 1.0;
+  gl_Position = vec4(c.x, -c.y, 0.0, 1.0);
+}
+`;
+const SPRITE_FRAGMENTOS = `
+precision mediump float;
+varying vec2 vUv;
+uniform sampler2D uHoja;
+uniform vec3 uAgua;
+uniform float uNiebla;
+uniform float uLuz;
+uniform float uAlfa;
+void main() {
+  vec4 t = texture2D(uHoja, vUv);
+  vec3 c = mix(t.rgb * uLuz, uAgua * t.a, uNiebla);
+  gl_FragColor = vec4(c, t.a) * uAlfa;
 }
 `;
 const PECES_FRAGMENTOS = `
@@ -477,6 +509,8 @@ export default {
     let textura = null;
     let u = {};
     let up = {};
+    let progSprite = null;
+    let us = {};
     const esTelefono = Math.min(ventana.innerWidth, ventana.innerHeight) < 700;
     const escalaMax = esTelefono ? 0.75 : 0.8;
     let escala = Math.min(escalaMax, ventana.devicePixelRatio || 1);
@@ -497,11 +531,16 @@ export default {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
-      for (const nombreU of ['uRes', 'uEscala', 'uT', 'uLinea', 'uAmp', 'uMetros', 'uFondo', 'uDesp', 'uNombreR', 'uHayNombre', 'uNombre', 'uCalidad', 'uCorte']) {
+      for (const nombreU of ['uRes', 'uEscala', 'uT', 'uLinea', 'uAmp', 'uMetros', 'uFondo', 'uDesp', 'uNombreR', 'uHayNombre', 'uNombre', 'uCalidad', 'uCorte', 'uLuces']) {
         u[nombreU] = gl.getUniformLocation(prog, nombreU);
       }
       up = { uTam: gl.getUniformLocation(progPeces, 'uTam'), aPos: gl.getAttribLocation(progPeces, 'aPos'), aColor: gl.getAttribLocation(progPeces, 'aColor') };
       u.aPos = gl.getAttribLocation(prog, 'aPos');
+      progSprite = programa(gl, SPRITE_VERTICES, SPRITE_FRAGMENTOS);
+      us = {};
+      for (const nombreU of ['uTam', 'uHoja', 'uAgua', 'uNiebla', 'uLuz', 'uAlfa']) us[nombreU] = gl.getUniformLocation(progSprite, nombreU);
+      us.aPos = gl.getAttribLocation(progSprite, 'aPos');
+      us.aUv = gl.getAttribLocation(progSprite, 'aUv');
     }
     try {
       lienzo = crear('canvas', 'descenso-agua' + (reducido ? ' fija' : ''), doc.body, doc.body.firstChild);
@@ -520,12 +559,14 @@ export default {
       if (!gl) return;
       if (prog) gl.deleteProgram(prog);
       if (progPeces) gl.deleteProgram(progPeces);
+      if (progSprite) gl.deleteProgram(progSprite);
+      for (const h of Object.values(hojas)) { if (h.tex) gl.deleteTexture(h.tex); h.tex = null; }
       if (bufPantalla) gl.deleteBuffer(bufPantalla);
       if (bufPeces) gl.deleteBuffer(bufPeces);
       if (textura) gl.deleteTexture(textura);
       const perder = gl.getExtension('WEBGL_lose_context');
       if (perder) perder.loseContext();
-      prog = progPeces = bufPantalla = bufPeces = textura = null;
+      prog = progPeces = progSprite = bufPantalla = bufPeces = textura = null;
     }
 
     // Mientras el agua no tiene su primer cuadro (o si se pierde el contexto), se ve la versión de
@@ -752,6 +793,7 @@ export default {
       gl.uniform1f(u.uDesp, desp);
       gl.uniform1f(u.uCalidad, calidad);
       gl.uniform1f(u.uCorte, reducido ? altoCss : 1e6);
+      gl.uniform4fv(u.uLuces, luces);
       if (m.nombre && texturaLista) {
         gl.uniform4f(u.uNombreR, m.nombre.x, m.nombre.y - desp, m.nombre.w, m.nombre.h);
         gl.uniform1f(u.uHayNombre, 1);
@@ -765,20 +807,232 @@ export default {
       return [metrosArriba, metrosAbajo];
     }
 
-    function pintarPeces(linea, metros) {
-      const cuantos = armarPeces(linea, metros[0], metros[1]);
+    // Los peces y los animales grandes comparten el mismo programa: triángulos con color.
+    function dibujarTriangulos(datos, cuantos, altoCss) {
+      if (!cuantos) return;
       gl.useProgram(progPeces);
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       gl.bindBuffer(gl.ARRAY_BUFFER, bufPeces);
-      gl.bufferData(gl.ARRAY_BUFFER, verticesPeces, gl.DYNAMIC_DRAW);
+      gl.bufferData(gl.ARRAY_BUFFER, datos.subarray(0, cuantos * 6), gl.DYNAMIC_DRAW);
       gl.enableVertexAttribArray(up.aPos);
       gl.vertexAttribPointer(up.aPos, 2, gl.FLOAT, false, 24, 0);
       gl.enableVertexAttribArray(up.aColor);
       gl.vertexAttribPointer(up.aColor, 4, gl.FLOAT, false, 24, 8);
-      gl.uniform2f(up.uTam, m.ancho, m.alto);
+      gl.uniform2f(up.uTam, m.ancho, altoCss);
       gl.drawArrays(gl.TRIANGLES, 0, cuantos);
       gl.disableVertexAttribArray(up.aColor);
+    }
+    function pintarPeces(linea, metros) {
+      dibujarTriangulos(verticesPeces, armarPeces(linea, metros[0], metros[1]), m.alto);
+    }
+
+    // ---------- los animales grandes ----------
+    // Tiburones, mantarrayas y peces espada donde todavía hay luz; en lo hondo, el rape con su
+    // señuelo encendido. Son modelos de Quaternius renderizados en Blender a hojas de 12 cuadros
+    // de su ciclo de nado: aquí cada animal es un rectángulo con su hoja que avanza por el agua,
+    // teñido y velado por la profundidad. Van detrás de todo el contenido: nunca tapan texto.
+    const ESPECIES = {
+      tiburon: { cuadro: [288, 116], ancho: [170, 260], vel: 46, ciclo: 1.3, zona: 'luz' },
+      manta: { cuadro: [256, 173], ancho: [150, 230], vel: 30, ciclo: 2.6, zona: 'luz' },
+      'pez-espada': { cuadro: [240, 146], ancho: [120, 180], vel: 58, ciclo: 0.9, zona: 'luz' },
+      rape: { cuadro: [200, 123], ancho: [104, 140], vel: 16, ciclo: 1.6, zona: 'honda', senuelo: [0.93, 0.46] },
+    };
+    const MAX_ANIMALES = esTelefono ? 3 : 4;
+    const animales = [];
+    const luces = new Float32Array(16);
+    const hojas = {};
+    const verticesSprite = new Float32Array(24);
+    let esperaNacer = 0.8;
+    let despAnterior = null;
+    let ultimaMarca = 0;
+    let primeros = false;
+
+    function rampaJS(metros) {
+      const k = limitar(Math.log(1 + metros / 60) / Math.log(81), 0, 1);
+      const a = [0.043, 0.31, 0.361];
+      const b = [0.039, 0.184, 0.239];
+      const c = [0.012, 0.067, 0.102];
+      const mezcla = (x, y, f) => [x[0] + (y[0] - x[0]) * f, x[1] + (y[1] - x[1]) * f, x[2] + (y[2] - x[2]) * f];
+      return k < 0.5 ? mezcla(a, b, k / 0.5) : mezcla(b, c, limitar((k - 0.5) / 0.42, 0, 1));
+    }
+
+    // Las hojas se piden cuando hacen falta: las de la zona con luz al entrar, la del rape al acercarse a lo hondo.
+    function subirHoja(h) {
+      if (!gl || perdido || !h.lista) return;
+      if (h.tex) gl.deleteTexture(h.tex);
+      h.tex = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, h.tex);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, h.img);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.activeTexture(gl.TEXTURE0);
+    }
+    function pedirHoja(especie) {
+      if (hojas[especie] || !gl) return;
+      const img = new Image();
+      const h = { img, tex: null, lista: false, fallo: false };
+      hojas[especie] = h;
+      img.decoding = 'async';
+      img.onload = () => {
+        if (!vivo) return;
+        h.lista = true;
+        subirHoja(h);
+        if (reducido) pintarFijo();
+      };
+      // Si la hoja no llega, esa especie simplemente no aparece.
+      img.onerror = () => { h.fallo = true; };
+      img.src = new URL('./recursos/' + especie + '.webp', import.meta.url).href;
+      limpiezas.push(() => { img.onload = null; img.onerror = null; });
+    }
+    const hojaLista = (especie) => !!(hojas[especie] && hojas[especie].tex);
+
+    // Qué tanto del ancho de la pantalla queda descubierto a esa altura: sin panel, tarjeta ni imagen encima.
+    // El panel de la presentación es un pseudoelemento de su rejilla: se reconoce por la altura del cargo.
+    const rejilla = nombre ? nombre.parentElement : null;
+    const cargo = rejilla ? rejilla.querySelector('.cargo') : null;
+    function aguaLibre(y) {
+      const xs = [];
+      for (let i = 0; i < 5; i++) {
+        const px = m.ancho * (0.1 + i * 0.2);
+        let e = doc.elementFromPoint(px, y);
+        let tapado = !!(e && cargo && rejilla.contains(e) && y >= cargo.getBoundingClientRect().top);
+        for (let n = 0; e && e !== doc.body && n < 8 && !tapado; n++, e = e.parentElement) {
+          const cs = ventana.getComputedStyle(e);
+          const fondo = cs.backgroundColor.match(/[\d.]+/g);
+          if (e.tagName === 'IMG' || cs.backgroundImage !== 'none' || (fondo && (fondo.length < 4 || parseFloat(fondo[3]) > 0.5))) tapado = true;
+        }
+        if (!tapado) xs.push(px);
+      }
+      return xs;
+    }
+
+    function nacer(linea, mArriba, mAbajo, enPantalla) {
+      const arriba = Math.max(linea + 80, m.cabecera + 60);
+      const abajo = m.alto - 40;
+      if (abajo - arriba < 50) return;
+      // Nacen donde se vean: de varias alturas al azar, la que tenga más agua descubierta y nadie cerca.
+      let y = 0;
+      let mejor = -1;
+      for (let i = 0; i < 8 && mejor < 0.8; i++) {
+        const otra = arriba + Math.random() * (abajo - arriba);
+        const libre = aguaLibre(otra).length / 5 - (animales.some((o) => Math.abs(o.y - otra) < 70) ? 0.5 : 0);
+        if (libre > mejor) { mejor = libre; y = otra; }
+      }
+      const metros = Math.max(0, mArriba + (mAbajo - mArriba) * (y / m.alto));
+      const zona = metros > 1300 ? 'honda' : 'luz';
+      const posibles = Object.keys(ESPECIES).filter((k) => ESPECIES[k].zona === zona && hojaLista(k));
+      if (!posibles.length) return;
+      const cuenta = (k) => animales.filter((x) => x.especie === k).length;
+      posibles.sort((p, q) => cuenta(p) - cuenta(q) || Math.random() - 0.5);
+      const especie = posibles[0];
+      const e = ESPECIES[especie];
+      const lejos = Math.random() * 0.5;
+      const tam = e.ancho[esTelefono ? 0 : 1] * (0.85 + Math.random() * 0.3) * (1 - lejos * 0.4);
+      const vel = e.vel * (0.85 + Math.random() * 0.3) * (1 - lejos * 0.3);
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      const x = enPantalla ? m.ancho * (0.2 + Math.random() * 0.6) : dir > 0 ? -tam * 0.6 : m.ancho + tam * 0.6;
+      animales.push({ especie, x, y, dir, vel, tam, lejos, fase: Math.random(), edad: 0, apto: 1 });
+      animales.sort((p, q) => q.lejos - p.lejos);
+    }
+
+    function moverAnimales(dt, linea, mArriba, mAbajo, desp) {
+      const dy = despAnterior === null ? 0 : limitar(desp - despAnterior, -240, 240);
+      despAnterior = desp;
+      for (let i = animales.length - 1; i >= 0; i--) {
+        const a = animales[i];
+        const e = ESPECIES[a.especie];
+        a.edad += dt;
+        // Se quedan atrás al desplazarse, más los que están lejos: están detrás del contenido.
+        a.y -= dy * 0.22 * (1 - a.lejos * 0.5);
+        a.x += a.dir * a.vel * dt;
+        // El ciclo de nado va al paso de su velocidad.
+        a.fase += (dt / e.ciclo) * (a.vel / e.vel);
+        if (a.especie === 'manta') a.y += Math.cos(a.fase * 6.283) * 6 * dt;
+        if (a.especie === 'rape') a.y += Math.sin(a.fase * 3.1) * 3 * dt;
+        const fuera = a.x < -a.tam || a.x > m.ancho + a.tam || a.y > m.alto + a.tam || a.y < Math.max(linea, 0) - a.tam;
+        if (fuera || (a.apto < 0.02 && a.edad > 1.5)) animales.splice(i, 1);
+      }
+      esperaNacer -= dt;
+      if (animales.length < MAX_ANIMALES && esperaNacer <= 0) {
+        nacer(linea, mArriba, mAbajo, false);
+        esperaNacer = 1.5 + Math.random() * 2.5;
+      }
+    }
+
+    // Calcula qué se ve de cada animal y prende la luz del señuelo antes de pintar el agua.
+    function prepararAnimales(linea, mArriba, mAbajo, altoCss) {
+      luces.fill(0);
+      let nl = 0;
+      const lista = [];
+      for (const a of animales) {
+        const e = ESPECIES[a.especie];
+        if (!hojaLista(a.especie)) continue;
+        const metros = Math.max(0, mArriba + (mAbajo - mArriba) * (a.y / altoCss));
+        a.apto = e.zona === 'honda' ? suave(800, 1400, metros) : 1 - suave(1500, 2600, metros);
+        const alto = a.tam * e.cuadro[1] / e.cuadro[0];
+        const alfa = Math.min(1, a.edad / 0.8) * a.apto * suave(linea + 10, linea + 50, a.y - alto * 0.3);
+        if (alfa < 0.01) continue;
+        const sol = Math.exp(-metros / 260);
+        const caja = [a.x - a.tam / 2, a.y - alto / 2, a.x + a.tam / 2, a.y + alto / 2];
+        if (e.senuelo && nl < 4) {
+          const lx = a.dir > 0 ? caja[0] + e.senuelo[0] * a.tam : caja[2] - e.senuelo[0] * a.tam;
+          luces.set([lx, caja[1] + e.senuelo[1] * alto, a.tam * 0.32, 0.75 * alfa], nl * 4);
+          nl++;
+        }
+        // En lo hondo ya no hay sol que los oscurezca: los alumbra su propio señuelo, y se ven más.
+        const hondo = e.zona === 'honda';
+        lista.push({ a, caja, alfa, agua: rampaJS(metros), luz: hondo ? 0.85 : 0.42 + 0.58 * sol, niebla: hondo ? 0.12 + a.lejos * 0.3 : Math.min(0.8, 0.14 + a.lejos * 0.5 + (1 - sol) * 0.25) });
+      }
+      return lista;
+    }
+
+    function dibujarAnimales(lista, altoCss) {
+      if (!lista.length || !progSprite) return;
+      gl.useProgram(progSprite);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.bindBuffer(gl.ARRAY_BUFFER, bufPeces);
+      gl.enableVertexAttribArray(us.aPos);
+      gl.enableVertexAttribArray(us.aUv);
+      gl.uniform2f(us.uTam, m.ancho, altoCss);
+      gl.uniform1i(us.uHoja, 1);
+      gl.activeTexture(gl.TEXTURE1);
+      for (const v of lista) {
+        const a = v.a;
+        const n = ((Math.floor(a.fase * 12) % 12) + 12) % 12;
+        const u0 = (n % 4) / 4;
+        const v0 = Math.floor(n / 4) / 3;
+        // Las hojas miran a la derecha; para nadar a la izquierda se voltea la textura.
+        const izq = a.dir > 0 ? u0 : u0 + 0.25;
+        const der = a.dir > 0 ? u0 + 0.25 : u0;
+        const [x0, y0, x1, y1] = v.caja;
+        const v1 = v0 + 1 / 3;
+        verticesSprite.set([x0, y0, izq, v0, x1, y0, der, v0, x0, y1, izq, v1, x1, y0, der, v0, x1, y1, der, v1, x0, y1, izq, v1]);
+        gl.bufferData(gl.ARRAY_BUFFER, verticesSprite, gl.DYNAMIC_DRAW);
+        gl.vertexAttribPointer(us.aPos, 2, gl.FLOAT, false, 16, 0);
+        gl.vertexAttribPointer(us.aUv, 2, gl.FLOAT, false, 16, 8);
+        gl.bindTexture(gl.TEXTURE_2D, hojas[a.especie].tex);
+        gl.uniform3f(us.uAgua, v.agua[0], v.agua[1], v.agua[2]);
+        gl.uniform1f(us.uLuz, v.luz);
+        gl.uniform1f(us.uNiebla, v.niebla);
+        gl.uniform1f(us.uAlfa, v.alfa);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
+      gl.disableVertexAttribArray(us.aUv);
+      gl.activeTexture(gl.TEXTURE0);
+    }
+
+    // Deja escrito en el lienzo qué animales están a la vista y dónde, sin tocar el contenido.
+    function anotarAnimales(vistos, ahora) {
+      if (ahora - ultimaMarca < 250) return;
+      ultimaMarca = ahora;
+      lienzo.dataset.animales = vistos.map(({ a }) => a.especie + ':' + Math.round(a.x) + ',' + Math.round(a.y) + ',' + Math.round(a.tam)).join(' ');
     }
 
     // Si el teléfono no da el cuadro, primero baja la resolución del agua y luego las capas finas.
@@ -814,8 +1068,21 @@ export default {
         inicioAscenso = t;
       }
       const linea = lineaEnPantalla(desp, t);
+      const mArriba = metrosDe(desp);
+      const mAbajo = metrosDe(desp + m.alto);
+      // Los primeros ya están en el agua cuando esta termina de subir.
+      if (!primeros && encendida && t - inicioAscenso > 0.75) {
+        primeros = true;
+        nacer(linea, mArriba, mAbajo, true);
+        nacer(linea, mArriba, mAbajo, true);
+      }
+      if (mAbajo > 700) pedirHoja('rape');
+      moverAnimales(dt, linea, mArriba, mAbajo, desp);
+      const grandes = prepararAnimales(linea, mArriba, mAbajo, m.alto);
       const metros = perdido ? null : pintar(t + 2, desp, linea, m.alto);
       if (metros) {
+        dibujarAnimales(grandes, m.alto);
+        anotarAnimales(grandes, ahora);
         moverPeces(dt, linea, t);
         pintarPeces(linea, metros);
         if (!encendida) {
@@ -839,7 +1106,14 @@ export default {
         calidad = 1;
         ajustarLienzo(altoCss);
         const guardaDesp = ventana.scrollY;
+        // En la imagen fija también hay animales, quietos, en el agua bajo el nombre.
+        animales.length = 0;
+        animales.push({ especie: 'tiburon', x: m.ancho * 0.64, y: m.superficie + (esTelefono ? 105 : 135), dir: -1, vel: 0, tam: ESPECIES.tiburon.ancho[esTelefono ? 0 : 1], lejos: 0, fase: 0.3, edad: 9, apto: 1 });
+        if (!esTelefono) animales.push({ especie: 'manta', x: m.ancho * 0.88, y: m.superficie + 115, dir: -1, vel: 0, tam: 190, lejos: 0.2, fase: 0.6, edad: 9, apto: 1 });
+        const grandes = prepararAnimales(m.superficie, metrosDe(0), metrosDe(altoCss), altoCss);
         pintar(t, 0, m.superficie, altoCss);
+        dibujarAnimales(grandes, altoCss);
+        anotarAnimales(grandes, Infinity);
         recortarNombre(m.superficie - guardaDesp, t, guardaDesp, true);
       }
       actualizarMedidor(m.superficie - ventana.scrollY, ventana.scrollY);
@@ -901,6 +1175,8 @@ export default {
       }
       perdido = false;
       texturaLista = false;
+      // Las hojas ya están descargadas: solo se vuelven a subir al contexto nuevo.
+      for (const h of Object.values(hojas)) { h.tex = null; subirHoja(h); }
       lienzo.style.visibility = '';
       if (reducido) {
         marcarRaiz('data-descenso-agua', 'fija');
@@ -913,6 +1189,7 @@ export default {
     }
 
     if (gl) {
+      for (const especie of Object.keys(ESPECIES)) if (ESPECIES[especie].zona === 'luz') pedirHoja(especie);
       escuchar(lienzo, 'webglcontextlost', alPerder);
       escuchar(lienzo, 'webglcontextrestored', alRecuperar);
       if (reducido) {

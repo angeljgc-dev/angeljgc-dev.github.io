@@ -15,6 +15,10 @@ const RETENCION = 0.982;
 const RETENCION_LENTA = 0.966;
 const PUNTOS_CINTA = 9;
 const VEL_MAX = 70;
+// Lo más que se estira la cinta respecto a su largo. Es un tope duro: por más que se jale, la
+// credencial se queda colgada del cordón y el lienzo siempre alcanza a dibujarlo completo.
+const ESTIRAMIENTO = 1.5;
+const ORILLA_LIENZO = 28;
 const ANCHO_CINTA = 15;
 const ENFOQUE = [
   { opacity: 0, filter: 'blur(12px)', transform: 'translateY(16px)' },
@@ -173,6 +177,7 @@ export default {
     let ultimo = 0;
     let acumulado = 0;
     let lienzoX = 0;
+    let lienzoY = 0;
     let lienzoW = 0;
     let lienzoH = 0;
     let dpr = 1;
@@ -195,21 +200,24 @@ export default {
       const ri = inicio.getBoundingClientRect();
       fondoCapa = Math.ceil(ri.bottom + win.scrollY + 160);
       capa.style.height = fondoCapa + 'px';
-      // El lienzo solo cubre el alcance de la cinta, no toda la pantalla.
-      const radio = Math.ceil(largo * 1.6 + 24);
-      dpr = Math.min(win.devicePixelRatio || 1, 2);
-      lienzoX = Math.round(nuevoX - radio);
-      lienzoW = radio * 2;
-      lienzoH = radio;
-      lienzo.style.transform = `translate(${lienzoX}px, 0)`;
-      lienzo.style.width = lienzoW + 'px';
-      lienzo.style.height = lienzoH + 'px';
-      lienzo.width = Math.round(lienzoW * dpr);
-      lienzo.height = Math.round(lienzoH * dpr);
       // La cinta nace 40 px arriba del borde inferior de la cabecera: asoma por debajo de ella
       // aunque la cabecera cambie de alto en el teléfono.
       const cabecera = doc.querySelector('.cabecera');
       const nuevoY = cabecera ? cabecera.offsetHeight - 40 : -14;
+      // El lienzo cubre todo el alcance de la cinta estirada al máximo, en cualquier dirección
+      // alrededor del ancla (también hacia arriba, si se jala la credencial por encima): con el
+      // tope de estiramiento ningún tramo puede salirse de él.
+      const radio = Math.ceil(largo * ESTIRAMIENTO + ORILLA_LIENZO);
+      dpr = Math.min(win.devicePixelRatio || 1, 2);
+      lienzoX = Math.round(nuevoX - radio);
+      lienzoY = Math.round(nuevoY - radio);
+      lienzoW = radio * 2;
+      lienzoH = radio * 2;
+      lienzo.style.transform = `translate(${lienzoX}px, ${lienzoY}px)`;
+      lienzo.style.width = lienzoW + 'px';
+      lienzo.style.height = lienzoH + 'px';
+      lienzo.width = Math.round(lienzoW * dpr);
+      lienzo.height = Math.round(lienzoH * dpr);
       return { x: nuevoX, y: nuevoY };
     }
 
@@ -267,7 +275,7 @@ export default {
         const gy = y[N - 1] + (y[N] - y[N - 1]) * t;
         let tx = agarre.x;
         let ty = agarre.y;
-        const alcance = (largo + alto) * 1.5;
+        const alcance = largo * ESTIRAMIENTO + alto;
         const ddx = tx - ax;
         const ddy = ty - ay;
         const dd = Math.sqrt(ddx * ddx + ddy * ddy);
@@ -282,6 +290,32 @@ export default {
         y[N - 1] += fy * (1 - t);
         x[N] += fx * t;
         y[N] += fy * t;
+        // El estirón se reparte a lo largo de la cinta y no en un solo tramo.
+        for (let k = 0; k < 3; k++) {
+          for (let i = 0; i < N - 1; i++) restriccion(i, i + 1, tramo, false);
+        }
+      }
+      atar();
+    }
+
+    // Tope duro: ningún punto de la cinta se aleja del ancla más de lo que permite el
+    // estiramiento. Si el broche se pasa, la credencial entera se recorre con él y su velocidad
+    // hacia afuera se pierde, como cuando un cordón llega a su límite.
+    function atar() {
+      for (let i = 1; i < N; i++) {
+        const dx = x[i] - ax;
+        const dy = y[i] - ay;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        const limite = tramo * i * ESTIRAMIENTO;
+        if (d <= limite || !d) continue;
+        const ox = dx - (dx / d) * limite;
+        const oy = dy - (dy / d) * limite;
+        x[i] -= ox;
+        y[i] -= oy;
+        if (i === N - 1) {
+          x[N] -= ox;
+          y[N] -= oy;
+        }
       }
     }
 
@@ -318,7 +352,7 @@ export default {
         factores.push(f);
         const media = (ANCHO_CINTA / 2) * (0.18 + 0.82 * f);
         const cx = x[i] - lienzoX;
-        const cy = y[i];
+        const cy = y[i] - lienzoY;
         izq.push([cx - ty * media, cy + tx * media]);
         der.push([cx + ty * media, cy - tx * media]);
       }
@@ -385,7 +419,7 @@ export default {
           indice++;
           if (f > 0.45 && letra !== ' ') {
             c.save();
-            c.translate(x[i] + dx * t - lienzoX, y[i] + dy * t);
+            c.translate(x[i] + dx * t - lienzoX, y[i] + dy * t - lienzoY);
             c.rotate(angulo);
             c.scale(1, f);
             c.fillText(letra, 0, 0);
