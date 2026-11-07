@@ -1,10 +1,12 @@
 # Cambios
 
+## 1.2.1 · noviembre de 2026
+
+- Se retira el estilo Vuelo: la secuencia de cuadros no se veía nítida al desplazarse.
+
 ## 1.2.0 · noviembre de 2026
 
-- Estilo nuevo, Vuelo: frente a la ventanilla de un avión, la cortinilla sube con el scroll, se
-  cruza el vidrio y se vuela entre nubes al atardecer hasta un cielo abierto donde aparece el
-  contenido. Escena 3D renderizada en Blender, con una versión vertical para el teléfono.
+- Estilo nuevo, Vuelo (retirado en 1.2.1).
 
 ## 1.1.0 · noviembre de 2026
 
