@@ -11,8 +11,8 @@
 - Escenario: las tarjetas de habilidades ya no se enciman al desplazarse.
 - Collage: el muro ya no muestra cifras de demostración.
 - Cursores: cada proyecto se construye una sola vez en su lugar, sin copias que se repiten.
-- Descenso: coral distinto alrededor de cada tarjeta y una medusa luminosa en lo profundo; nunca dos
-  animales iguales a la vista.
+- Descenso: coral modelado en los títulos de sección, algas y enredaderas que siguen el borde de las
+  demás tarjetas, y una medusa luminosa en lo profundo; nunca dos animales iguales a la vista.
 - Collage: tarjetas de proyectos nítidas, sin encimarse y con el nombre de cada sitio completo.
 
 ## 1.0.0 · noviembre de 2026

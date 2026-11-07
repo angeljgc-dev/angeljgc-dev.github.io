@@ -305,7 +305,7 @@ html[data-estilo="descenso"] .mas-sitios {
 html[data-estilo="descenso"] .mas-sitios p { color: var(--claro); }
 html[data-estilo="descenso"] .mas-sitios ul { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 
-/* El coral crece detrás de cada tarjeta y se asoma por arriba y por abajo; nunca va encima del texto. */
+/* El lecho marino crece sobre el borde de cada tarjeta, en un anillo que no llega al texto. */
 html[data-estilo="descenso"] .zona-cabeza,
 html[data-estilo="descenso"] .mas-sitios,
 html[data-estilo="descenso"] .puesto,
@@ -313,11 +313,23 @@ html[data-estilo="descenso"] .subtitulo,
 html[data-estilo="descenso"] .idiomas,
 html[data-estilo="descenso"] .tesis,
 html[data-estilo="descenso"] .grupo,
-html[data-estilo="descenso"] .canal { position: relative; }
+html[data-estilo="descenso"] .canal,
+html[data-estilo="descenso"] .dato { position: relative; }
+/* El coral 3D de las tarjetas de título va detrás, asomándose por el borde de arriba. */
 html[data-estilo="descenso"] .descenso-coral { position: absolute; inset: 0; z-index: -1; display: block; pointer-events: none; }
 html[data-estilo="descenso"] .descenso-coral-pieza { position: absolute; display: block; background: no-repeat center bottom / contain; }
+html[data-estilo="descenso"] .descenso-borde,
+html[data-estilo="descenso"] .descenso-alga { position: absolute; z-index: 2; display: block; pointer-events: none; background: no-repeat 0 0 / 100% 100%; }
 html[data-estilo="descenso"] .inicio-reja > .descenso-coral.en-inicio {
-  position: relative; inset: auto; z-index: 0; grid-column: 1 / -1; grid-row: cargo-start / datos-end; margin: 150px -6px 0;
+  position: relative; inset: auto; z-index: 0; display: block; pointer-events: none;
+  grid-column: 1 / -1; grid-row: cargo-start / datos-end; margin: 150px -6px 0;
+}
+/* Las algas se mecen unos grados, despacio, solo cerca de la pantalla y nunca con movimiento reducido. */
+html[data-estilo="descenso"] .descenso-mece { animation: descenso-mecer 7s ease-in-out infinite alternate; animation-play-state: paused; }
+html[data-estilo="descenso"] .descenso-mece.en-vista { animation-play-state: running; }
+@keyframes descenso-mecer { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+@media (prefers-reduced-motion: reduce) {
+  html[data-estilo="descenso"] .descenso-mece { animation: none; }
 }
 /* Experiencia y formación */
 html[data-estilo="descenso"] .trayecto,

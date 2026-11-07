@@ -1133,33 +1133,58 @@ export default {
       actualizarMedidor(m.superficie - ventana.scrollY, ventana.scrollY);
     }
 
-    // ---------- el coral alrededor de las tarjetas ----------
-    // Piezas modeladas en Blender (abanicos, cerebros, cuernos de ciervo, tubos, anémonas y, en lo
-    // hondo, esponjas y coral que da su propia luz). Cada tarjeta lleva su combinación, que sale de
-    // su índice: no cambia al recargar, ninguna se repite y dos tarjetas seguidas no comparten pieza.
-    // Van detrás de la tarjeta, asomándose por arriba y por abajo, nunca encima del texto.
-    const CORALES = {
-      'abanico-naranja': [200, 126], 'abanico-violeta': [200, 114], 'anemona-coral': [200, 165], 'anemona-rosa': [200, 157],
-      'cerebro-ocre': [200, 109], 'cerebro-verde': [200, 112], 'ciervo-lila': [174, 200], 'ciervo-ocre': [200, 187],
-      'tubos-amarillo': [139, 200], 'tubos-naranja': [66, 200],
-      'esponja-barril': [169, 200], 'esponja-vidrio': [110, 200], 'esponja-luz': [169, 200], 'ciervo-luz': [200, 152],
+    // ---------- el lecho marino que enmarca cada tarjeta ----------
+    // Para cada tarjeta se dibuja un SVG que sigue su rectángulo redondeado: enredaderas con hojas
+    // que recorren tramos del borde y se enroscan en las esquinas, coral ramificado en una o dos
+    // esquinas, matas de algas que se mecen y detalles chicos. Todo crece en un anillo que va de
+    // 5 px dentro del marco a 28 px afuera: nunca llega al área de texto. Qué tramos, qué esquinas,
+    // qué colores y qué detalles salen de una semilla por índice, así no cambian al recargar.
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const ANILLO = 28;
+    const DENTRO = 5;
+    const SELECTOR_TARJETAS = '.proyecto, .mas-sitios, .puesto, .subtitulo, .idiomas, .tesis, .grupo, .canal, .dato';
+    // Las tarjetitas de datos tienen otras al lado: su anillo es angosto para no invadirlas.
+    const anilloDe = (el) => (el.classList.contains('dato') ? 6 : ANILLO);
+    // Tres tonos por pieza: sombra, cuerpo y la orilla de arriba, que recibe la luz de la superficie.
+    const PALETAS = {
+      superficie: [
+        { tallo: ['#0F3F22', '#4FB86A', '#D2F7B0'], coral: ['#7A2218', '#F0704F', '#FFC7A6'], detalle: ['#FF8A45', '#FFE0C2'] },
+        { tallo: ['#22420F', '#8BC34A', '#E6F7A6'], coral: ['#7E2A4E', '#F07FA6', '#FFD3E1'], detalle: ['#FF6E5A', '#FFDCD2'] },
+        { tallo: ['#0A3A35', '#36C29B', '#B8FBE0'], coral: ['#8A4012', '#FFA04F', '#FFE0A8'], detalle: ['#FFC23D', '#FFF0C2'] },
+      ],
+      media: [
+        { tallo: ['#123E4A', '#2C7A88', '#8CCFD9'], coral: ['#3A3E7A', '#6A70BE', '#B9BDF0'], detalle: ['#8F95E0', '#DADDFF'] },
+        { tallo: ['#16364F', '#336F95', '#94C4E6'], coral: ['#3F2F6E', '#7A62B8', '#C8B8F2'], detalle: ['#6FA9D8', '#D2E8FF'] },
+        { tallo: ['#0F3E3D', '#287B74', '#88D3C9'], coral: ['#2D4A78', '#5784C2', '#AFCBF1'], detalle: ['#7CC4D0', '#D4F4F8'] },
+      ],
+      hondo: [
+        { tallo: ['#0B2A33', '#1F5A66', '#5FA3AE'], coral: ['#23284A', '#45508A', '#8A93CC'], detalle: ['#5C88A8', '#A9C8DE'] },
+        { tallo: ['#0C2433', '#22506B', '#6799B8'], coral: ['#2A2147', '#544188', '#9C88CC'], detalle: ['#4F8AA0', '#A5D2DE'] },
+      ],
+      abisal: [
+        { tallo: ['#0A2E2C', '#22A386', '#4DFFD2'], coral: ['#0E3540', '#2ACFAE', '#9CFFE9'], detalle: ['#4DFFD2', '#C2FFF1'], brillo: true },
+        { tallo: ['#0B2A35', '#2295A8', '#7BE9FF'], coral: ['#102E3E', '#2BB9C4', '#A6F6FF'], detalle: ['#5EE6FF', '#CBF8FF'], brillo: true },
+      ],
     };
-    const SOMERO = ['abanico-naranja', 'abanico-violeta', 'anemona-coral', 'anemona-rosa', 'cerebro-ocre', 'cerebro-verde', 'ciervo-lila', 'ciervo-ocre', 'tubos-amarillo', 'tubos-naranja'];
-    const MEDIANOCHE = ['esponja-barril', 'esponja-vidrio', 'esponja-luz', 'ciervo-luz'];
-    const ABISMO = ['esponja-luz', 'ciervo-luz', 'esponja-vidrio', 'esponja-barril'];
-    const LUGARES = ['cima-izq', 'cima-der', 'cima-centro', 'base-izq', 'base-der'];
-    const SELECTOR_TARJETAS = '.zona-cabeza, .proyecto, .mas-sitios, .puesto, .subtitulo, .idiomas, .tesis, .grupo, .canal';
+    const DETALLES = ['percebes', 'burbujas', 'anemona', 'estrella'];
     let arrecife = [];
     let anchoCoral = 0;
-    const vigiaCoral = 'IntersectionObserver' in ventana ? new ventana.IntersectionObserver((entradas) => {
+    const vigiaBorde = 'IntersectionObserver' in ventana ? new ventana.IntersectionObserver((entradas) => {
+      // Las algas solo se mecen mientras su tarjeta está cerca de la pantalla.
       for (const en of entradas) {
-        if (!en.isIntersecting) continue;
-        for (const p of en.target.querySelectorAll('[data-coral]')) p.style.backgroundImage = 'url("' + new URL('./recursos/coral/' + p.dataset.coral + '.webp', import.meta.url).href + '")';
-        vigiaCoral.unobserve(en.target);
+        en.target.classList.toggle('en-vista', en.isIntersecting);
+        const alga = en.target.nextElementSibling;
+        if (alga && alga.classList.contains('descenso-alga')) alga.classList.toggle('en-vista', en.isIntersecting);
       }
-    }, { rootMargin: '900px 0px' }) : null;
+    }, { rootMargin: '200px 0px' }) : null;
+    const vigiaTamano = 'ResizeObserver' in ventana ? new ventana.ResizeObserver((entradas) => {
+      for (const en of entradas) {
+        const datos = arrecife.find((d) => d.medida === en.target);
+        if (datos) dibujarBorde(datos);
+      }
+    }) : null;
 
-    // Azar con semilla: el mismo índice da siempre la misma combinación.
+    // Azar con semilla: el mismo índice da siempre el mismo borde.
     function azarDe(semilla) {
       let a = semilla >>> 0;
       return () => {
@@ -1171,39 +1196,362 @@ export default {
       };
     }
 
-    function armarCoral() {
-      for (const caja of arrecife) { if (vigiaCoral) vigiaCoral.unobserve(caja); caja.remove(); }
-      arrecife = [];
-      anchoCoral = m.ancho;
+    // El contorno de la tarjeta: un punto y su normal hacia afuera para cada fracción s del perímetro.
+    function contorno(W, H, r) {
+      r = Math.max(0, Math.min(r, W / 2, H / 2));
+      const recta = [W - 2 * r, H - 2 * r];
+      const arco = (Math.PI / 2) * r;
+      const tramos = [recta[0], arco, recta[1], arco, recta[0], arco, recta[1], arco];
+      const total = tramos.reduce((x, y) => x + y, 0);
+      return {
+        total,
+        en(s) {
+          let d = (((s % 1) + 1) % 1) * total;
+          let i = 0;
+          while (i < 7 && d > tramos[i]) { d -= tramos[i]; i++; }
+          const k = tramos[i] ? d / tramos[i] : 0;
+          const esquina = (cx, cy, a0) => { const a = a0 + k * Math.PI / 2; return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, nx: Math.cos(a), ny: Math.sin(a) }; };
+          switch (i) {
+            case 0: return { x: r + d, y: 0, nx: 0, ny: -1 };
+            case 1: return esquina(W - r, r, -Math.PI / 2);
+            case 2: return { x: W, y: r + d, nx: 1, ny: 0 };
+            case 3: return esquina(W - r, H - r, 0);
+            case 4: return { x: W - r - d, y: H, nx: 0, ny: 1 };
+            case 5: return esquina(r, H - r, Math.PI / 2);
+            case 6: return { x: 0, y: H - r - d, nx: -1, ny: 0 };
+            default: return esquina(r, r, Math.PI);
+          }
+        },
+      };
+    }
+
+    function dibujarBorde(datos) {
+      const { svg, medida, indice, azarBase, paleta, plan } = datos;
+      const W = medida.offsetWidth;
+      const H = medida.offsetHeight;
+      if (!W || !H) return;
+      const r = parseFloat(ventana.getComputedStyle(datos.radio || medida).borderTopLeftRadius) || 14;
+      const caja = medida.getBoundingClientRect();
+      const anchoPagina = doc.documentElement.clientWidth;
+      // A los lados el anillo no sale de la página.
+      const A = datos.anillo;
+      const izq = Math.max(0, Math.min(A, caja.left - 5));
+      const der = Math.max(0, Math.min(A, anchoPagina - caja.right - 5));
+      const vista = `${-izq} ${-A} ${W + izq + der} ${H + 2 * A}`;
+      svg.style.left = -izq + 'px';
+      svg.style.top = -A + 'px';
+      svg.style.width = W + izq + der + 'px';
+      svg.style.height = H + 2 * A + 'px';
+      const az = azarDe(azarBase);
+      const c = contorno(W, H, r);
+      // Un punto vale si está en el anillo: fuera del área de texto y dentro de la página.
+      const vale = (x, y) => x >= -izq && x <= W + der && y >= -A && y <= H + A && !(x > DENTRO && x < W - DENTRO && y > DENTRO && y < H - DENTRO);
+      const tierra = (s, d) => { const p = c.en(s); return { x: p.x + p.nx * d, y: p.y + p.ny * d, nx: p.nx, ny: p.ny }; };
+      const atrapar = (p) => ({ x: Math.max(-izq + 1, Math.min(W + der - 1, p.x)), y: Math.max(-A + 1, Math.min(H + A - 1, p.y)) });
+      const capas = { fondo: [], cuerpo: [], luz: [], meces: [] };
+      const f = (n) => n.toFixed(1);
+      const brillo = paleta.brillo;
+
+      // Una cinta de grosor variable: la base de las enredaderas, los tallos y las hojas largas.
+      function cinta(puntos, ancho, colores, destino) {
+        const izqP = [];
+        const derP = [];
+        const n = puntos.length;
+        for (let i = 0; i < n; i++) {
+          const a = puntos[Math.max(0, i - 1)];
+          const b = puntos[Math.min(n - 1, i + 1)];
+          let tx = b.x - a.x;
+          let ty = b.y - a.y;
+          const l = Math.hypot(tx, ty) || 1;
+          tx /= l; ty /= l;
+          const t = i / (n - 1);
+          const w = (ancho * Math.pow(Math.sin(Math.PI * Math.min(0.98, Math.max(0.02, t))), 0.55) + 0.5) / 2;
+          izqP.push([puntos[i].x - ty * w, puntos[i].y + tx * w]);
+          derP.push([puntos[i].x + ty * w, puntos[i].y - tx * w]);
+        }
+        const d = 'M' + izqP.map((p) => f(p[0]) + ' ' + f(p[1])).join('L') + 'L' + derP.reverse().map((p) => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
+        const linea = 'M' + puntos.map((p) => f(p.x) + ' ' + f(p.y - 0.5)).join('L');
+        (destino || capas.cuerpo).push(`<path d="${d}" fill="${colores[1]}" stroke="${colores[0]}" stroke-width="0.9" stroke-linejoin="round"/>`);
+        capas.luz.push(`<path d="${linea}" fill="none" stroke="${colores[2]}" stroke-width="${f(Math.max(0.6, ancho * 0.28))}" stroke-linecap="round" opacity="0.8"/>`);
+        if (brillo) capas.fondo.push(`<path d="${linea}" fill="none" stroke="${colores[2]}" stroke-width="${f(ancho * 3)}" stroke-linecap="round" opacity="0.14"/>`);
+      }
+      // Una fronda de alga: nace angosta, se ensancha y termina en punta, con la punta doblada.
+      function hoja(p, ang, largo, ancho, colores, doblez) {
+        const dx = Math.cos(ang), dy = Math.sin(ang);
+        const px = -dy, py = dx;
+        const fin = { x: p.x + dx * largo + px * doblez, y: p.y + dy * largo + py * doblez };
+        const medio = { x: p.x + dx * largo * 0.55 + px * doblez * 0.4, y: p.y + dy * largo * 0.55 + py * doblez * 0.4 };
+        if (!vale(fin.x, fin.y) || !vale(medio.x, medio.y)) return;
+        // También donde la fronda se abomba: ninguna curva entra al área de texto.
+        const lado1 = { x: medio.x + px * ancho * 1.1, y: medio.y + py * ancho * 1.1 };
+        const lado2 = { x: medio.x - px * ancho * 0.9, y: medio.y - py * ancho * 0.9 };
+        if (!vale(lado1.x, lado1.y) || !vale(lado2.x, lado2.y)) return;
+        const a1 = { x: p.x + dx * largo * 0.3 + px * ancho, y: p.y + dy * largo * 0.3 + py * ancho };
+        const a2 = { x: medio.x + px * ancho * 1.1, y: medio.y + py * ancho * 1.1 };
+        const b1 = { x: medio.x - px * ancho * 0.9, y: medio.y - py * ancho * 0.9 };
+        const b2 = { x: p.x + dx * largo * 0.3 - px * ancho * 0.8, y: p.y + dy * largo * 0.3 - py * ancho * 0.8 };
+        capas.cuerpo.push(`<path d="M${f(p.x)} ${f(p.y)}C${f(a1.x)} ${f(a1.y)} ${f(a2.x)} ${f(a2.y)} ${f(fin.x)} ${f(fin.y)}C${f(b1.x)} ${f(b1.y)} ${f(b2.x)} ${f(b2.y)} ${f(p.x)} ${f(p.y)}Z" fill="${colores[1]}" stroke="${colores[0]}" stroke-width="0.7" stroke-linejoin="round"/>`);
+        capas.luz.push(`<path d="M${f(p.x)} ${f(p.y)}Q${f(medio.x)} ${f(medio.y)} ${f(p.x + (fin.x - p.x) * 0.85)} ${f(p.y + (fin.y - p.y) * 0.85)}" fill="none" stroke="${colores[2]}" stroke-width="0.7" stroke-linecap="round" opacity="0.9"/>`);
+      }
+      function zarcillo(p, sentido, colores) {
+        // Una espiral corta que se enrosca hacia afuera.
+        const base = Math.atan2(p.ny, p.nx);
+        const puntos = [];
+        for (let k = 0; k <= 18; k++) {
+          const th = k / 18 * Math.PI * 2.6;
+          const rad = 1 + k * 0.38;
+          const cx = p.x + p.nx * 7;
+          const cy = p.y + p.ny * 7;
+          puntos.push({ x: cx + Math.cos(base + Math.PI + sentido * th) * rad, y: cy + Math.sin(base + Math.PI + sentido * th) * rad });
+        }
+        if (!puntos.every((q) => vale(q.x, q.y))) return;
+        capas.cuerpo.push(`<path d="M${puntos.map((q) => f(q.x) + ' ' + f(q.y)).join('L')}" fill="none" stroke="${colores[1]}" stroke-width="1.3" stroke-linecap="round"/>`);
+      }
+
+      // Enredaderas: tramos del borde con un tallo ondulado, hojas alternadas y zarcillos al final.
+      for (const [s0, s1] of plan.tramos) {
+        const largo = (s1 - s0) * c.total;
+        const n = Math.max(6, Math.round(largo / 3));
+        const fase = az() * 6.28;
+        const puntos = [];
+        for (let i = 0; i <= n; i++) {
+          const s = s0 + (s1 - s0) * i / n;
+          const d = Math.min(A - 2, 3 + 4 * Math.sin(i / n * Math.PI * (2 + plan.ondas) + fase));
+          puntos.push(atrapar(tierra(s, d)));
+        }
+        cinta(puntos, plan.grosor, paleta.tallo);
+        // En algunas tarjetas, un segundo tallo más fino se enreda con el primero.
+        if (plan.doble) {
+          const otros = [];
+          for (let i = 0; i <= n; i++) {
+            const t = i / n;
+            otros.push(atrapar(tierra(s0 + (s1 - s0) * (0.08 + t * 0.84), 3 + 4 * Math.sin(t * Math.PI * (3 + plan.ondas) + fase + 2.4))));
+          }
+          cinta(otros, plan.grosor * 0.55, paleta.tallo);
+        }
+        // Hojas a distancias irregulares, alternando lados, más grandes hacia el centro del tramo.
+        let lado = 1;
+        for (let i = 2 + Math.floor(az() * 3); i < puntos.length - 2; i += plan.densidad + Math.floor(az() * 4)) {
+          const t = i / n;
+          const p = tierra(s0 + (s1 - s0) * t, 3);
+          const tang = Math.atan2(p.ny, p.nx) - Math.PI / 2;
+          const ang = Math.atan2(p.ny, p.nx) + lado * (0.55 + az() * 0.45) - (az() < 0.5 ? 0 : 0.1);
+          const tam = 0.7 + 0.6 * Math.sin(Math.PI * t);
+          hoja(puntos[i], ang + 0 * tang, (11 + az() * 7) * tam, (2.4 + az() * 1.4) * tam, paleta.tallo, lado * (2 + az() * 3));
+          lado = -lado;
+        }
+        zarcillo(tierra(s1, 3), az() < 0.5 ? 1 : -1, paleta.tallo);
+      }
+
+      // Coral ramificado en una o dos esquinas: ramas cortas y redondeadas, con pólipos en las puntas.
+      for (const esquina of plan.esquinas) {
+        const s = { arribaIzq: 7.5, arribaDer: 1.5, abajoDer: 3.5, abajoIzq: 5.5 }[esquina] / 8;
+        const p = tierra(s, 1);
+        const arriba = esquina.startsWith('arriba');
+        const lado = esquina.endsWith('Izq') ? -1 : 1;
+        const espacio = lado < 0 ? izq : der;
+        // Arriba crece hacia la superficie; abajo, hacia el costado, si hay lugar.
+        let ang = arriba ? -Math.PI / 2 + lado * 0.35 : (lado < 0 ? Math.PI : 0) + (espacio < 20 ? -lado * 1.2 : -lado * 0.5);
+        const ramas = [];
+        const crecer = (x, y, a, l, w, nivel) => {
+          const x2 = x + Math.cos(a) * l;
+          const y2 = y + Math.sin(a) * l;
+          if (!vale(x2, y2)) return;
+          const cx = (x + x2) / 2 + Math.cos(a + 1.57) * l * 0.15;
+          const cy = (y + y2) / 2 + Math.sin(a + 1.57) * l * 0.15;
+          ramas.push({ d: `M${f(x)} ${f(y)}Q${f(cx)} ${f(cy)} ${f(x2)} ${f(y2)}`, w, x2, y2, punta: nivel === 0 });
+          if (nivel > 0) {
+            const abre = 0.32 + az() * 0.3;
+            crecer(x2, y2, a - abre, l * 0.74, w * 0.72, nivel - 1);
+            crecer(x2, y2, a + abre, l * 0.74, w * 0.72, nivel - 1);
+            if (az() < 0.35) crecer(x2, y2, a + (az() - 0.5) * 0.3, l * 0.6, w * 0.6, nivel - 1);
+          }
+        };
+        const troncos = 2 + Math.floor(az() * 2);
+        for (let k = 0; k < troncos; k++) crecer(p.x + (k - troncos / 2) * 3.5 * lado, p.y, ang + (k - (troncos - 1) / 2) * 0.4, 10 + az() * 4, 4.2, 3);
+        for (const b of ramas) capas.cuerpo.push(`<path d="${b.d}" fill="none" stroke="${paleta.coral[0]}" stroke-width="${f(b.w + 1.1)}" stroke-linecap="round"/>`);
+        for (const b of ramas) capas.cuerpo.push(`<path d="${b.d}" fill="none" stroke="${paleta.coral[1]}" stroke-width="${f(b.w)}" stroke-linecap="round"/>`);
+        for (const b of ramas) {
+          capas.luz.push(`<path d="${b.d}" transform="translate(-0.4 -0.6)" fill="none" stroke="${paleta.coral[2]}" stroke-width="${f(Math.max(0.6, b.w * 0.32))}" stroke-linecap="round"/>`);
+          if (b.punta) capas.luz.push(`<circle cx="${f(b.x2)}" cy="${f(b.y2)}" r="${f(b.w * 0.55 + 0.4)}" fill="${paleta.coral[2]}"/>`);
+          if (brillo) capas.fondo.push(`<path d="${b.d}" fill="none" stroke="${paleta.coral[2]}" stroke-width="${f(b.w * 3)}" stroke-linecap="round" opacity="0.12"/>`);
+        }
+      }
+
+      // Una mata de algas que se mece despacio, en la orilla de arriba o en un costado.
+      {
+        const p = tierra(plan.alga, 1);
+        const blades = [];
+        const base = Math.atan2(p.ny, p.nx);
+        const n = 3 + Math.floor(az() * 3);
+        for (let k = 0; k < n; k++) {
+          const ang = base + (k - (n - 1) / 2) * 0.28;
+          const largo = 12 + az() * 12;
+          const puntos = [];
+          for (let i = 0; i <= 8; i++) {
+            const t = i / 8;
+            const curva = Math.sin(t * 2.4 + k) * 2.4 * t;
+            const x = p.x + Math.cos(ang) * largo * t - Math.sin(ang) * curva;
+            const y = p.y + Math.sin(ang) * largo * t + Math.cos(ang) * curva;
+            puntos.push({ x, y });
+          }
+          if (puntos.every((q) => vale(q.x, q.y))) blades.push(puntos);
+        }
+        const antes = capas.cuerpo.length;
+        const antesLuz = capas.luz.length;
+        const antesFondo = capas.fondo.length;
+        for (const pts of blades) cinta(pts, 2.4, paleta.tallo);
+        const grupo = capas.fondo.splice(antesFondo).concat(capas.cuerpo.splice(antes), capas.luz.splice(antesLuz));
+        if (grupo.length) {
+          // La mata va en su propio SVG chico: gira entero en el compositor y no obliga a repintar el borde.
+          const xs = blades.flat().map((q) => q.x).concat(p.x);
+          const ys = blades.flat().map((q) => q.y).concat(p.y);
+          const bx = Math.max(-izq, Math.min(...xs) - 4), by = Math.min(...ys) - 4;
+          const bw = Math.min(W + der, Math.max(...xs) + 4) - bx, bh = Math.max(...ys) + 4 - by;
+          capas.meces.push({ html: grupo.join(''), bx, by, bw, bh, ox: p.x - bx, oy: p.y - by, dura: (5 + az() * 4).toFixed(1), retraso: (az() * 5).toFixed(1) });
+        }
+      }
+
+      // Detalles chicos en una orilla.
+      for (const det of plan.detalles) {
+        const s = det.s;
+        if (det.tipo === 'percebes') {
+          for (let k = 0; k < 4; k++) {
+            const p = tierra(s + k * 0.006, 2.5);
+            const rr = 1.8 + az() * 1.4;
+            if (!vale(p.x, p.y)) continue;
+            capas.cuerpo.push(`<circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(rr)}" fill="${paleta.detalle[1]}" stroke="${paleta.tallo[0]}" stroke-width="0.7"/>`);
+            capas.luz.push(`<circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(rr * 0.42)}" fill="${paleta.tallo[0]}"/>`);
+          }
+        } else if (det.tipo === 'burbujas') {
+          const p = tierra(s, 4);
+          for (let k = 0; k < 4; k++) {
+            const q = { x: p.x + p.nx * k * 5 + (az() - 0.5) * 4, y: p.y + p.ny * k * 5 + (az() - 0.5) * 4 };
+            if (!vale(q.x, q.y)) continue;
+            capas.luz.push(`<circle cx="${f(q.x)}" cy="${f(q.y)}" r="${f(1 + k * 0.5)}" fill="none" stroke="${paleta.detalle[1]}" stroke-width="0.8" opacity="0.75"/>`);
+          }
+        } else if (det.tipo === 'anemona') {
+          const p = tierra(s, 1.5);
+          const base = Math.atan2(p.ny, p.nx);
+          for (let k = 0; k < 9; k++) {
+            const a = base + (k - 4) * 0.22;
+            const l = 6 + az() * 4;
+            const x2 = p.x + Math.cos(a) * l, y2 = p.y + Math.sin(a) * l;
+            if (!vale(x2, y2)) continue;
+            capas.cuerpo.push(`<path d="M${f(p.x)} ${f(p.y)}Q${f(p.x + Math.cos(a + 0.4) * l * 0.6)} ${f(p.y + Math.sin(a + 0.4) * l * 0.6)} ${f(x2)} ${f(y2)}" fill="none" stroke="${paleta.coral[1]}" stroke-width="1.5" stroke-linecap="round"/>`);
+            capas.luz.push(`<circle cx="${f(x2)}" cy="${f(y2)}" r="0.9" fill="${paleta.coral[2]}"/>`);
+          }
+        } else {
+          const p = tierra(s, 7);
+          if (!vale(p.x, p.y)) continue;
+          const rot = az() * 6.28;
+          let d = '';
+          for (let k = 0; k < 10; k++) {
+            const a = rot + k * Math.PI / 5;
+            const rr = k % 2 ? 2.4 : 6.5;
+            d += (k ? 'L' : 'M') + f(p.x + Math.cos(a) * rr) + ' ' + f(p.y + Math.sin(a) * rr);
+          }
+          capas.cuerpo.push(`<path d="${d}Z" fill="${paleta.detalle[0]}" stroke="${paleta.coral[0]}" stroke-width="0.8" stroke-linejoin="round"/>`);
+          capas.luz.push(`<circle cx="${f(p.x - 0.6)}" cy="${f(p.y - 0.8)}" r="1.1" fill="${paleta.detalle[1]}"/>`);
+        }
+      }
+      // El dibujo se entrega como imagen SVG de fondo: el navegador lo rasteriza una vez y al
+      // desplazarse solo pinta un mapa de bits, en lugar de cientos de trazos vivos.
+      const comoImagen = (caja, cuerpo) => 'url("data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="${SVG_NS}" viewBox="${caja}">${cuerpo}</svg>`) + '")';
+      svg.style.backgroundImage = comoImagen(vista, capas.fondo.join('') + capas.cuerpo.join('') + capas.luz.join(''));
+      svg.dataset.indice = String(indice);
+      if (datos.alga) { datos.alga.remove(); datos.alga = null; }
+      for (const g of capas.meces) {
+        const alga = doc.createElement('span');
+        alga.className = 'descenso-alga descenso-mece';
+        alga.setAttribute('aria-hidden', 'true');
+        alga.setAttribute('data-descenso', '');
+        alga.setAttribute('style', `left:${f(g.bx)}px;top:${f(g.by)}px;width:${f(g.bw)}px;height:${f(g.bh)}px;transform-origin:${f(g.ox)}px ${f(g.oy)}px;animation-duration:${g.dura}s;animation-delay:-${g.retraso}s`);
+        alga.style.backgroundImage = comoImagen(`${f(g.bx)} ${f(g.by)} ${f(g.bw)} ${f(g.bh)}`, g.html);
+        svg.after(alga);
+        datos.alga = alga;
+      }
+    }
+
+    function planDe(indice, previo) {
+      for (let intento = 0; intento < 40; intento++) {
+        const az = azarDe(indice * 7919 + intento * 104729 + 23);
+        const cuantos = 1 + Math.floor(az() * 2);
+        const tramos = [];
+        let s = az();
+        for (let k = 0; k < cuantos; k++) {
+          const largo = 0.14 + az() * 0.2;
+          tramos.push([s, s + largo]);
+          s += largo + 0.12 + az() * 0.2;
+        }
+        const todas = ['arribaIzq', 'arribaDer', 'abajoDer', 'abajoIzq'];
+        const esquinas = [todas[Math.floor(az() * 4)]];
+        if (az() < 0.45) esquinas.push(todas[(todas.indexOf(esquinas[0]) + 1 + Math.floor(az() * 3)) % 4]);
+        const detalles = [];
+        const tipos = DETALLES.slice().sort(() => az() - 0.5).slice(0, 1 + Math.floor(az() * 2));
+        for (const tipo of tipos) detalles.push({ tipo, s: tipo === 'estrella' || tipo === 'percebes' ? 0.5 + az() * 0.25 : az() < 0.5 ? 0.05 + az() * 0.15 : 0.3 + az() * 0.15 });
+        const plan = {
+          tramos, esquinas, detalles,
+          alga: az() < 0.6 ? 0.04 + az() * 0.18 : 0.28 + az() * 0.16,
+          grosor: 2.6 + az() * 1.4,
+          densidad: 4 + Math.floor(az() * 3),
+          doble: az() < 0.5,
+          ondas: Math.floor(az() * 4),
+          variante: Math.floor(az() * 6),
+        };
+        plan.firma = esquinas.slice().sort().join('+') + '|' + tramos.map((t) => t.map((x) => (x % 1).toFixed(2)).join('-')).join(',') + '|' + tipos.slice().sort().join('+') + '|' + plan.variante;
+        // Dos tarjetas seguidas nunca iguales: otras esquinas, otros detalles y otro color.
+        if (!previo || (plan.esquinas[0] !== previo.esquinas[0] && plan.variante % 2 !== previo.variante % 2 && tipos.join() !== previo.detalles.map((d) => d.tipo).join())) return plan;
+      }
+      return null;
+    }
+
+    // ---------- coral 3D en las tarjetas de título ----------
+    // La presentación y la cabecera de cada sección llevan coral modelado en Blender, asomándose
+    // entero por detrás de su borde de arriba. Piezas continuas, sin partes sueltas.
+    const CORAL3D = {
+      'anemona-coral': [200, 162], 'anemona-rosa': [200, 154], 'cerebro-ocre': [200, 104], 'cerebro-verde': [200, 108],
+      'gorgonia-violeta': [200, 175], 'mesa-verde': [200, 94], 'rama-ocre': [200, 199], 'rama-rosa': [200, 176],
+      'tubos-amarillo': [164, 200], 'tubos-naranja': [129, 200],
+      'esponja-vidrio': [120, 200], 'gorgonia-luz': [175, 200], 'rama-luz': [187, 200], 'tubos-luz': [138, 200],
+      'anemona-luz': [200, 164], 'cerebro-luz': [200, 106], 'rama-luz-azul': [200, 160],
+    };
+    const SOMERO = ['cerebro-verde', 'anemona-rosa', 'tubos-naranja', 'rama-ocre', 'gorgonia-violeta', 'cerebro-ocre', 'anemona-coral', 'tubos-amarillo', 'mesa-verde', 'rama-rosa'];
+    const HONDO = ['rama-luz', 'tubos-luz', 'anemona-luz', 'gorgonia-luz', 'cerebro-luz', 'esponja-vidrio', 'rama-luz-azul'];
+    let titulos = [];
+    const vigiaCoral = 'IntersectionObserver' in ventana ? new ventana.IntersectionObserver((entradas) => {
+      for (const en of entradas) {
+        if (!en.isIntersecting) continue;
+        ponerImagenes(en.target);
+        vigiaCoral.unobserve(en.target);
+      }
+    }, { rootMargin: '900px 0px' }) : null;
+    function ponerImagenes(caja) {
+      for (const p of caja.querySelectorAll('[data-coral]')) p.style.backgroundImage = 'url("' + new URL('./recursos/coral/' + p.dataset.coral + '.webp', import.meta.url).href + '")';
+    }
+    function armarTitulos() {
       const desp = ventana.scrollY;
-      const tarjetas = [];
-      if (rejilla && cargo) tarjetas.push({ el: rejilla, inicio: true });
-      for (const el of principal.querySelectorAll(SELECTOR_TARJETAS)) tarjetas.push({ el, inicio: false });
+      const lista = [];
+      if (rejilla && cargo) lista.push({ el: rejilla, inicio: true });
+      for (const el of principal.querySelectorAll('.zona-cabeza')) lista.push({ el, inicio: false });
       const usadas = new Set();
       let anteriores = [];
-      tarjetas.forEach(({ el, inicio: esInicio }, i) => {
+      lista.forEach(({ el, inicio: esInicio }, i) => {
         const r = (esInicio ? cargo : el).getBoundingClientRect();
         const metros = metrosDe(r.top + desp + r.height / 2);
-        const banco = metros < 1000 ? SOMERO : metros < 4000 ? MEDIANOCHE : ABISMO;
-        // Más coral en lo somero; al bajar ralea.
-        const cuantas = metros < 200 ? 3 + (i % 2) : metros < 1000 ? 2 + (i % 2) : 1 + (i % 2);
+        const banco = metros < 1000 ? SOMERO : HONDO;
+        const cuantas = banco === SOMERO ? 3 : 2;
         let elegido = null;
-        for (let intento = 0; intento < 60 && !elegido; intento++) {
-          const azar = azarDe(i * 7919 + intento * 104729 + 17);
-          // Nunca una pieza de la tarjeta anterior: si no alcanzan, esta lleva menos.
+        for (let intento = 0; intento < 80 && !elegido; intento++) {
+          const azar = azarDe(i * 6007 + intento * 92821 + 5);
           const fuente = banco.filter((n) => !anteriores.includes(n));
           const piezas = [];
           while (piezas.length < Math.min(cuantas, fuente.length)) {
             const n = fuente[Math.floor(azar() * fuente.length)];
             if (!piezas.includes(n)) piezas.push(n);
           }
-          const lugares = [];
-          while (lugares.length < piezas.length) {
-            const l = LUGARES[Math.floor(azar() * LUGARES.length)];
-            if (!lugares.includes(l)) lugares.push(l);
-          }
-          const firma = piezas.map((n, k) => n + '@' + lugares[k]).sort().join('|');
-          if (!usadas.has(firma)) elegido = { piezas, lugares, firma, azar };
+          const firma = piezas.slice().sort().join('+');
+          if (!usadas.has(firma)) elegido = { piezas, firma, azar };
         }
         if (!elegido) return;
         usadas.add(elegido.firma);
@@ -1213,42 +1561,93 @@ export default {
         caja.setAttribute('data-descenso', '');
         caja.setAttribute('aria-hidden', 'true');
         caja.dataset.firma = elegido.firma;
-        const ancho = r.width;
-        // Las cabeceras de sección tienen más agua alrededor: su coral es más grande.
-        const grande = el.classList.contains('zona-cabeza') || esInicio ? 1.35 : 1;
-        const oscuro = banco === SOMERO ? limitar((metros - 150) / 850, 0, 1) : 0;
-        elegido.piezas.forEach((n, k) => {
-          const [w0, h0] = CORALES[n];
-          const alto = Math.round((esTelefono ? 56 + elegido.azar() * 30 : 84 + elegido.azar() * 60) * grande);
-          const anchoP = Math.min(Math.round(alto * w0 / h0), Math.round(ancho * 0.5));
+        // El ancho se mide ya puesto: en la presentación es el del panel, no el de la rejilla.
+        el.insertBefore(caja, el.firstChild);
+        const ancho = caja.getBoundingClientRect().width;
+        const n = elegido.piezas.length;
+        const hueco = ancho / n;
+        elegido.piezas.forEach((nombrePieza, k) => {
+          const [w0, h0] = CORAL3D[nombrePieza];
+          // Cada pieza cabe en su tramo del borde, entera: nada se sale de la tarjeta a los lados.
+          let alto = Math.round((esTelefono ? 78 : 132) * (0.85 + elegido.azar() * 0.4));
+          let anchoP = Math.round(alto * w0 / h0);
+          if (anchoP > hueco * 0.92) { anchoP = Math.floor(hueco * 0.92); alto = Math.round(anchoP * h0 / w0); }
           const p = doc.createElement('i');
           p.className = 'descenso-coral-pieza';
-          p.dataset.coral = n;
-          p.dataset.lugar = elegido.lugares[k];
+          p.dataset.coral = nombrePieza;
           p.style.width = anchoP + 'px';
           p.style.height = alto + 'px';
-          const lugar = elegido.lugares[k];
-          const corrida = Math.round(elegido.azar() * Math.max(0, ancho * 0.28 - anchoP * 0.2));
-          if (lugar.startsWith('cima')) p.style.bottom = 'calc(100% - ' + Math.round(alto * 0.22) + 'px)';
-          else p.style.top = 'calc(100% - ' + Math.round(alto * 0.38) + 'px)';
-          if (lugar.endsWith('izq')) p.style.left = (6 + corrida) + 'px';
-          else if (lugar.endsWith('der')) p.style.right = (6 + corrida) + 'px';
-          else p.style.left = Math.round((ancho - anchoP) * (0.35 + elegido.azar() * 0.3)) + 'px';
+          const libre = hueco - anchoP;
+          p.style.left = Math.round(k * hueco + libre * (0.2 + elegido.azar() * 0.6)) + 'px';
+          // Solo la base queda detrás del borde: el resto se ve completo.
+          p.style.bottom = 'calc(100% - ' + Math.round(alto * 0.1) + 'px)';
           if (elegido.azar() < 0.5) p.style.transform = 'scaleX(-1)';
-          // En lo menos somero el coral se apaga un poco, como todo lo que está más hondo.
-          if (oscuro > 0) p.style.filter = 'brightness(' + (1 - 0.45 * oscuro).toFixed(2) + ') saturate(' + (1 - 0.35 * oscuro).toFixed(2) + ')';
           caja.appendChild(p);
         });
-        el.insertBefore(caja, el.firstChild);
-        arrecife.push(caja);
+        titulos.push(caja);
         if (vigiaCoral) vigiaCoral.observe(caja);
-        else for (const p of caja.querySelectorAll('[data-coral]')) p.style.backgroundImage = 'url("' + new URL('./recursos/coral/' + p.dataset.coral + '.webp', import.meta.url).href + '")';
+        else ponerImagenes(caja);
       });
     }
-    limpiezas.push(() => {
-      if (vigiaCoral) vigiaCoral.disconnect();
-      for (const caja of arrecife) caja.remove();
+
+    function armarCoral() {
+      quitarCoral();
+      anchoCoral = m.ancho;
+      armarTitulos();
+      const desp = ventana.scrollY;
+      const tarjetas = [];
+      for (const el of principal.querySelectorAll(SELECTOR_TARJETAS)) tarjetas.push({ el, inicio: false });
+      let previo = null;
+      tarjetas.forEach(({ el, inicio: esInicio }, i) => {
+        const plan = planDe(i, previo);
+        if (!plan) return;
+        previo = plan;
+        let anfitrion = el;
+        let medida = el;
+        if (esInicio) {
+          // El panel de la presentación es un pseudoelemento: un contenedor ocupa su lugar en la rejilla.
+          anfitrion = doc.createElement('span');
+          anfitrion.className = 'descenso-coral en-inicio';
+          anfitrion.setAttribute('data-descenso', '');
+          anfitrion.setAttribute('aria-hidden', 'true');
+          el.insertBefore(anfitrion, el.firstChild);
+          medida = anfitrion;
+        }
+        const r = medida.getBoundingClientRect();
+        const metros = metrosDe(r.top + desp + r.height / 2);
+        const zona = metros < 200 ? 'superficie' : metros < 1000 ? 'media' : metros < 4000 ? 'hondo' : 'abisal';
+        const opciones = PALETAS[zona];
+        const paleta = opciones[plan.variante % opciones.length];
+        const svg = doc.createElement('span');
+        svg.className = 'descenso-borde';
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('data-descenso', '');
+        svg.dataset.firma = plan.firma + '|' + zona;
+        anfitrion.insertBefore(svg, anfitrion.firstChild);
+        const datos = { svg, medida, anfitrion: esInicio ? anfitrion : null, indice: i, azarBase: i * 131 + 7, paleta, plan, radio: esInicio ? null : el, anillo: anilloDe(el) };
+        arrecife.push(datos);
+        dibujarBorde(datos);
+        if (vigiaBorde) vigiaBorde.observe(svg);
+        if (vigiaTamano) vigiaTamano.observe(medida);
+      });
+    }
+    function quitarCoral() {
+      for (const d of arrecife) {
+        if (vigiaBorde) vigiaBorde.unobserve(d.svg);
+        if (vigiaTamano) vigiaTamano.unobserve(d.medida);
+        d.svg.remove();
+        if (d.alga) d.alga.remove();
+        if (d.anfitrion) d.anfitrion.remove();
+      }
       arrecife = [];
+      for (const caja of titulos) { if (vigiaCoral) vigiaCoral.unobserve(caja); caja.remove(); }
+      titulos = [];
+    }
+    limpiezas.push(() => {
+      if (vigiaBorde) vigiaBorde.disconnect();
+      if (vigiaTamano) vigiaTamano.disconnect();
+      if (vigiaCoral) vigiaCoral.disconnect();
+      quitarCoral();
     });
 
     // ---------- arranque y respuesta a cambios ----------
