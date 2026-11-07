@@ -471,7 +471,9 @@ export default {
       const subida = metrica.fontBoundingBoxAscent || tam * 0.9;
       const mayuscula = metrica.actualBoundingBoxAscent || tam * 0.7;
       const mayus = cs.textTransform === 'uppercase';
-      let ultimaBase = 0;
+      // Las bases van en coordenadas de la pantalla y son negativas si el nombre ya quedó arriba:
+      // por eso se empieza desde menos infinito y no desde cero.
+      let ultimaBase = -Infinity;
       for (const p of palabras) {
         const base = p.r.top + subida;
         ultimaBase = Math.max(ultimaBase, base);
@@ -1569,7 +1571,10 @@ export default {
         elegido.piezas.forEach((nombrePieza, k) => {
           const [w0, h0] = CORAL3D[nombrePieza];
           // Cada pieza cabe en su tramo del borde, entera: nada se sale de la tarjeta a los lados.
-          let alto = Math.round((esTelefono ? 78 : 132) * (0.85 + elegido.azar() * 0.4));
+          // Toda pieza crece desde detrás del borde: su parte de abajo queda tapada. Las que traen
+          // base modelada (tubos y esponjas) esconden más, para que la base nunca se vea encima.
+          const tapado = /^(tubos|esponja)/.test(nombrePieza) ? 0.3 : 0.2;
+          let alto = Math.round((esTelefono ? 78 : 132) * (0.85 + elegido.azar() * 0.4) * (1 + tapado - 0.1));
           let anchoP = Math.round(alto * w0 / h0);
           if (anchoP > hueco * 0.92) { anchoP = Math.floor(hueco * 0.92); alto = Math.round(anchoP * h0 / w0); }
           const p = doc.createElement('i');
@@ -1579,8 +1584,8 @@ export default {
           p.style.height = alto + 'px';
           const libre = hueco - anchoP;
           p.style.left = Math.round(k * hueco + libre * (0.2 + elegido.azar() * 0.6)) + 'px';
-          // Solo la base queda detrás del borde: el resto se ve completo.
-          p.style.bottom = 'calc(100% - ' + Math.round(alto * 0.1) + 'px)';
+          p.style.bottom = 'calc(100% - ' + Math.round(alto * tapado) + 'px)';
+          p.dataset.tapado = String(tapado);
           if (elegido.azar() < 0.5) p.style.transform = 'scaleX(-1)';
           caja.appendChild(p);
         });

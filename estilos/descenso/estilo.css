@@ -214,7 +214,6 @@ html[data-estilo="descenso"] .ver-video {
   min-height: 48px; min-width: 44px; padding: 0 20px; border-radius: 6px;
   border: 1px solid rgba(242, 250, 249, 0.55); background: transparent; color: var(--claro);
   font: 700 1rem/1.2 var(--lectura); text-decoration: none; cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 html[data-estilo="descenso"] .boton:hover,
 html[data-estilo="descenso"] .ver-video:hover { border-color: var(--bio); background: rgba(77, 255, 210, 0.08); }
@@ -226,7 +225,8 @@ html[data-estilo="descenso"] .boton svg { width: 18px; height: 18px; flex: none;
 /* Todas se acomodan desde el principio: la profundidad depende de dónde queda cada una. */
 html[data-estilo="descenso"] .zona { position: relative; padding-block: 112px; content-visibility: visible; }
 html[data-estilo="descenso"] .zona-cabeza {
-  display: inline-block; max-width: 100%; margin-bottom: 36px; padding: 18px 20px 22px;
+  /* Abajo va más holgado: el renglón de Anton es más alto que la letra y tiene que quedar dentro del panel. */
+  display: inline-block; max-width: 100%; margin-bottom: 36px; padding: 18px 20px 32px;
   border-radius: 14px; background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
 }
 html[data-estilo="descenso"] .zona-cabeza h2 { margin-top: 8px; font-size: clamp(2.75rem, 12vw, 7rem); line-height: 1.02; color: var(--claro); }
@@ -275,7 +275,7 @@ html[data-estilo="descenso"] .proyecto-videos .videos { display: grid; grid-temp
 html[data-estilo="descenso"] .video-marco { position: relative; aspect-ratio: 9 / 16; overflow: hidden; border-radius: 10px; background: #000; }
 html[data-estilo="descenso"] .video-marco img,
 html[data-estilo="descenso"] .video-marco video { width: 100%; height: 100%; object-fit: cover; display: block; }
-html[data-estilo="descenso"] .video-nombre { display: block; margin-top: 8px; font-weight: 700; font-size: 0.875rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--claro-suave); }
+html[data-estilo="descenso"] .video-nombre { display: block; margin-top: 8px; font-weight: 700; font-size: 0.875rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--claro-suave); overflow-wrap: anywhere; }
 html[data-estilo="descenso"] .proyecto-videos figcaption { position: static; display: inline-block; margin-top: 12px; padding: 0; background: none; }
 /* El botón para ver un comercial va encima del póster, abajo al centro, y todo el póster responde
    al toque: el pseudoelemento del propio enlace lo cubre y el recorte del marco lo limita. */
