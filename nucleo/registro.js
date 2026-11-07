@@ -12,5 +12,5 @@ window.RegistroEstilos = [
   { id: 'pausa', nombre: 'Pausa', disponible: true },
   { id: 'collage', nombre: 'Collage', disponible: true },
   { id: 'descenso', nombre: 'Descenso', disponible: true },
-  { id: 'vuelo', nombre: 'Vuelo', disponible: false },
+  { id: 'vuelo', nombre: 'Vuelo', disponible: true },
 ];

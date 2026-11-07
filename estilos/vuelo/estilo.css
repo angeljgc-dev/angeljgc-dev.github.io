@@ -1,0 +1,498 @@
+/* Estilo "vuelo". La página empieza en la cabina de un jet, frente a la ventanilla, de noche
+   por dentro y al atardecer por fuera. Al bajar, la cámara se acerca al vidrio, lo atraviesa y
+   vuela entre las nubes; el resto de la página sigue en el cielo, que se oscurece con la altura.
+   El cielo es una secuencia de cuadros en un lienzo fijo detrás de todo; antes de que llegue,
+   el primer cuadro ya está puesto como fondo, para que la portada se vea desde el primer pintado.
+   El texto va sobre la pared oscura de la cabina o sobre paneles de vidrio ahumado. */
+
+@font-face {
+  font-family: 'Vuelo Atkinson';
+  src: url('../../fuentes/atkinson-400.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Vuelo Atkinson';
+  src: url('../../fuentes/atkinson-700.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+html[data-estilo="vuelo"] {
+  /* De noche en la cabina y en lo alto; oro del sol y rosa del atardecer como acentos. */
+  --noche: #0D0B1C;
+  --panel: rgba(16, 13, 34, 0.86);
+  --panel-solido: #15122C;
+  --panel-hondo: rgba(9, 8, 22, 0.72);
+  --tinta: #FFF8F0;
+  --tinta-suave: #E3D8EE;
+  --oro: #F6C98E;
+  --rosa: #F5BCC8;
+  --borde: rgba(255, 236, 220, 0.18);
+  --sombra: 0 30px 60px -30px rgba(5, 4, 14, 0.85), 0 10px 24px -14px rgba(5, 4, 14, 0.7);
+  --lectura: 'Vuelo Atkinson', Arial, sans-serif;
+  --margen: 16px;
+  --ancho: 1240px;
+  --alto-cabecera: 64px;
+  --cruce: 0px;
+  color-scheme: dark;
+  background: var(--noche);
+  scroll-padding-top: calc(var(--alto-cabecera) + 12px);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+/* Con la secuencia, la portada se alarga: ese tramo es el que recorre la cámara. */
+html[data-estilo="vuelo"].anima { --cruce: 150svh; }
+html[data-estilo="vuelo"] *,
+html[data-estilo="vuelo"] *::before,
+html[data-estilo="vuelo"] *::after { box-sizing: border-box; }
+
+html[data-estilo="vuelo"] body {
+  margin: 0;
+  color: var(--tinta);
+  font: 400 1.125rem/1.6 var(--lectura);
+  overflow-x: clip;
+  background: transparent;
+}
+/* Detrás de todo: primero un fondo propio, la penumbra de la cabina con el resplandor de la
+   ventanilla; en cuanto el estilo confirma que la secuencia está publicada, el primer cuadro
+   (o el último, con movimiento reducido). Ninguna imagen se pide si no existe. El lienzo
+   tapa este fondo cuando llega. */
+html[data-estilo="vuelo"] body::before {
+  content: ''; position: fixed; inset: 0; z-index: -3; pointer-events: none;
+  background:
+    radial-gradient(ellipse 15% 27% at 50% 50%, #CBBFB8 0%, #A2938A 42%, rgba(70, 52, 38, 0.9) 64%, rgba(40, 28, 20, 0) 100%),
+    radial-gradient(ellipse 45% 22% at 50% 8%, rgba(200, 140, 86, 0.32), rgba(200, 140, 86, 0) 100%),
+    linear-gradient(180deg, #2A1D14 0%, #1C140E 60%, #140E0A 100%);
+  background-position: center; background-size: cover; background-repeat: no-repeat;
+}
+html[data-estilo="vuelo"][data-vuelo-portada="escritorio"] body::before { background: #140E0A url('recursos/escritorio/001.webp') center / cover no-repeat; }
+html[data-estilo="vuelo"][data-vuelo-portada="movil"] body::before { background: #140E0A url('recursos/movil/001.webp') center / cover no-repeat; }
+html[data-estilo="vuelo"][data-vuelo-portada="escritorio-final"] body::before { background: #2A2440 url('recursos/escritorio/final.webp') center / cover no-repeat; }
+html[data-estilo="vuelo"][data-vuelo-portada="movil-final"] body::before { background: #2A2440 url('recursos/movil/final.webp') center / cover no-repeat; }
+/* Con movimiento reducido y sin cuadro fijo publicado, un cielo de atardecer en degradado. */
+html[data-estilo="vuelo"][data-vuelo-modo="fijo"]:not([data-vuelo-portada]) body::before {
+  background: linear-gradient(180deg, #3B3560 0%, #6E5F86 42%, #C9A2A0 70%, #E8C3A4 100%);
+}
+
+html[data-estilo="vuelo"] img { max-width: 100%; height: auto; display: block; }
+html[data-estilo="vuelo"] a { color: inherit; }
+html[data-estilo="vuelo"] h1,
+html[data-estilo="vuelo"] h2,
+html[data-estilo="vuelo"] h3,
+html[data-estilo="vuelo"] h4 { font-family: var(--lectura); font-weight: 700; margin: 0; letter-spacing: -0.015em; line-height: 1.08; }
+html[data-estilo="vuelo"] p,
+html[data-estilo="vuelo"] ul,
+html[data-estilo="vuelo"] ol,
+html[data-estilo="vuelo"] dl,
+html[data-estilo="vuelo"] dd,
+html[data-estilo="vuelo"] figure { margin: 0; }
+html[data-estilo="vuelo"] ul,
+html[data-estilo="vuelo"] ol { padding: 0; list-style: none; }
+html[data-estilo="vuelo"] :focus-visible { outline: 3px solid var(--oro); outline-offset: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+  html[data-estilo="vuelo"] { scroll-behavior: smooth; }
+}
+
+html[data-estilo="vuelo"] .saltar {
+  position: absolute; left: var(--margen); top: -100px; z-index: 70;
+  background: var(--tinta); color: var(--noche); padding: 12px 16px; min-height: 44px;
+  font-weight: 700; text-decoration: none;
+}
+html[data-estilo="vuelo"] .saltar:focus { top: 8px; }
+html[data-estilo="vuelo"] .envoltura { width: 100%; max-width: calc(var(--ancho) + 2 * var(--margen)); margin: 0 auto; padding-inline: var(--margen); }
+html[data-estilo="vuelo"] .rotulo {
+  display: block; font-weight: 700; font-size: 0.875rem; line-height: 1.4;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--oro);
+}
+
+/* ---------- El cielo: lienzo fijo, el velo de altura y la cortina de la entrada ---------- */
+html[data-estilo="vuelo"] .vuelo-cielo {
+  position: fixed; inset: 0; z-index: -2; width: 100%; height: 100%;
+  display: block; pointer-events: none; opacity: 0;
+}
+html[data-estilo="vuelo"] .vuelo-cielo.encendido { opacity: 1; }
+/* Arriba de las nubes el cielo se va oscureciendo hacia la noche. */
+html[data-estilo="vuelo"] .vuelo-altura {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, #0B0919 0%, #1A1436 46%, #2A1E44 100%);
+  opacity: var(--vuelo-altura, 0);
+}
+html[data-estilo="vuelo"] .vuelo-cortina {
+  position: fixed; inset: 0; z-index: 30; pointer-events: none; background: #07060F; opacity: 0;
+}
+html[data-estilo="vuelo"].vuelo-entra .vuelo-cortina { animation: vuelo-luces 1.5s cubic-bezier(0.3, 0, 0.2, 1) both; }
+@keyframes vuelo-luces { from { opacity: 1; } 40% { opacity: 0.9; } to { opacity: 0; } }
+
+/* ---------- Cabecera ---------- */
+html[data-estilo="vuelo"] .cabecera {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+  background: linear-gradient(180deg, rgba(9, 8, 20, 0.92), rgba(9, 8, 20, 0.84));
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--borde); color: var(--tinta);
+}
+html[data-estilo="vuelo"] .cabecera .envoltura { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: var(--alto-cabecera); }
+html[data-estilo="vuelo"] .marca { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; min-width: 44px; text-decoration: none; font-weight: 700; }
+html[data-estilo="vuelo"] .marca svg { width: 34px; height: 34px; flex: none; }
+html[data-estilo="vuelo"] .marca span { display: none; }
+html[data-estilo="vuelo"] .menu { display: flex; gap: 2px; margin-left: auto; }
+html[data-estilo="vuelo"] .menu a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px;
+  font-weight: 700; font-size: 0.9375rem; text-decoration: none;
+}
+html[data-estilo="vuelo"] .menu a:hover { text-decoration: underline; text-underline-offset: 6px; text-decoration-color: var(--oro); }
+html[data-estilo="vuelo"] .menu .solo-ancho { display: none; }
+html[data-estilo="vuelo"] .ranura-estilo { display: flex; align-items: center; }
+html[data-estilo="vuelo"] .selector-estilo select {
+  min-height: 44px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--borde);
+  background: var(--panel-solido); color: var(--tinta); font: 700 0.9375rem/1 var(--lectura);
+}
+html[data-estilo="vuelo"] .selector-estilo option { color: var(--tinta); background: var(--panel-solido); }
+
+/* ---------- Portada: el nombre a un lado de la ventanilla, el cargo al otro ---------- */
+html[data-estilo="vuelo"] .inicio { position: relative; overflow-x: clip; }
+html[data-estilo="vuelo"] .inicio-reja {
+  position: relative; display: grid;
+  grid-template-columns: var(--margen) minmax(0, 1fr) var(--margen);
+  grid-template-rows: [portada] 100svh [cruce] var(--cruce) [foto] auto [lectura] auto [acciones] auto [datos] auto [fin];
+  max-width: none; padding-inline: 0;
+}
+html[data-estilo="vuelo"] .inicio-reja > * { position: relative; z-index: 1; grid-column: 2; }
+/* Lo de la portada se queda pegado a la pantalla mientras la cámara avanza, crece con ella
+   y se desvanece antes de cruzar el vidrio. */
+html[data-estilo="vuelo"] .saludo,
+html[data-estilo="vuelo"] .nombre,
+html[data-estilo="vuelo"] .cargo,
+html[data-estilo="vuelo"] .lugar {
+  grid-row: portada / lectura; align-self: start; position: sticky;
+  opacity: calc(1 - var(--vuelo-salida, 0));
+  transition: none;
+}
+html[data-estilo="vuelo"].vuelo-cruzado .saludo,
+html[data-estilo="vuelo"].vuelo-cruzado .nombre,
+html[data-estilo="vuelo"].vuelo-cruzado .cargo,
+html[data-estilo="vuelo"].vuelo-cruzado .lugar { pointer-events: none; }
+html[data-estilo="vuelo"] .saludo,
+html[data-estilo="vuelo"] .lugar {
+  font-weight: 700; font-size: 0.9375rem; line-height: 1.3; letter-spacing: 0.18em; text-transform: uppercase; color: var(--oro);
+  /* Una etiqueta de vidrio ahumado: arriba de la ventanilla cae la luz de la tira de la cabina. */
+  padding: 5px 12px; border-radius: 999px; background: rgba(10, 8, 20, 0.8);
+}
+html[data-estilo="vuelo"] .nombre { color: var(--tinta); }
+html[data-estilo="vuelo"] .nombre span { display: block; }
+html[data-estilo="vuelo"] .cargo { color: var(--tinta); font-weight: 700; }
+/* Un halo oscuro detrás del texto de la portada, para que se lea sobre cualquier tono de la pared. */
+html[data-estilo="vuelo"] .nombre::before,
+html[data-estilo="vuelo"] .cargo::before {
+  content: ''; position: absolute; inset: -34% -22%; z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(8, 6, 16, 0.84) 0%, rgba(8, 6, 16, 0.78) 62%, rgba(8, 6, 16, 0) 100%);
+}
+
+/* Teléfono y tableta vertical: el nombre arriba de la ventanilla y el cargo abajo. */
+html[data-estilo="vuelo"] .saludo { top: calc(var(--alto-cabecera) + 2.2svh); margin-top: calc(var(--alto-cabecera) + 2.2svh); justify-self: center; text-align: center; transform-origin: 50% 100%; transform: translateY(calc(var(--vuelo-acerca, 0) * -26svh)) scale(calc(1 + var(--vuelo-acerca, 0) * 0.6)); }
+html[data-estilo="vuelo"] .nombre {
+  top: calc(var(--alto-cabecera) + 5.4svh); margin-top: calc(var(--alto-cabecera) + 5.4svh);
+  justify-self: center; text-align: center;
+  font-size: min(10.6vw, 5.4svh); line-height: 1.04;
+  transform-origin: 50% 100%; transform: translateY(calc(var(--vuelo-acerca, 0) * -26svh)) scale(calc(1 + var(--vuelo-acerca, 0) * 0.6));
+}
+html[data-estilo="vuelo"] .cargo {
+  top: 74.5svh; margin-top: 74.5svh; justify-self: center; text-align: center;
+  font-size: min(6.4vw, 3.2svh); line-height: 1.2;
+  transform-origin: 50% 0; transform: translateY(calc(var(--vuelo-acerca, 0) * 26svh)) scale(calc(1 + var(--vuelo-acerca, 0) * 0.6));
+}
+html[data-estilo="vuelo"] .lugar {
+  top: calc(74.5svh + 3.2svh + 1.6rem); margin-top: calc(74.5svh + 3.2svh + 1.6rem); justify-self: center; text-align: center;
+  transform-origin: 50% 0; transform: translateY(calc(var(--vuelo-acerca, 0) * 26svh)) scale(calc(1 + var(--vuelo-acerca, 0) * 0.6));
+}
+/* En pantalla vertical el nombre y el cargo van en vidrio ahumado, como las etiquetas: un panel
+   limpio en lugar de una sombra difusa. */
+@media (orientation: portrait) {
+  html[data-estilo="vuelo"] .nombre,
+  html[data-estilo="vuelo"] .cargo {
+    background: rgba(10, 8, 20, 0.8); border: 1px solid var(--borde); border-radius: 18px;
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  html[data-estilo="vuelo"] .nombre { padding: 10px 18px 12px; }
+  html[data-estilo="vuelo"] .cargo { padding: 6px 16px 8px; }
+  html[data-estilo="vuelo"] .nombre::before,
+  html[data-estilo="vuelo"] .cargo::before { display: none; }
+}
+/* Tableta vertical: la ventanilla del cuadro ancho ocupa más alto; el texto se acerca a los bordes. */
+@media (orientation: portrait) and (min-width: 600px) {
+  html[data-estilo="vuelo"] .saludo { top: calc(var(--alto-cabecera) + 1.6svh); margin-top: calc(var(--alto-cabecera) + 1.6svh); }
+  html[data-estilo="vuelo"] .nombre { top: calc(var(--alto-cabecera) + 4.6svh); margin-top: calc(var(--alto-cabecera) + 4.6svh); font-size: min(7vw, 4.4svh); }
+  html[data-estilo="vuelo"] .cargo { top: 82.5svh; margin-top: 82.5svh; font-size: min(4.6vw, 3svh); }
+  html[data-estilo="vuelo"] .lugar { top: calc(82.5svh + 3svh + 1.8rem); margin-top: calc(82.5svh + 3svh + 1.8rem); }
+}
+/* Pantalla horizontal: a los dos lados de la ventanilla, que ocupa el centro. */
+@media (orientation: landscape) {
+  html[data-estilo="vuelo"] .inicio-reja {
+    grid-template-columns: var(--margen) minmax(0, 1fr) minmax(0, var(--ventana, 34vw)) minmax(0, 1fr) var(--margen);
+    --ventana: max(36vw, 33svh * 1.78);
+  }
+  html[data-estilo="vuelo"] .inicio-reja > * { grid-column: 2 / 5; }
+  html[data-estilo="vuelo"] .saludo,
+  html[data-estilo="vuelo"] .nombre {
+    grid-column: 2; justify-self: start; text-align: left; padding-left: clamp(0px, 3vw, 64px);
+    transform-origin: 100% 50%;
+    transform: translateX(calc(var(--vuelo-acerca, 0) * -24vw)) scale(calc(1 + var(--vuelo-acerca, 0) * 0.55));
+  }
+  html[data-estilo="vuelo"] .saludo { top: 27svh; margin-top: 27svh; }
+  html[data-estilo="vuelo"] .nombre { top: calc(27svh + 2.2rem); margin-top: calc(27svh + 2.2rem); font-size: clamp(2.25rem, min(4.4vw, 8svh), 5.2rem); line-height: 1.02; max-width: 100%; }
+  html[data-estilo="vuelo"] .cargo,
+  html[data-estilo="vuelo"] .lugar {
+    grid-column: 4; justify-self: end; text-align: right; padding-right: clamp(0px, 3vw, 64px);
+    transform-origin: 0 50%;
+    transform: translateX(calc(var(--vuelo-acerca, 0) * 24vw)) scale(calc(1 + var(--vuelo-acerca, 0) * 0.55));
+  }
+  html[data-estilo="vuelo"] .lugar { top: 58svh; margin-top: 58svh; white-space: nowrap; font-size: clamp(0.8125rem, 1.15vw, 0.9375rem); letter-spacing: 0.14em; }
+  html[data-estilo="vuelo"] .cargo { top: calc(58svh + 2rem); margin-top: calc(58svh + 2rem); font-size: clamp(1.25rem, min(1.95vw, 3.5svh), 2.5rem); line-height: 1.12; white-space: nowrap; }
+}
+
+/* Sin recorrido (movimiento reducido, o si el estilo no llegó a montarse) la portada no se
+   queda pegada: ocupa su pantalla y la lectura sigue debajo. */
+html[data-estilo="vuelo"]:not(.anima) .saludo,
+html[data-estilo="vuelo"]:not(.anima) .nombre,
+html[data-estilo="vuelo"]:not(.anima) .cargo,
+html[data-estilo="vuelo"]:not(.anima) .lugar { position: relative; top: auto; grid-row: portada; }
+
+/* Con el cuadro fijo del cielo abierto detrás, el texto de la portada va en paneles. */
+html[data-estilo="vuelo"][data-vuelo-modo="fijo"] .saludo,
+html[data-estilo="vuelo"][data-vuelo-modo="fijo"] .lugar,
+html[data-estilo="vuelo"][data-vuelo-modo="fijo"] .nombre,
+html[data-estilo="vuelo"][data-vuelo-modo="fijo"] .cargo {
+  background: var(--panel); border: 1px solid var(--borde); border-radius: 18px; padding: 8px 16px;
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+html[data-estilo="vuelo"][data-vuelo-modo="fijo"] .nombre { padding: 14px 20px; }
+html[data-estilo="vuelo"][data-vuelo-modo="fijo"] .nombre::before,
+html[data-estilo="vuelo"][data-vuelo-modo="fijo"] .cargo::before { display: none; }
+
+/* ---------- Ya entre las nubes: el resumen, las acciones y los datos ---------- */
+html[data-estilo="vuelo"] .retrato { grid-row: foto; }
+html[data-estilo="vuelo"] .resumen { grid-row: lectura; }
+html[data-estilo="vuelo"] .acciones { grid-row: acciones; }
+html[data-estilo="vuelo"] .datos { grid-row: datos; }
+html[data-estilo="vuelo"] .resumen {
+  align-self: start; margin-top: 20px; padding: 24px 20px; max-width: 40em;
+  font-size: 1.25rem; line-height: 1.6;
+  background: var(--panel); border: 1px solid var(--borde); border-radius: 22px; box-shadow: var(--sombra);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+/* El retrato va en su propia ventanilla, chica. */
+html[data-estilo="vuelo"] .retrato {
+  justify-self: center; align-self: start; width: 150px; aspect-ratio: 0.74; margin: 0;
+  border-radius: 46% / 40%; overflow: hidden; background: var(--panel-solido);
+  border: 10px solid #EDE7DE; box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.35), var(--sombra);
+  margin-top: 14svh; z-index: 2;
+}
+html[data-estilo="vuelo"] .retrato img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; }
+html[data-estilo="vuelo"] .acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+html[data-estilo="vuelo"] .datos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; padding-bottom: 18svh; }
+html[data-estilo="vuelo"] .dato {
+  padding: 14px 16px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--borde);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+html[data-estilo="vuelo"] .dato dt { font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--oro); }
+html[data-estilo="vuelo"] .dato dd { margin-top: 4px; font-size: 1.125rem; line-height: 1.35; }
+
+/* ---------- Botones: píldoras, como los mandos de la cabina ---------- */
+html[data-estilo="vuelo"] .boton,
+html[data-estilo="vuelo"] .ver-video {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 48px; min-width: 44px; padding: 0 22px; border-radius: 999px;
+  border: 1px solid rgba(255, 248, 240, 0.5); background: var(--panel-solido); color: var(--tinta);
+  font: 700 1rem/1.2 var(--lectura); text-decoration: none; cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+html[data-estilo="vuelo"] .boton:hover,
+html[data-estilo="vuelo"] .ver-video:hover { border-color: var(--oro); background: #221C40; }
+html[data-estilo="vuelo"] .boton-principal { background: var(--oro); border-color: var(--oro); color: #17112B; }
+html[data-estilo="vuelo"] .boton-principal:hover { background: #FFD9A8; border-color: #FFD9A8; color: #17112B; }
+
+/* ---------- Las demás secciones, en el cielo ---------- */
+html[data-estilo="vuelo"] .zona { position: relative; padding-block: 104px; }
+html[data-estilo="vuelo"] .zona-cabeza {
+  display: inline-block; max-width: 100%; margin-bottom: 36px; padding: 18px 22px 22px;
+  border-radius: 20px; background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+html[data-estilo="vuelo"] .zona-cabeza h2 { margin-top: 8px; font-size: clamp(2.25rem, 9vw, 4.75rem); line-height: 1.02; }
+html[data-estilo="vuelo"] .zona-cabeza p { margin-top: 14px; max-width: 36em; }
+
+html[data-estilo="vuelo"] .proyectos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+html[data-estilo="vuelo"] .proyecto {
+  position: relative; display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid var(--borde); border-radius: 22px; box-shadow: var(--sombra);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+html[data-estilo="vuelo"] .proyecto[data-destacado] { grid-column: 1 / -1; }
+html[data-estilo="vuelo"] .proyecto-medio { position: relative; margin: 0; aspect-ratio: 16 / 10; border-radius: 21px 21px 0 0; background: var(--panel-hondo); overflow: hidden; }
+html[data-estilo="vuelo"] .proyecto-medio > img { width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+html[data-estilo="vuelo"] .proyecto-medio figcaption {
+  position: absolute; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 999px;
+  background: var(--panel-solido); color: var(--tinta); font-weight: 700; font-size: 0.875rem; line-height: 1.3;
+}
+html[data-estilo="vuelo"] .proyecto-cifra { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 22px; height: 100%; }
+html[data-estilo="vuelo"] .proyecto-cifra .antes { font: 700 clamp(2.5rem, 10vw, 3.75rem)/1 var(--lectura); color: var(--tinta-suave); text-decoration: line-through; text-decoration-thickness: 3px; }
+html[data-estilo="vuelo"] .proyecto-cifra .despues { font: 700 clamp(3.75rem, 15vw, 5.75rem)/1 var(--lectura); color: var(--oro); }
+html[data-estilo="vuelo"] .proyecto-cifra .nota,
+html[data-estilo="vuelo"] .proyecto-esquema li:last-child { font-weight: 700; font-size: 0.875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tinta-suave); margin-top: 6px; }
+html[data-estilo="vuelo"] .proyecto-esquema { display: flex; align-items: center; padding: 22px; }
+html[data-estilo="vuelo"] .proyecto-esquema ol { display: grid; gap: 6px; }
+html[data-estilo="vuelo"] .proyecto-esquema li { font: 700 clamp(1.5rem, 6vw, 2.25rem)/1.1 var(--lectura); color: var(--tinta); }
+html[data-estilo="vuelo"] .proyecto-esquema li:not(:last-child)::after { content: ''; display: block; width: 2px; height: 14px; margin: 6px 0 0 10px; background: var(--oro); }
+html[data-estilo="vuelo"] .proyecto-videos { aspect-ratio: auto; padding: 14px; overflow: visible; }
+html[data-estilo="vuelo"] .proyecto-videos .videos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+html[data-estilo="vuelo"] .video-marco { position: relative; aspect-ratio: 9 / 16; overflow: hidden; border-radius: 14px; background: #000; }
+html[data-estilo="vuelo"] .video-marco img,
+html[data-estilo="vuelo"] .video-marco video { width: 100%; height: 100%; object-fit: cover; display: block; }
+html[data-estilo="vuelo"] .video-nombre { display: block; margin-top: 8px; font-weight: 700; font-size: 0.875rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tinta-suave); }
+html[data-estilo="vuelo"] .proyecto-videos figcaption { position: static; display: inline-block; margin-top: 12px; padding: 0; background: none; }
+html[data-estilo="vuelo"] .video-marco .ver-video {
+  position: absolute; left: 50%; bottom: 10px; z-index: 1; transform: translateX(-50%);
+  min-height: 44px; min-width: 44px; padding: 0 14px 0 12px; gap: 8px; white-space: nowrap;
+  background: var(--tinta); border-color: var(--tinta); color: var(--noche); font-size: 0.9375rem;
+}
+html[data-estilo="vuelo"] .video-marco .ver-video:hover { background: #FFFFFF; border-color: var(--oro); color: var(--noche); }
+html[data-estilo="vuelo"] .video-marco .ver-video::after { content: ''; position: absolute; inset: -2000px -1000px -20px; }
+html[data-estilo="vuelo"] .ver-video::before { content: ''; width: 0; height: 0; border-left: 10px solid currentColor; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+html[data-estilo="vuelo"] .proyecto-texto { padding: 20px 20px 24px; display: flex; flex-direction: column; flex: 1; }
+html[data-estilo="vuelo"] .proyecto-tipo { display: block; font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--oro); }
+html[data-estilo="vuelo"] .proyecto-titulo { font-size: 2rem; margin-top: 6px; }
+html[data-estilo="vuelo"] .proyecto-texto p { margin-top: 12px; }
+html[data-estilo="vuelo"] .proyecto-cifras { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+html[data-estilo="vuelo"] .proyecto-cifras li { font-weight: 700; font-size: 1.0625rem; line-height: 1.3; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--borde); background: var(--panel-hondo); }
+html[data-estilo="vuelo"] .proyecto-stack { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+html[data-estilo="vuelo"] .proyecto-stack li { font-size: 1rem; line-height: 1.3; padding: 4px 12px; border-radius: 999px; background: var(--panel-hondo); }
+html[data-estilo="vuelo"] .proyecto-enlaces { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+html[data-estilo="vuelo"] .mas-sitios {
+  margin-top: 32px; padding: 20px; border-radius: 20px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="vuelo"] .mas-sitios ul { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+html[data-estilo="vuelo"] .trayecto,
+html[data-estilo="vuelo"] .grados { display: grid; gap: 20px; }
+html[data-estilo="vuelo"] .puesto {
+  padding: 20px 20px 22px; border-radius: 20px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+html[data-estilo="vuelo"] .puesto h3 { font-size: clamp(1.5rem, 5.4vw, 2.25rem); margin-top: 6px; }
+html[data-estilo="vuelo"] .puesto h4 { font-size: clamp(1.375rem, 4.6vw, 1.875rem); margin-top: 6px; }
+html[data-estilo="vuelo"] .meta,
+html[data-estilo="vuelo"] .meta-chica { display: block; font-weight: 700; font-size: 0.875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--oro); }
+html[data-estilo="vuelo"] .lugar-puesto { display: block; margin-top: 6px; color: var(--tinta-suave); }
+html[data-estilo="vuelo"] .puesto ul { margin-top: 14px; display: grid; gap: 10px; }
+html[data-estilo="vuelo"] .puesto ul li { position: relative; padding-left: 20px; }
+html[data-estilo="vuelo"] .puesto ul li::before { content: ''; position: absolute; left: 2px; top: 0.7em; width: 7px; height: 7px; border-radius: 50%; background: var(--rosa); }
+html[data-estilo="vuelo"] .subtitulo {
+  display: inline-block; margin: 56px 0 20px; padding: 14px 20px; border-radius: 18px;
+  font-size: clamp(1.75rem, 6vw, 2.75rem);
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="vuelo"] .idiomas {
+  margin-top: 20px; display: grid; gap: 8px; padding: 20px; border-radius: 20px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+
+html[data-estilo="vuelo"] .tesis {
+  display: grid; gap: 22px; padding: 24px 20px; border-radius: 22px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+html[data-estilo="vuelo"] .tesis-texto { font-size: 1.25rem; line-height: 1.55; max-width: 38em; }
+html[data-estilo="vuelo"] .tesis-datos { display: grid; gap: 12px; }
+html[data-estilo="vuelo"] .tesis-datos li { padding-top: 12px; border-top: 1px solid var(--borde); }
+html[data-estilo="vuelo"] .tesis-datos strong { display: block; font-size: 0.875rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--oro); }
+
+html[data-estilo="vuelo"] .grupos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+html[data-estilo="vuelo"] .grupo {
+  padding: 18px 18px 20px; border-radius: 20px;
+  background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+html[data-estilo="vuelo"] .grupo h3 { font-size: 1.5rem; }
+html[data-estilo="vuelo"] .etiquetas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+html[data-estilo="vuelo"] .etiquetas li { font-size: 1rem; line-height: 1.3; padding: 5px 12px; border-radius: 999px; background: var(--panel-hondo); border: 1px solid var(--borde); }
+
+html[data-estilo="vuelo"] .contacto { padding-bottom: 200px; }
+html[data-estilo="vuelo"] .canales { display: grid; gap: 16px; }
+html[data-estilo="vuelo"] .canal {
+  display: flex; flex-direction: column; gap: 4px; min-height: 64px; padding: 14px 20px; border-radius: 20px;
+  text-decoration: none; background: var(--panel); border: 1px solid var(--borde); box-shadow: var(--sombra);
+  transition: border-color 0.2s;
+}
+html[data-estilo="vuelo"] .canal:hover { border-color: var(--oro); }
+html[data-estilo="vuelo"] .canal-tipo { font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--oro); }
+html[data-estilo="vuelo"] .canal-dato { font-size: 1.0625rem; overflow-wrap: anywhere; }
+html[data-estilo="vuelo"] .pie { position: relative; padding: 0 0 28px; }
+html[data-estilo="vuelo"] .pie p { display: inline-block; padding: 10px 16px; border-radius: 999px; background: var(--panel-solido); color: var(--tinta-suave); font-size: 1rem; }
+
+/* ---------- Entrada: se encienden las luces de la cabina y aparece el texto ---------- */
+html[data-estilo="vuelo"].vuelo-entra .saludo,
+html[data-estilo="vuelo"].vuelo-entra .nombre,
+html[data-estilo="vuelo"].vuelo-entra .cargo,
+html[data-estilo="vuelo"].vuelo-entra .lugar { animation: vuelo-aparece 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+html[data-estilo="vuelo"].vuelo-entra .saludo { animation-delay: 0.45s; }
+html[data-estilo="vuelo"].vuelo-entra .nombre { animation-delay: 0.6s; }
+html[data-estilo="vuelo"].vuelo-entra .lugar { animation-delay: 0.8s; }
+html[data-estilo="vuelo"].vuelo-entra .cargo { animation-delay: 0.9s; }
+html[data-estilo="vuelo"].vuelo-entra.vuelo-entra-corta .vuelo-cortina { animation-duration: 0.6s; }
+html[data-estilo="vuelo"].vuelo-entra.vuelo-entra-corta .saludo,
+html[data-estilo="vuelo"].vuelo-entra.vuelo-entra-corta .nombre,
+html[data-estilo="vuelo"].vuelo-entra.vuelo-entra-corta .cargo,
+html[data-estilo="vuelo"].vuelo-entra.vuelo-entra-corta .lugar { animation-duration: 0.5s; animation-delay: 0.1s; }
+@keyframes vuelo-aparece { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: none; } }
+
+@media (min-width: 600px) {
+  html[data-estilo="vuelo"] { --margen: 28px; }
+  html[data-estilo="vuelo"] .grupos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-estilo="vuelo"] .canales { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  html[data-estilo="vuelo"] .datos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  html[data-estilo="vuelo"] .resumen { padding: 28px 30px; }
+}
+@media (min-width: 768px) {
+  html[data-estilo="vuelo"] .menu .solo-ancho { display: inline-flex; }
+  html[data-estilo="vuelo"] .proyectos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-estilo="vuelo"] .zona { padding-block: 140px; }
+}
+@media (min-width: 1024px) {
+  html[data-estilo="vuelo"] .marca span { display: inline; }
+  html[data-estilo="vuelo"] .proyecto[data-destacado] { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  html[data-estilo="vuelo"] .proyecto[data-destacado] .proyecto-medio { aspect-ratio: auto; min-height: 100%; border-radius: 21px 0 0 21px; }
+  html[data-estilo="vuelo"] .proyecto[data-destacado] .proyecto-texto { padding: 32px; justify-content: center; }
+  html[data-estilo="vuelo"] .proyecto[data-destacado] .proyecto-titulo { font-size: 2.75rem; }
+  html[data-estilo="vuelo"] .grupos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  html[data-estilo="vuelo"] .tesis { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); padding: 36px; }
+  html[data-estilo="vuelo"] .trayecto { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Pantalla ancha y horizontal: el resumen a la izquierda y el retrato a la derecha. */
+@media (min-width: 1024px) and (orientation: landscape) {
+  html[data-estilo="vuelo"] .inicio-reja .resumen { grid-column: 2 / 4; justify-self: start; font-size: 1.375rem; margin-top: 14svh; }
+  html[data-estilo="vuelo"] .inicio-reja .retrato { grid-row: lectura; grid-column: 4; justify-self: end; width: 210px; margin-top: 14svh; margin-right: clamp(0px, 3vw, 64px); }
+  html[data-estilo="vuelo"] .inicio-reja .acciones,
+  html[data-estilo="vuelo"] .inicio-reja .datos { grid-column: 2 / 5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-estilo="vuelo"] .saludo,
+  html[data-estilo="vuelo"] .nombre,
+  html[data-estilo="vuelo"] .cargo,
+  html[data-estilo="vuelo"] .lugar { opacity: 1; transform: none; animation: none; }
+  html[data-estilo="vuelo"] .vuelo-cortina { display: none; }
+}
+
+@media print {
+  html[data-estilo="vuelo"] body::before,
+  html[data-estilo="vuelo"] .vuelo-cielo,
+  html[data-estilo="vuelo"] .vuelo-altura,
+  html[data-estilo="vuelo"] .vuelo-cortina { display: none; }
+  html[data-estilo="vuelo"] .saludo,
+  html[data-estilo="vuelo"] .nombre,
+  html[data-estilo="vuelo"] .cargo,
+  html[data-estilo="vuelo"] .lugar { position: static; opacity: 1; transform: none; }
+}

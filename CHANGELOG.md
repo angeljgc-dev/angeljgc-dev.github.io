@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.2.0 · noviembre de 2026
+
+- Estilo nuevo, Vuelo: frente a la ventanilla de un avión, la cortinilla sube con el scroll, se
+  cruza el vidrio y se vuela entre nubes al atardecer hasta un cielo abierto donde aparece el
+  contenido. Escena 3D renderizada en Blender, con una versión vertical para el teléfono.
+
 ## 1.1.0 · noviembre de 2026
 
 - Al cambiar de estilo la página sube al principio y el estilo nuevo corre su entrada completa.
