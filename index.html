@@ -46,6 +46,8 @@
       hoja.rel = 'stylesheet';
       hoja.href = 'estilos/' + elegido + '/estilo.css';
       hoja.dataset.hoja = elegido;
+      // Una hoja agregada por guion no detiene el pintado; sin esto la página sale sin forma y salta.
+      hoja.setAttribute('blocking', 'render');
       document.head.appendChild(hoja);
       var base = document.querySelector('link[data-hoja="cursores"]');
       if (base) base.disabled = true;

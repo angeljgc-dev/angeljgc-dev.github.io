@@ -14,6 +14,8 @@
 - Descenso: coral modelado en los títulos de sección, algas y enredaderas que siguen el borde de las
   demás tarjetas, y una medusa luminosa en lo profundo; nunca dos animales iguales a la vista.
 - Collage: tarjetas de proyectos nítidas, sin encimarse y con el nombre de cada sitio completo.
+- Al abrir el sitio con un estilo distinto del de base, la página ya no se pinta un instante sin forma
+  antes de acomodarse.
 
 ## 1.0.0 · noviembre de 2026
 
