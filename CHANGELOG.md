@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.3.1 · noviembre de 2026
+
+- La sección de proyectos destaca ahora Doce Rounds, Gloss Club y Remolino junto a Surco y Ultravioleta.
+  Halley y Madrigal pasan a la línea de más sitios.
+
 ## 1.3.0 · noviembre de 2026
 
 - Estilo nuevo, Estanque: una escena 3D en vivo con un koi, nenúfares, libélulas, un cardumen, una rana

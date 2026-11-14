@@ -199,58 +199,90 @@
       ]
     },
     {
-      "id": "halley",
+      "id": "doce-rounds",
       "tipo": "Sitio · marca ficticia",
-      "titulo": "Halley",
-      "descripcion": "Landing de un planetario ficticio: un campo de estrellas infinito y una luna con brillo de borde.",
+      "titulo": "Doce Rounds",
+      "descripcion": "Landing de un gimnasio de box ficticio que se cuenta como un montaje de entrenamiento: cortes de impacto, sellos de round, cronómetros y contadores que avanzan con el scroll, en duotono rojo.",
       "rol": "La diseñé, la construí y la publiqué.",
       "stack": [
-        "Three.js",
-        "GSAP"
+        "GSAP ScrollTrigger",
+        "CSS",
+        "HTML"
       ],
       "medio": {
         "tipo": "imagen",
-        "src": "img/proyectos/halley",
+        "src": "img/proyectos/doce-rounds",
         "ancho": 960,
         "alto": 600,
-        "alt": "Portada de Halley con el campo de estrellas y la luna"
+        "alt": "Portada de Doce Rounds, con el nombre en letras grandes sobre una foto del gimnasio"
       },
       "enlaces": [
         {
           "texto": "Ver sitio",
-          "url": "https://angeljgc-dev.github.io/halley-planetario/"
+          "url": "https://angeljgc-dev.github.io/doce-rounds/"
         },
         {
           "texto": "Código",
-          "url": "https://github.com/angeljgc-dev/halley-planetario"
+          "url": "https://github.com/angeljgc-dev/doce-rounds"
         }
       ]
     },
     {
-      "id": "madrigal",
+      "id": "gloss-club",
       "tipo": "Sitio · marca ficticia",
-      "titulo": "Madrigal",
-      "descripcion": "Landing de una florería ficticia donde las fotos ganan relieve 3D con mapas de profundidad, en WebGL sin librería.",
+      "titulo": "Gloss Club",
+      "descripcion": "Landing pop de los 2000 para un club de uñas ficticio: colores que cambian entre secciones, marquesinas inclinadas y un carrete horizontal, todo narrado con el scroll.",
       "rol": "La diseñé, la construí y la publiqué.",
       "stack": [
-        "WebGL",
-        "GSAP"
+        "GSAP ScrollTrigger",
+        "Lenis",
+        "CSS"
       ],
       "medio": {
         "tipo": "imagen",
-        "src": "img/proyectos/madrigal",
+        "src": "img/proyectos/gloss-club",
         "ancho": 960,
         "alto": 600,
-        "alt": "Portada de Madrigal con flores en relieve"
+        "alt": "Portada de Gloss Club en rosa intenso, con el nombre en letras redondas"
       },
       "enlaces": [
         {
           "texto": "Ver sitio",
-          "url": "https://angeljgc-dev.github.io/madrigal-floreria/"
+          "url": "https://angeljgc-dev.github.io/gloss-club/"
         },
         {
           "texto": "Código",
-          "url": "https://github.com/angeljgc-dev/madrigal-floreria"
+          "url": "https://github.com/angeljgc-dev/gloss-club"
+        }
+      ]
+    },
+    {
+      "id": "remolino",
+      "tipo": "Sitio · marca ficticia",
+      "titulo": "Remolino",
+      "descripcion": "Landing de una heladería ficticia hecha sin GSAP, para probar otras herramientas: animaciones con anime.js, una ilustración en falso 3D y un helado 3D que se gira con el dedo o el cursor.",
+      "rol": "La diseñé, la construí y la publiqué.",
+      "stack": [
+        "anime.js 4",
+        "Zdog",
+        "Vanilla-Tilt",
+        "model-viewer"
+      ],
+      "medio": {
+        "tipo": "imagen",
+        "src": "img/proyectos/remolino",
+        "ancho": 960,
+        "alto": 600,
+        "alt": "Portada de Remolino con un helado 3D de tres bolas"
+      },
+      "enlaces": [
+        {
+          "texto": "Ver sitio",
+          "url": "https://angeljgc-dev.github.io/remolino-heladeria/"
+        },
+        {
+          "texto": "Código",
+          "url": "https://github.com/angeljgc-dev/remolino-heladeria"
         }
       ]
     },
@@ -357,20 +389,16 @@
         "url": "https://angeljgc-dev.github.io/volcan-tostaduria/"
       },
       {
-        "nombre": "Doce Rounds",
-        "url": "https://angeljgc-dev.github.io/doce-rounds/"
-      },
-      {
-        "nombre": "Gloss Club",
-        "url": "https://angeljgc-dev.github.io/gloss-club/"
-      },
-      {
         "nombre": "Navaja",
         "url": "https://angeljgc-dev.github.io/navaja-barberia/"
       },
       {
-        "nombre": "Remolino",
-        "url": "https://angeljgc-dev.github.io/remolino-heladeria/"
+        "nombre": "Halley",
+        "url": "https://angeljgc-dev.github.io/halley-planetario/"
+      },
+      {
+        "nombre": "Madrigal",
+        "url": "https://angeljgc-dev.github.io/madrigal-floreria/"
       }
     ]
   }

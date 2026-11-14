@@ -16,7 +16,7 @@ const toma = (i) => ({ x: 34 + Math.floor(i / 4) * 296, y: 12 + (i % 4) * 252 })
 
 // Tarjetas con grosor: capturas de proyectos sin cifras de demostración. La vacía lleva el
 // degradado que cambia de color; la de Ultravioleta, el marco de neón.
-const FICHAS = ['surco', 'medibot', '', 'halley', 'ultravioleta', 'madrigal'];
+const FICHAS = ['surco', 'medibot', '', 'doce-rounds', 'ultravioleta', 'gloss-club'];
 const NEON = 4;
 // Apaisadas como las capturas: se ve la pantalla completa, con el nombre de cada sitio entero.
 const PROPORCION = 16 / 10;
