@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.3.2 · noviembre de 2026
+
+- Estanque: los pétalos de loto ya no aparecen sueltos en la portada, en el camino del koi.
+- Estanque: al bajar ya no hay parpadeo ni tirones; lo de cada sección queda listo antes de verse.
+- Estanque: la escena carga más rápido. El koi pesa menos de la mitad y se pide junto con la escena.
+- Estanque: los nenúfares flotan, con grosor, sombra, ondas y un vaivén propio en cada hoja.
+
 ## 1.3.1 · noviembre de 2026
 
 - La sección de proyectos destaca ahora Doce Rounds, Gloss Club y Remolino junto a Surco y Ultravioleta.

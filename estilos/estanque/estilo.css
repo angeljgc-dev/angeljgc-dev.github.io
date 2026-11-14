@@ -94,8 +94,11 @@ html[data-estilo="estanque"] .rotulo {
 }
 
 /* ---------- La escena ---------- */
+/* Alto grande del viewport (lvh): en el teléfono, la barra de direcciones que aparece y desaparece al
+   bajar no cambia el tamaño del lienzo (cambiarlo borra su cuadro). Lo que sobra queda abajo, oculto. */
 html[data-estilo="estanque"] .estanque-fondo {
-  position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  position: fixed; top: 0; left: 0; right: 0; height: 100vh; height: 100lvh; overflow: hidden;
+  z-index: -2; pointer-events: none;
   background: linear-gradient(180deg, #F1C29C 0%, #F7B994 20%, #F09BB0 40%, #D8A8D8 54%, #B9A6E6 60%, #9B8EE0 64%, #C24F98 70%, #9C3C80 80%, #E6D4F0 100%);
 }
 html[data-estilo="estanque"] .estanque-fondo canvas { opacity: 0; }

@@ -274,7 +274,18 @@ export default {
         limpiezas.push(() => l.remove());
       });
     }
+    // El koi se pide junto con el módulo, no después: las dos descargas van en paralelo. Si falla,
+    // resuelve en null y la escena lo vuelve a pedir por su ruta.
+    const rutaKoi = new URL('koi.glb', RECURSOS).href;
+    function pedirKoi() {
+      const corte = new AbortController();
+      limpiezas.push(() => corte.abort());
+      return fetch(rutaKoi, { signal: corte.signal })
+        .then((r) => (r.ok ? r.arrayBuffer() : null))
+        .then((datos) => datos, () => null);
+    }
     async function cargarEscena() {
+      const datosKoi = pedirKoi();
       await precargar(new URL('escena.min.js', RECURSOS).href);
       if (!vivo) return;
       modulo = await importarEscena();
@@ -285,7 +296,8 @@ export default {
       // estilo, desmontar espera a que esto termine y la escena se quita en cuanto existe.
       montando = (async () => {
         const quitar = await modulo.montarEscena(fondo, {
-          rutaKoi: new URL('koi.glb', RECURSOS).href,
+          rutaKoi,
+          datosKoi,
           rutaRana: HAY_RANA ? new URL('rana.glb', RECURSOS).href : null,
           movil,
           recorrido: () => recorrido,
