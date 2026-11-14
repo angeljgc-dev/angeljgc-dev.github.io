@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.3.0 · noviembre de 2026
+
+- Estilo nuevo, Estanque: una escena 3D en vivo con un koi, nenúfares, libélulas, un cardumen, una rana
+  y luciérnagas al anochecer. La cámara recorre el estanque conforme se baja por la página.
+- La escena de Estanque se carga después del contenido y se pausa cuando la pestaña no está a la vista.
+
 ## 1.2.1 · noviembre de 2026
 
 - Se retira el estilo Vuelo: la secuencia de cuadros no se veía nítida al desplazarse.

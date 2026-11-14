@@ -13,9 +13,16 @@ piezas que caen en su lugar. Con movimiento reducido, todo aparece terminado des
 
 ## Novedades
 
-Siete estilos para elegir en la cabecera: **Cursores** (el de base), **Gafete**, **Escenario**,
-**Teclado**, **Pausa**, **Collage** y **Descenso**. Al cambiar de estilo la página no se recarga:
-sube al principio y el estilo nuevo se arma con su entrada completa. Los cambios están en `CHANGELOG.md`.
+Ocho estilos para elegir en la cabecera: **Cursores** (el de base), **Gafete**, **Escenario**,
+**Teclado**, **Pausa**, **Collage**, **Descenso** y **Estanque**. Al cambiar de estilo la página no se
+recarga: sube al principio y el estilo nuevo se arma con su entrada completa. Los cambios están en
+`CHANGELOG.md`.
+
+El más reciente es **Estanque**: un estanque pastel en 3D que se dibuja en vivo detrás del contenido y
+acompaña todo el recorrido. En la portada nada un koi; al bajar aparecen nenúfares y libélulas, un
+cardumen en agua baja, una rana sobre su hoja y, al llegar a contacto, el anochecer con luciérnagas.
+La escena se descarga después de que la página ya se ve (cerca de 1.6 MB) y no se pide con movimiento
+reducido ni en equipos sin aceleración gráfica: ahí queda un fondo pastel fijo.
 
 ## Cómo verlo
 
@@ -64,5 +71,11 @@ La elección del visitante se recuerda en el navegador y se puede compartir con 
 
 - Tipografías: Anton y Atkinson Hyperlegible Next, SIL Open Font License 1.1 (`fuentes/OFL.txt`).
 - Animación de las secciones: GSAP 3.13.0, servido desde jsDelivr.
+- Estanque: la escena usa three.js, React, react-three-fiber, drei y otras bibliotecas de licencia MIT,
+  además de postprocessing (Zlib) y n8ao (ISC), empaquetadas en
+  `estilos/estanque/recursos/escena.min.js`. Los avisos completos están en
+  `estilos/estanque/recursos/LICENCIAS-terceros.txt`. Su tipografía es Plus Jakarta Sans, SIL Open Font
+  License 1.1 (`estilos/estanque/recursos/OFL-plus-jakarta-sans.txt`). El koi y la rana son modelos
+  propios.
 - Los sitios de la sección de proyectos son de marcas ficticias. Las capturas de Recepción IA y Mi
   Kinder usan datos de demostración.

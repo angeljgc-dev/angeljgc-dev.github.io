@@ -1,0 +1,465 @@
+/* Estilo "estanque". Un estanque pastel de superficie: cielo durazno y lila, dunas lavanda, pasto
+   rosa y agua espejo. La escena 3D vive en un lienzo fijo detrás de todo; esta hoja acomoda el
+   contenido encima, en paneles claros y casi opacos, porque el cielo y el pasto cambian de tono y el
+   texto tiene que leerse igual sobre cualquiera. Sin la escena (movimiento reducido o sin GPU) el
+   mismo paisaje queda en degradados fijos de CSS. */
+
+@font-face {
+  font-family: 'Estanque Jakarta';
+  src: url('recursos/plus-jakarta-sans.woff2') format('woff2');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+/* Mientras llega la fuente, Arial ajustada a sus medidas: el texto no salta al cambiar. */
+@font-face {
+  font-family: 'Estanque Respaldo';
+  src: local('Arial'), local('Helvetica');
+  size-adjust: 105%;
+  ascent-override: 99%;
+  descent-override: 21%;
+  line-gap-override: 0%;
+}
+
+html[data-estilo="estanque"] {
+  --crema: #FFF7F0;
+  --lila: #F2EAFB;
+  --tinta: #2A1433;
+  --tinta-suave: #4A2F55;
+  --ciruela: #3B1645;
+  --ciruela-viva: #5A2468;
+  --coral: #E2507F;
+  --lavanda: #9B8EE0;
+  --rosa: #FBE3EE;
+  --panel: rgba(255, 249, 244, 0.97);
+  --tarjeta: #FFFCF9;
+  --borde: rgba(42, 20, 51, 0.12);
+  --sombra: 0 22px 44px -26px rgba(59, 22, 69, 0.45), 0 6px 14px -8px rgba(59, 22, 69, 0.2);
+  --sale: cubic-bezier(0.23, 1, 0.32, 1);
+  --letra: 'Estanque Jakarta', 'Estanque Respaldo', Arial, sans-serif;
+  --margen: 16px;
+  --ancho: 1240px;
+  --alto-cabecera: 88px;
+  /* Alto de la fila de datos de la portada en escritorio (dos renglones a 1024, uno desde 1280). */
+  --alto-datos: 92px;
+  color-scheme: light;
+  /* El paisaje de respaldo va en la raíz: arriba el cielo, las dunas y el pasto; abajo la crema.
+     El lienzo de la escena, cuando existe, queda encima de él. */
+  background:
+    linear-gradient(180deg, #F1C29C 0%, #F7B994 20%, #F09BB0 40%, #D8A8D8 54%, #B9A6E6 60%, #9B8EE0 64%, #C24F98 70%, #9C3C80 80%, #E6D4F0 90%, var(--crema) 100%) top left / 100% 100svh no-repeat,
+    linear-gradient(180deg, var(--crema), var(--lila)) var(--crema);
+  scroll-padding-top: calc(var(--alto-cabecera) + 12px);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html[data-estilo="estanque"] *,
+html[data-estilo="estanque"] *::before,
+html[data-estilo="estanque"] *::after { box-sizing: border-box; }
+html[data-estilo="estanque"] ::selection { background: #F7C9DE; color: var(--tinta); }
+
+html[data-estilo="estanque"] body {
+  margin: 0;
+  color: var(--tinta);
+  font: 400 1.125rem/1.6 var(--letra);
+  overflow-x: clip;
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+html[data-estilo="estanque"] img { max-width: 100%; height: auto; display: block; }
+html[data-estilo="estanque"] a { color: inherit; text-underline-offset: 4px; }
+html[data-estilo="estanque"] h1,
+html[data-estilo="estanque"] h2,
+html[data-estilo="estanque"] h3,
+html[data-estilo="estanque"] h4 { margin: 0; font-weight: 800; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; }
+html[data-estilo="estanque"] p,
+html[data-estilo="estanque"] ul,
+html[data-estilo="estanque"] ol,
+html[data-estilo="estanque"] dl,
+html[data-estilo="estanque"] dd,
+html[data-estilo="estanque"] figure { margin: 0; }
+html[data-estilo="estanque"] ul,
+html[data-estilo="estanque"] ol { padding: 0; list-style: none; }
+html[data-estilo="estanque"] :focus-visible { outline: 3px solid var(--ciruela-viva); outline-offset: 3px; border-radius: 6px; }
+
+html[data-estilo="estanque"] .saltar {
+  position: absolute; left: var(--margen); top: -100px; z-index: 70;
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  background: var(--ciruela); color: var(--crema); font-weight: 700; text-decoration: none;
+}
+html[data-estilo="estanque"] .saltar:focus { top: 12px; }
+html[data-estilo="estanque"] .envoltura { width: 100%; max-width: calc(var(--ancho) + 2 * var(--margen)); margin: 0 auto; padding-inline: var(--margen); }
+html[data-estilo="estanque"] .rotulo {
+  display: block; font-weight: 700; font-size: 0.875rem; line-height: 1.4;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--tinta-suave);
+}
+
+/* ---------- La escena ---------- */
+html[data-estilo="estanque"] .estanque-fondo {
+  position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background: linear-gradient(180deg, #F1C29C 0%, #F7B994 20%, #F09BB0 40%, #D8A8D8 54%, #B9A6E6 60%, #9B8EE0 64%, #C24F98 70%, #9C3C80 80%, #E6D4F0 100%);
+}
+html[data-estilo="estanque"] .estanque-fondo canvas { opacity: 0; }
+html[data-estilo="estanque"] .estanque-fondo.viva canvas { opacity: 1; }
+/* Sin escena (movimiento reducido o sin GPU) cada sección conserva un paisaje pastel fijo: la orilla
+   verde de agua, la poza clara, el rosa de los lotos, la lavanda quieta y el anochecer lila. */
+html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="proyectos"] { background: linear-gradient(180deg, #F3E3D6 0%, #DCEBDD 30%, #CFE6DA 100%); }
+html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="experiencia"] { background: linear-gradient(180deg, #CFE6DA 0%, #D6EEEA 40%, #EAE2CF 100%); }
+html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="investigacion"] { background: linear-gradient(180deg, #EAE2CF 0%, #F6DCE6 45%, #F2D2E0 100%); }
+html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="habilidades"] { background: linear-gradient(180deg, #F2D2E0 0%, #E4DDF4 50%, #D9D3F0 100%); }
+html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="contacto"] { background: linear-gradient(180deg, #D9D3F0 0%, #A893C9 55%, #6F5B98 100%); }
+html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) .pie { background: #6F5B98; }
+@media (prefers-reduced-motion: no-preference) {
+  html[data-estilo="estanque"] .estanque-fondo canvas { transition: opacity 600ms var(--sale); }
+}
+
+/* ---------- Cabecera: una píldora clara sobre el cielo ---------- */
+html[data-estilo="estanque"] .cabecera {
+  position: fixed; top: 10px; left: 0; right: 0; z-index: 40; pointer-events: none;
+}
+html[data-estilo="estanque"] .cabecera .envoltura {
+  pointer-events: auto;
+  display: flex; align-items: center; gap: 6px; min-height: 60px; padding: 6px 8px 6px 10px;
+  width: calc(100% - 2 * var(--margen)); max-width: var(--ancho);
+  border-radius: 999px; border: 1px solid var(--borde);
+  background: rgba(255, 249, 244, 0.95); box-shadow: var(--sombra);
+}
+html[data-estilo="estanque"] .marca {
+  display: inline-flex; align-items: center; gap: 10px; min-height: 44px; min-width: 44px; padding: 0 4px;
+  border-radius: 999px; text-decoration: none; font-weight: 800; letter-spacing: -0.01em;
+}
+html[data-estilo="estanque"] .marca svg { width: 34px; height: 34px; flex: none; }
+html[data-estilo="estanque"] .marca svg rect { fill: var(--ciruela); }
+html[data-estilo="estanque"] .marca svg path { stroke: #F7C9DE; }
+html[data-estilo="estanque"] .marca span { display: none; }
+html[data-estilo="estanque"] .menu { display: flex; gap: 2px; margin-left: auto; }
+html[data-estilo="estanque"] .menu a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 999px;
+  font-weight: 700; font-size: 0.9375rem; text-decoration: none;
+}
+html[data-estilo="estanque"] .menu a:hover { background: var(--rosa); }
+html[data-estilo="estanque"] .menu .solo-ancho { display: none; }
+html[data-estilo="estanque"] .ranura-estilo { display: flex; align-items: center; }
+html[data-estilo="estanque"] .selector-estilo select {
+  min-height: 44px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--borde);
+  background: var(--tarjeta); color: var(--tinta); font: 700 0.9375rem/1 var(--letra);
+}
+html[data-estilo="estanque"] .selector-flotante select { background: var(--ciruela); color: var(--crema); border-color: var(--ciruela); }
+
+/* ---------- Portada: el paisaje arriba y el panel con el nombre abajo ---------- */
+/* En teléfono el koi nada en la mitad de arriba; el panel empieza debajo de él. */
+html[data-estilo="estanque"] .inicio { position: relative; padding: 54svh 0 64px; }
+html[data-estilo="estanque"] .inicio-reja {
+  position: relative; display: grid; column-gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'retrato lugar'
+    'retrato saludo'
+    'nombre nombre'
+    'cargo cargo'
+    'resumen resumen'
+    'acciones acciones'
+    'datos datos';
+  width: calc(100% - 2 * var(--margen)); margin: 0 auto; padding: 20px 18px 22px;
+  border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.7);
+  background: var(--panel); box-shadow: var(--sombra);
+}
+html[data-estilo="estanque"] .retrato {
+  grid-area: retrato; align-self: center; width: 64px; height: 64px;
+  border-radius: 50%; overflow: hidden; background: var(--rosa);
+  box-shadow: 0 0 0 3px #FFFFFF, 0 0 0 4px var(--borde);
+}
+html[data-estilo="estanque"] .retrato img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 10%; }
+html[data-estilo="estanque"] .lugar {
+  grid-area: lugar; align-self: end; color: var(--tinta-suave);
+  font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.12em; text-transform: uppercase;
+}
+html[data-estilo="estanque"] .saludo { grid-area: saludo; align-self: start; font-weight: 600; font-size: 1.125rem; color: var(--tinta); }
+html[data-estilo="estanque"] .nombre {
+  grid-area: nombre; margin-top: 16px; color: var(--tinta);
+  font-size: clamp(2.6rem, 12.5vw, 6rem); line-height: 1.0; letter-spacing: -0.035em;
+}
+html[data-estilo="estanque"] .nombre span { display: block; }
+html[data-estilo="estanque"] .nombre span + span { color: var(--ciruela-viva); }
+html[data-estilo="estanque"] .cargo { grid-area: cargo; margin-top: 12px; font-weight: 700; font-size: 1.1875rem; color: var(--tinta); }
+html[data-estilo="estanque"] .resumen { grid-area: resumen; margin-top: 12px; color: var(--tinta-suave); max-width: 38em; }
+html[data-estilo="estanque"] .acciones { grid-area: acciones; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+html[data-estilo="estanque"] .datos { grid-area: datos; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 24px; }
+html[data-estilo="estanque"] .dato { padding: 12px 14px; border-radius: 18px; background: #FFFFFF; border: 1px solid var(--borde); }
+html[data-estilo="estanque"] .dato dt { font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tinta-suave); }
+html[data-estilo="estanque"] .dato dd { margin-top: 4px; font-weight: 600; font-size: 1.0625rem; line-height: 1.35; color: var(--tinta); }
+
+/* ---------- Botones: píldoras ---------- */
+html[data-estilo="estanque"] .boton,
+html[data-estilo="estanque"] .ver-video {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; min-width: 48px; padding: 0 22px; border-radius: 999px;
+  border: 1.5px solid var(--tinta); background: transparent; color: var(--tinta);
+  font: 700 1rem/1.2 var(--letra); text-decoration: none; cursor: pointer;
+}
+html[data-estilo="estanque"] .boton:hover,
+html[data-estilo="estanque"] .ver-video:hover { background: var(--rosa); }
+html[data-estilo="estanque"] .boton-principal { background: var(--ciruela); border-color: var(--ciruela); color: var(--crema); }
+html[data-estilo="estanque"] .boton-principal:hover { background: var(--ciruela-viva); border-color: var(--ciruela-viva); color: #FFFFFF; }
+@media (prefers-reduced-motion: no-preference) {
+  html[data-estilo="estanque"] .boton,
+  html[data-estilo="estanque"] .ver-video,
+  html[data-estilo="estanque"] .canal { transition: transform 160ms var(--sale), background-color 160ms ease; }
+  html[data-estilo="estanque"] .boton:active,
+  html[data-estilo="estanque"] .canal:active { transform: scale(0.97); }
+}
+
+/* ---------- Secciones sobre la crema ---------- */
+/* Sobre la escena viva todo el texto va en paneles claros; entre secciones queda un respiro donde se
+   ve el estanque. */
+html[data-estilo="estanque"] .zona { position: relative; padding-block: 34vh 40px; }
+html[data-estilo="estanque"] .zona-cabeza {
+  margin-bottom: 18vh; max-width: 46em; padding: 18px 20px 22px; border-radius: 24px;
+  background: var(--panel); border: 1px solid rgba(255, 255, 255, 0.7); box-shadow: var(--sombra);
+}
+html[data-estilo="estanque"] .zona-cabeza h2 { margin-top: 10px; font-size: clamp(2.4rem, 9vw, 5rem); line-height: 1.02; letter-spacing: -0.035em; color: var(--tinta); }
+html[data-estilo="estanque"] .zona-cabeza p { margin-top: 14px; color: var(--tinta-suave); }
+
+/* Proyectos */
+html[data-estilo="estanque"] .proyectos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16vh; }
+/* En teléfono las tarjetas no van de orilla a orilla: se alternan a un lado y al otro y por el hueco
+   se asoma el estanque. */
+@media (max-width: 767px) {
+  html[data-estilo="estanque"] .proyecto,
+  html[data-estilo="estanque"] .puesto,
+  html[data-estilo="estanque"] .grupo,
+  html[data-estilo="estanque"] .canal { width: 78%; }
+  html[data-estilo="estanque"] .proyecto:nth-child(even),
+  html[data-estilo="estanque"] .puesto:nth-child(even),
+  html[data-estilo="estanque"] .grupo:nth-child(even),
+  html[data-estilo="estanque"] .canales li:nth-child(even) .canal { margin-left: auto; }
+}
+html[data-estilo="estanque"] .proyecto {
+  position: relative; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 28px; box-shadow: var(--sombra);
+}
+html[data-estilo="estanque"] .proyecto[data-destacado] { grid-column: 1 / -1; }
+html[data-estilo="estanque"] .proyecto-medio { position: relative; margin: 0; aspect-ratio: 16 / 10; background: var(--lila); }
+html[data-estilo="estanque"] .proyecto-medio > img { width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+html[data-estilo="estanque"] .proyecto-medio figcaption {
+  position: absolute; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 999px;
+  background: rgba(255, 252, 249, 0.96); color: var(--tinta); font-weight: 700; font-size: 0.875rem; line-height: 1.3;
+}
+html[data-estilo="estanque"] .proyecto-cifra {
+  display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 24px; height: 100%;
+  background: linear-gradient(160deg, #F7C9DE, #E6D4F0 60%, #D9D2F7);
+}
+html[data-estilo="estanque"] .proyecto-cifra .antes { font-weight: 800; font-size: clamp(2.5rem, 11vw, 4rem); line-height: 0.95; color: var(--tinta-suave); text-decoration: line-through; text-decoration-thickness: 4px; }
+html[data-estilo="estanque"] .proyecto-cifra .despues { font-weight: 800; font-size: clamp(3.75rem, 16vw, 6rem); line-height: 0.95; letter-spacing: -0.04em; color: var(--ciruela); }
+html[data-estilo="estanque"] .proyecto-cifra .nota,
+html[data-estilo="estanque"] .proyecto-esquema li:last-child { font-weight: 700; font-size: 0.875rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tinta); margin-top: 6px; }
+html[data-estilo="estanque"] .proyecto-esquema { display: flex; align-items: center; padding: 24px; background: linear-gradient(160deg, #FCE0CF, #F7C9DE 55%, #E6D4F0); }
+html[data-estilo="estanque"] .proyecto-esquema ol { display: grid; gap: 6px; }
+html[data-estilo="estanque"] .proyecto-esquema li { font-weight: 800; font-size: clamp(1.6rem, 6.5vw, 2.25rem); line-height: 1.05; letter-spacing: -0.02em; color: var(--tinta); }
+html[data-estilo="estanque"] .proyecto-esquema li:not(:last-child)::after { content: ''; display: block; width: 2px; height: 14px; margin: 6px 0 0 10px; background: var(--coral); }
+html[data-estilo="estanque"] .proyecto-videos { aspect-ratio: auto; padding: 14px; }
+html[data-estilo="estanque"] .proyecto-videos .videos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+html[data-estilo="estanque"] .video-marco { position: relative; aspect-ratio: 9 / 16; overflow: hidden; border-radius: 16px; background: var(--ciruela); }
+html[data-estilo="estanque"] .video-marco img,
+html[data-estilo="estanque"] .video-marco video { width: 100%; height: 100%; object-fit: cover; display: block; }
+html[data-estilo="estanque"] .video-nombre { display: block; margin-top: 8px; font-weight: 700; font-size: 0.875rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tinta-suave); overflow-wrap: anywhere; }
+html[data-estilo="estanque"] .proyecto-videos figcaption { position: static; display: inline-block; margin-top: 12px; padding: 0; background: none; color: var(--tinta-suave); }
+/* El botón de cada comercial va abajo al centro del póster y todo el póster responde al toque. */
+html[data-estilo="estanque"] .video-marco .ver-video {
+  position: absolute; left: 50%; bottom: 10px; z-index: 1; transform: translateX(-50%);
+  min-height: 44px; min-width: 44px; padding: 0 14px 0 12px; white-space: nowrap;
+  background: var(--crema); border-color: var(--crema); color: var(--tinta); font-size: 0.9375rem;
+  box-shadow: 0 8px 18px -8px rgba(42, 20, 51, 0.7);
+}
+html[data-estilo="estanque"] .video-marco .ver-video:hover { background: #FFFFFF; }
+html[data-estilo="estanque"] .video-marco .ver-video::after { content: ''; position: absolute; inset: -2000px -1000px -20px; }
+html[data-estilo="estanque"] .ver-video::before { content: ''; width: 0; height: 0; border-left: 10px solid currentColor; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+html[data-estilo="estanque"] .proyecto-texto { padding: 20px 20px 24px; display: flex; flex-direction: column; flex: 1; }
+html[data-estilo="estanque"] .proyecto-tipo { display: block; font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tinta-suave); }
+html[data-estilo="estanque"] .proyecto-titulo { font-size: 2rem; margin-top: 6px; color: var(--tinta); }
+html[data-estilo="estanque"] .proyecto-texto p { margin-top: 12px; color: var(--tinta-suave); }
+html[data-estilo="estanque"] .proyecto-texto p strong { color: var(--tinta); }
+html[data-estilo="estanque"] .proyecto-cifras { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+html[data-estilo="estanque"] .proyecto-cifras li { font-weight: 700; font-size: 1rem; line-height: 1.3; padding: 6px 12px; border-radius: 999px; background: var(--rosa); color: var(--tinta); }
+html[data-estilo="estanque"] .proyecto-stack { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+html[data-estilo="estanque"] .proyecto-stack li { font-size: 0.9375rem; line-height: 1.3; padding: 4px 11px; border-radius: 999px; background: var(--lila); color: var(--tinta); }
+html[data-estilo="estanque"] .proyecto-enlaces { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; padding-top: 20px; }
+html[data-estilo="estanque"] .mas-sitios {
+  margin-top: 32px; padding: 22px; border-radius: 28px;
+  background: var(--tarjeta); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="estanque"] .mas-sitios p { color: var(--tinta); font-weight: 600; }
+html[data-estilo="estanque"] .mas-sitios ul { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+/* Experiencia y formación */
+html[data-estilo="estanque"] .trayecto,
+html[data-estilo="estanque"] .grados { display: grid; gap: 20px; }
+html[data-estilo="estanque"] .puesto {
+  padding: 22px 22px 24px; border-radius: 28px;
+  background: var(--tarjeta); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="estanque"] .puesto h3 { font-size: clamp(1.5rem, 5.6vw, 2.1rem); margin-top: 6px; color: var(--tinta); }
+html[data-estilo="estanque"] .puesto h4 { font-size: clamp(1.3rem, 4.8vw, 1.6rem); margin-top: 6px; color: var(--tinta); }
+html[data-estilo="estanque"] .meta,
+html[data-estilo="estanque"] .meta-chica { display: inline-block; padding: 4px 12px; border-radius: 999px; background: var(--rosa); font-weight: 700; font-size: 0.875rem; letter-spacing: 0.06em; color: var(--tinta); }
+html[data-estilo="estanque"] .lugar-puesto { display: block; margin-top: 6px; color: var(--tinta-suave); }
+html[data-estilo="estanque"] .puesto ul { margin-top: 14px; display: grid; gap: 10px; }
+html[data-estilo="estanque"] .puesto ul li { position: relative; padding-left: 22px; color: var(--tinta-suave); }
+html[data-estilo="estanque"] .puesto ul li::before { content: ''; position: absolute; left: 2px; top: 0.62em; width: 9px; height: 9px; border-radius: 50%; background: var(--coral); }
+html[data-estilo="estanque"] .subtitulo {
+  display: inline-block; margin: 18vh 0 22px; padding: 12px 18px; border-radius: 20px;
+  font-size: clamp(1.9rem, 7vw, 3rem); letter-spacing: -0.03em; color: var(--tinta);
+  background: var(--panel); box-shadow: var(--sombra);
+}
+html[data-estilo="estanque"] .idiomas {
+  margin-top: 20px; display: grid; gap: 8px; padding: 22px; border-radius: 28px;
+  background: var(--tarjeta); border: 1px solid var(--borde); box-shadow: var(--sombra); color: var(--tinta-suave);
+}
+html[data-estilo="estanque"] .idiomas strong { color: var(--tinta); }
+
+/* Investigación */
+html[data-estilo="estanque"] .tesis {
+  display: grid; gap: 22px; padding: 26px 22px; border-radius: 32px;
+  background: var(--tarjeta); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="estanque"] .tesis-texto { font-size: 1.25rem; line-height: 1.55; color: var(--tinta); max-width: 38em; }
+html[data-estilo="estanque"] .tesis-datos { display: grid; gap: 12px; }
+html[data-estilo="estanque"] .tesis-datos li { padding-top: 12px; border-top: 1px solid var(--borde); color: var(--tinta-suave); }
+html[data-estilo="estanque"] .tesis-datos strong { display: block; font-size: 0.8125rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tinta); }
+
+/* Habilidades */
+html[data-estilo="estanque"] .grupos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+html[data-estilo="estanque"] .grupo {
+  padding: 20px 20px 22px; border-radius: 28px;
+  background: var(--tarjeta); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="estanque"] .grupo h3 { font-size: 1.5rem; color: var(--tinta); }
+html[data-estilo="estanque"] .etiquetas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+html[data-estilo="estanque"] .etiquetas li { font-size: 0.9375rem; line-height: 1.3; padding: 5px 11px; border-radius: 999px; background: var(--lila); color: var(--tinta); }
+html[data-estilo="estanque"] .grupo[data-familia="lenguajes"] .etiquetas li,
+html[data-estilo="estanque"] .grupo[data-familia="ia"] .etiquetas li { background: var(--rosa); }
+
+/* Contacto y pie */
+html[data-estilo="estanque"] .contacto { padding-bottom: 120px; }
+html[data-estilo="estanque"] .canales { display: grid; gap: 14px; }
+html[data-estilo="estanque"] .canal {
+  display: flex; flex-direction: column; gap: 4px; min-height: 64px; padding: 16px 20px; border-radius: 24px;
+  text-decoration: none; background: var(--tarjeta); border: 1px solid var(--borde); box-shadow: var(--sombra);
+}
+html[data-estilo="estanque"] .canal:hover { background: #FFFFFF; border-color: var(--lavanda); }
+html[data-estilo="estanque"] .canal-tipo { font-weight: 700; font-size: 0.8125rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tinta-suave); }
+html[data-estilo="estanque"] .canal-dato { font-weight: 600; font-size: 1.0625rem; color: var(--tinta); overflow-wrap: anywhere; }
+html[data-estilo="estanque"] .pie { padding: 0 0 32px; }
+html[data-estilo="estanque"] .pie p { display: inline-block; padding: 10px 16px; border-radius: 999px; background: var(--panel); color: var(--tinta-suave); font-size: 1rem; }
+
+/* ---------- Entrada: el panel de la portada sube una vez, rápido ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* El panel solo aparece (sin moverse: los datos se acomodan respecto a la portada); su
+     contenido sube unos pixeles. */
+  html[data-estilo="estanque"].anima.entrada-completa .inicio-reja { animation: estanque-aparece 240ms var(--sale) both; }
+  html[data-estilo="estanque"].anima.entrada-completa .inicio-reja > * { animation: estanque-sube 300ms var(--sale) both; }
+  html[data-estilo="estanque"].anima.entrada-completa .inicio-reja > :nth-child(4) { animation-delay: 60ms; }
+  html[data-estilo="estanque"].anima.entrada-completa .inicio-reja > :nth-child(n+5) { animation-delay: 120ms; }
+  html[data-estilo="estanque"].anima.entrada-corta .inicio-reja { animation: estanque-aparece 160ms ease-out both; }
+}
+@keyframes estanque-sube { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes estanque-aparece { from { opacity: 0; } to { opacity: 1; } }
+
+@media (min-width: 600px) {
+  html[data-estilo="estanque"] { --margen: 28px; }
+  html[data-estilo="estanque"] .grupos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-estilo="estanque"] .canales { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  html[data-estilo="estanque"] .inicio-reja { padding: 26px 28px 28px; }
+  html[data-estilo="estanque"] .retrato { width: 76px; height: 76px; }
+  html[data-estilo="estanque"] .datos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 768px) {
+  html[data-estilo="estanque"] .menu .solo-ancho { display: inline-flex; }
+  html[data-estilo="estanque"] .proyectos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+  html[data-estilo="estanque"] .zona { padding-block: 40vh 60px; }
+  html[data-estilo="estanque"] .inicio { padding-top: 46svh; }
+  html[data-estilo="estanque"] .datos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  html[data-estilo="estanque"] .marca span { display: inline; }
+  html[data-estilo="estanque"] { --alto-datos: 104px; }
+  /* En escritorio el panel es angosto, abajo a la izquierda; los datos van en una fila baja al pie
+     de la primera pantalla. El resto (arriba y a la derecha) es la zona libre donde nada el koi. */
+  html[data-estilo="estanque"] .inicio {
+    min-height: 100svh; padding: calc(var(--alto-cabecera) + 16px) 0 calc(var(--alto-datos) + 40px);
+    display: flex; align-items: flex-end;
+  }
+  html[data-estilo="estanque"] .inicio-reja {
+    position: static; width: clamp(424px, 31vw, 448px);
+    margin: 0 0 0 max(var(--margen), calc((100vw - var(--ancho)) / 2));
+    padding: 22px 24px 24px; column-gap: 12px;
+    grid-template-areas:
+      'retrato lugar'
+      'retrato saludo'
+      'nombre nombre'
+      'cargo cargo'
+      'resumen resumen'
+      'acciones acciones';
+  }
+  html[data-estilo="estanque"] .retrato { width: 60px; height: 60px; }
+  html[data-estilo="estanque"] .nombre { margin-top: 10px; font-size: clamp(2.4rem, 3.6vw, 3.75rem); }
+  html[data-estilo="estanque"] .cargo { margin-top: 10px; font-size: 1.125rem; }
+  html[data-estilo="estanque"] .resumen { margin-top: 8px; font-size: 1rem; line-height: 1.5; max-width: 52ch; }
+  html[data-estilo="estanque"] .acciones { margin-top: 18px; }
+  /* La fila de datos: cuatro piezas bajas, de orilla a orilla del contenido. */
+  html[data-estilo="estanque"] .datos {
+    position: absolute; left: max(var(--margen), calc((100vw - var(--ancho)) / 2));
+    right: max(var(--margen), calc((100vw - var(--ancho)) / 2)); bottom: 20px;
+    margin: 0; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  html[data-estilo="estanque"] .dato { padding: 10px 14px; border-radius: 16px; background: rgba(255, 252, 249, 0.97); box-shadow: var(--sombra); }
+  html[data-estilo="estanque"] .dato dt { font-size: 0.75rem; }
+  html[data-estilo="estanque"] .dato dd { margin-top: 2px; font-size: 1rem; line-height: 1.3; }
+  html[data-estilo="estanque"] .proyecto[data-destacado] { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  html[data-estilo="estanque"] .proyecto[data-destacado] .proyecto-medio { aspect-ratio: auto; min-height: 100%; }
+  html[data-estilo="estanque"] .proyecto[data-destacado] .proyecto-texto { padding: 32px; justify-content: center; }
+  html[data-estilo="estanque"] .proyecto[data-destacado] .proyecto-enlaces { margin-top: 0; }
+  html[data-estilo="estanque"] .proyecto[data-destacado] .proyecto-titulo { font-size: 2.75rem; }
+  /* El contenido de las secciones va en una columna a la izquierda; a la derecha queda la zona
+     libre donde vive cada parte del estanque. */
+  html[data-estilo="estanque"] .zona > .envoltura {
+    max-width: min(800px, 58vw); margin: 0 auto 0 max(var(--margen), calc((100vw - var(--ancho)) / 2));
+  }
+  html[data-estilo="estanque"] .proyectos { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  html[data-estilo="estanque"] .grupos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-estilo="estanque"] .tesis { padding: 36px; }
+  html[data-estilo="estanque"] .trayecto { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (min-width: 1280px) {
+  html[data-estilo="estanque"] { --alto-datos: 80px; }
+  html[data-estilo="estanque"] .resumen { font-size: 1.0625rem; line-height: 1.55; }
+}
+
+@media (max-width: 767px) {
+  /* La tesis se parte en dos paneles con un respiro en medio, donde se asoman los lotos. */
+  html[data-estilo="estanque"] .tesis { background: none; border: 0; box-shadow: none; padding: 0; gap: 26vh; }
+  /* Las dos van en una columna a la izquierda: la franja de la derecha es de la rana. */
+  html[data-estilo="estanque"] .tesis-texto,
+  html[data-estilo="estanque"] .tesis-datos {
+    width: 62%; padding: 18px 16px; border-radius: 24px;
+    background: var(--tarjeta); border: 1px solid var(--borde); box-shadow: var(--sombra);
+  }
+  html[data-estilo="estanque"] .tesis-texto { font-size: 1.125rem; }
+  /* Entre tarjeta y tarjeta queda un respiro de agua: ahí se asoman los peces, los juncos y el koi. */
+  html[data-estilo="estanque"] .grupos { gap: 24vh; }
+  html[data-estilo="estanque"] .trayecto,
+  html[data-estilo="estanque"] .grados { gap: 34vh; }
+  html[data-estilo="estanque"] .subtitulo { margin-top: 34vh; }
+  html[data-estilo="estanque"] .idiomas { margin-top: 34vh; width: 86%; }
+  html[data-estilo="estanque"] .canales { gap: 38vh; }
+  html[data-estilo="estanque"] .contacto .zona-cabeza { margin-bottom: 38vh; }
+  /* Al llegar a contacto el koi vuelve: se le deja medio cuadro antes del panel. */
+  html[data-estilo="estanque"] .contacto { padding-top: 52vh; padding-bottom: 46vh; }
+}
+
+@media print {
+  html[data-estilo="estanque"] { background: #FFFFFF; }
+  html[data-estilo="estanque"] .estanque-fondo { display: none !important; }
+  html[data-estilo="estanque"] .cabecera { position: static; }
+  html[data-estilo="estanque"] .inicio { padding-top: 24px; }
+}
