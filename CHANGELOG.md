@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.3.3 · noviembre de 2026
+
+- Estanque: la escena es mucho más ligera de dibujar. El pasto pasa de briznas sueltas a un suelo
+  sombreado con matas cerca de la orilla, y en teléfono ya no se dibuja dos veces para reflejos.
+- Estanque: el paisaje se ve desde el primer instante y el koi entra nadando cuando la escena queda lista.
+- Estanque: si el equipo pierde la escena 3D, queda una imagen fija del estanque en lugar de parpadear.
+
 ## 1.3.2 · noviembre de 2026
 
 - Estanque: los pétalos de loto ya no aparecen sueltos en la portada, en el camino del koi.

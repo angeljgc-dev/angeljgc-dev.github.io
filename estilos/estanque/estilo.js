@@ -235,6 +235,7 @@ export default {
     }
 
     const movil = !!ventana.matchMedia && ventana.matchMedia('(max-width: 767px), (pointer: coarse)').matches;
+    const DIAG = new URLSearchParams(ventana.location.search).get('diag') === '1';
 
     function avisar(e) {
       // Si la escena no carga, la página se queda con el fondo pastel de la hoja.
@@ -306,19 +307,57 @@ export default {
           // dibujar la escena una vez más por cuadro.
           reflejo: ventana.innerWidth >= 768,
           alListo: () => { if (vivo) fondo.classList.add('viva'); },
+          alPerderse: soltarEscena,
+          diagnostico: DIAG,
         });
-        if (!vivo) {
+        if (!vivo || perdida) {
           await quitar();
           return;
         }
         escena = quitar;
         if (doc.hidden) escena.pausar(true);
+        if (DIAG) mostrarDiagnostico();
       })().catch(avisar);
       await montando;
       montando = null;
     }
     function arrancar() {
       if (vivo) cargarEscena().catch(avisar);
+    }
+    // El navegador tiró el contexto WebGL dos veces (o no lo devolvió): queda la imagen fija del
+    // estanque y se suelta la escena, en lugar de un bucle de verse y irse a negro.
+    let perdida = false;
+    let perdidas = 0;
+    function soltarEscena() {
+      perdida = true;
+      if (!vivo) return;
+      if (escena) perdidas = escena.diagnostico().perdidas;
+      fondo.classList.add('sin-escena');
+      fondo.classList.remove('viva');
+      const quitar = escena;
+      escena = null;
+      if (quitar) quitar().catch(avisar);
+    }
+    // Diagnóstico para un teléfono real (?diag=1): cuadros por segundo, triángulos y llamadas por
+    // cuadro, tamaño y densidad del lienzo, pérdidas de contexto y la tarjeta gráfica. Sin el
+    // parámetro, este panel no existe.
+    function mostrarDiagnostico() {
+      const panel = crear('div', 'estanque-diag', doc.body);
+      panel.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:60;max-width:calc(100% - 16px);'
+        + 'padding:6px 8px;border-radius:8px;background:rgba(20,10,28,.82);color:#fff;'
+        + 'font:12px/1.35 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;pointer-events:none';
+      const pintar = () => {
+        const d = escena ? escena.diagnostico() : null;
+        panel.textContent = d
+          ? `${d.fps} cuadros/s · ${d.triangulos.toLocaleString('es-MX')} triángulos · ${d.llamadas} llamadas
+`
+            + `lienzo ${d.lienzo} (densidad ${d.densidad}, pantalla ${ventana.devicePixelRatio}) · pérdidas ${d.perdidas}
+${d.tarjeta}`
+          : `sin escena (imagen fija) · pérdidas ${perdidas}`;
+      };
+      pintar();
+      const reloj = ventana.setInterval(pintar, 500);
+      limpiezas.push(() => ventana.clearInterval(reloj));
     }
     // La escena se pide después de load, para no competir con el contenido. Dentro del propio
     // evento load todavía cuenta como carga inicial, así que se deja pasar una tarea.

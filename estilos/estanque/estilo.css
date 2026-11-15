@@ -1,8 +1,9 @@
 /* Estilo "estanque". Un estanque pastel de superficie: cielo durazno y lila, dunas lavanda, pasto
    rosa y agua espejo. La escena 3D vive en un lienzo fijo detrás de todo; esta hoja acomoda el
    contenido encima, en paneles claros y casi opacos, porque el cielo y el pasto cambian de tono y el
-   texto tiene que leerse igual sobre cualquiera. Sin la escena (movimiento reducido o sin GPU) el
-   mismo paisaje queda en degradados fijos de CSS. */
+   texto tiene que leerse igual sobre cualquiera. Sin la escena (movimiento reducido, sin GPU o con el
+   contexto perdido) la portada lleva una imagen fija del estanque y el resto del paisaje queda en
+   degradados fijos de CSS. */
 
 @font-face {
   font-family: 'Estanque Jakarta';
@@ -99,12 +100,33 @@ html[data-estilo="estanque"] .rotulo {
 html[data-estilo="estanque"] .estanque-fondo {
   position: fixed; top: 0; left: 0; right: 0; height: 100vh; height: 100lvh; overflow: hidden;
   z-index: -2; pointer-events: none;
-  background: linear-gradient(180deg, #F1C29C 0%, #F7B994 20%, #F09BB0 40%, #D8A8D8 54%, #B9A6E6 60%, #9B8EE0 64%, #C24F98 70%, #9C3C80 80%, #E6D4F0 100%);
+  /* Desde el primer pintado se ve el estanque: una imagen fija del paisaje de la portada hecha con la
+     propia escena (sin koi ni burbujas). La escena en vivo entra encima con un fundido; si se pierde
+     el contexto WebGL, la imagen se queda. Debajo, el degradado por si la imagen no llega. */
+  background: url("recursos/paisaje-horizontal.webp") center / cover no-repeat,
+    linear-gradient(180deg, #F1C29C 0%, #F7B994 20%, #F09BB0 40%, #D8A8D8 54%, #B9A6E6 60%, #9B8EE0 64%, #C24F98 70%, #9C3C80 80%, #E6D4F0 100%);
 }
+/* Una imagen por proporción de pantalla (16:10, 4:3, 3:4 y teléfono), cada una hecha con la escena a
+   esa proporción: el horizonte cae donde lo pone la escena en vivo. */
+@media (max-aspect-ratio: 29/20) and (min-aspect-ratio: 1/1) {
+  html[data-estilo="estanque"] .estanque-fondo { background-image: url("recursos/paisaje-horizontal-4x3.webp"), linear-gradient(180deg, #F1C29C 0%, #F7B994 20%, #F09BB0 40%, #D8A8D8 54%, #B9A6E6 60%, #9B8EE0 64%, #C24F98 70%, #9C3C80 80%, #E6D4F0 100%); }
+}
+@media (max-aspect-ratio: 1/1) and (min-aspect-ratio: 31/50) {
+  html[data-estilo="estanque"] .estanque-fondo { background-image: url("recursos/paisaje-vertical-3x4.webp"), linear-gradient(180deg, #F1C29C 0%, #F7B994 20%, #F09BB0 40%, #D8A8D8 54%, #B9A6E6 60%, #9B8EE0 64%, #C24F98 70%, #9C3C80 80%, #E6D4F0 100%); }
+}
+@media (max-aspect-ratio: 31/50) {
+  html[data-estilo="estanque"] .estanque-fondo { background-image: url("recursos/paisaje-vertical.webp"), linear-gradient(180deg, #F1C29C 0%, #F7B994 20%, #F09BB0 40%, #D8A8D8 54%, #B9A6E6 60%, #9B8EE0 64%, #C24F98 70%, #9C3C80 80%, #E6D4F0 100%); }
+}
+html[data-estilo="estanque"] .estanque-fondo.sin-escena canvas { display: none; }
 html[data-estilo="estanque"] .estanque-fondo canvas { opacity: 0; }
 html[data-estilo="estanque"] .estanque-fondo.viva canvas { opacity: 1; }
-/* Sin escena (movimiento reducido o sin GPU) cada sección conserva un paisaje pastel fijo: la orilla
-   verde de agua, la poza clara, el rosa de los lotos, la lavanda quieta y el anochecer lila. */
+/* Sin escena (movimiento reducido, sin GPU o con el contexto perdido) la portada lleva la imagen fija
+   del estanque y cada sección conserva un paisaje pastel fijo: la orilla verde de agua, la poza
+   clara, el rosa de los lotos, la lavanda quieta y el anochecer lila. */
+html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="presentacion"] { background: url("recursos/paisaje-horizontal.webp") center / cover no-repeat, #F1C29C; }
+@media (max-aspect-ratio: 29/20) and (min-aspect-ratio: 1/1) { html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="presentacion"] { background-image: url("recursos/paisaje-horizontal-4x3.webp"); } }
+@media (max-aspect-ratio: 1/1) and (min-aspect-ratio: 31/50) { html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="presentacion"] { background-image: url("recursos/paisaje-vertical-3x4.webp"); } }
+@media (max-aspect-ratio: 31/50) { html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="presentacion"] { background-image: url("recursos/paisaje-vertical.webp"); } }
 html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="proyectos"] { background: linear-gradient(180deg, #F3E3D6 0%, #DCEBDD 30%, #CFE6DA 100%); }
 html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="experiencia"] { background: linear-gradient(180deg, #CFE6DA 0%, #D6EEEA 40%, #EAE2CF 100%); }
 html[data-estilo="estanque"]:not(:has(.estanque-fondo:not(.sin-escena))) [data-seccion="investigacion"] { background: linear-gradient(180deg, #EAE2CF 0%, #F6DCE6 45%, #F2D2E0 100%); }
