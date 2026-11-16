@@ -115,13 +115,16 @@ export function zonasPorSeccion(doc = document) {
   const cabecera = doc.querySelector('.cabecera .envoltura');
   const y0 = cabecera ? Math.round(cabecera.getBoundingClientRect().bottom + HOLGURA) : 0;
   const alto = v.innerHeight;
+  const tesis = doc.querySelector('.tesis-texto');
+  const derechaTesis = tesis ? tesis.getBoundingClientRect().right : ancho * 0.67;
   return {
-    // La rana, en la franja derecha, a media pantalla bajo el título: así la escena sube y el horizonte
-    // queda arriba (con la rana más abajo, la mitad de arriba era cielo vacío).
-    3: { x0: Math.round(ancho * 0.62), y0: Math.round(alto * 0.57), x1: Math.round(ancho * 0.97), y1: Math.round(alto * 0.78) },
-    // El koi de contacto nada en el respiro que dejan las tarjetas al final de la página (donde se
-    // detiene el scroll): arriba lo cruzaban las tarjetas y quedaba medio tapado.
-    5: { x0: 0, y0: Math.round(alto * 0.47), x1: ancho, y1: Math.round(alto * 0.85) },
+    // La rana, arriba, en la columna libre a la derecha de las tarjetas de la tesis: entre su borde
+    // derecho + 8 px y el borde de la pantalla - 16 px (la hoja sí puede salirse). Arriba, porque al
+    // llegar por el menú el título queda a media pantalla.
+    3: { x0: Math.round(derechaTesis + 8), y0: Math.max(y0, Math.round(alto * 0.14)), x1: ancho - 16, y1: Math.round(alto * 0.4) },
+    // El koi de contacto nada arriba: al llegar por el menú la tarjeta de Escríbeme queda abajo, y al final de la
+    // página (donde se detiene el scroll) la última tarjeta también queda abajo.
+    5: { x0: 0, y0: Math.max(y0, Math.round(alto * 0.14)), x1: ancho, y1: Math.round(alto * 0.54) },
   };
 }
 

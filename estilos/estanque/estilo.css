@@ -146,7 +146,8 @@ html[data-estilo="estanque"] .cabecera .envoltura {
   display: flex; align-items: center; gap: 6px; min-height: 60px; padding: 6px 8px 6px 10px;
   width: calc(100% - 2 * var(--margen)); max-width: var(--ancho);
   border-radius: 999px; border: 1px solid var(--borde);
-  background: rgba(255, 249, 244, 0.95); box-shadow: var(--sombra);
+  /* Opaca: con 0.95 se leían, tenues, los títulos que pasaban por debajo. */
+  background: rgb(255, 249, 244); box-shadow: var(--sombra);
 }
 html[data-estilo="estanque"] .marca {
   display: inline-flex; align-items: center; gap: 10px; min-height: 44px; min-width: 44px; padding: 0 4px;
@@ -468,11 +469,15 @@ html[data-estilo="estanque"] .pie p { display: inline-block; padding: 10px 16px;
 
 @media (max-width: 767px) {
   /* La tesis se parte en dos paneles con un respiro en medio, donde se asoman los lotos. */
-  html[data-estilo="estanque"] .tesis { background: none; border: 0; box-shadow: none; padding: 0; gap: 26vh; }
-  /* Las dos van en una columna a la izquierda: la franja de la derecha es de la rana. */
+  /* La barra pegada arriba: con 10 px de aire encima, el texto que sube se asomaba por arriba de ella. */
+  html[data-estilo="estanque"] .cabecera { top: 0; }
+  html[data-estilo="estanque"] .cabecera .envoltura { border-top: 0; border-radius: 0 0 26px 26px; }
+  html[data-estilo="estanque"] .tesis { background: none; border: 0; box-shadow: none; padding: 0; gap: 50vh; }
+  /* Las dos van a la izquierda, al 67 % (unos 30 caracteres por renglón;
+     más angostas dejaban renglones de dos palabras); la rana vive en la columna libre de la derecha. */
   html[data-estilo="estanque"] .tesis-texto,
   html[data-estilo="estanque"] .tesis-datos {
-    width: 62%; padding: 18px 16px; border-radius: 24px;
+    width: 67%; padding: 18px 16px; border-radius: 24px;
     background: var(--tarjeta); border: 1px solid var(--borde); box-shadow: var(--sombra);
   }
   html[data-estilo="estanque"] .tesis-texto { font-size: 1.125rem; }
@@ -485,8 +490,12 @@ html[data-estilo="estanque"] .pie p { display: inline-block; padding: 10px 16px;
   /* Respiro amplio entre tarjetas de contacto: el koi nada entre ellas y se ve entero casi siempre. */
   html[data-estilo="estanque"] .canales { gap: 75vh; }
   html[data-estilo="estanque"] .contacto .zona-cabeza { margin-bottom: 38vh; }
-  /* Al llegar a contacto el koi vuelve: se le deja medio cuadro antes del panel. */
-  html[data-estilo="estanque"] .contacto { padding-top: 52vh; padding-bottom: 46vh; }
+  /* Al llegar a contacto el koi vuelve: se le deja medio cuadro antes del panel. Abajo, poco relleno:
+     al final de la página la última tarjeta queda baja y el koi nada libre arriba. */
+  html[data-estilo="estanque"] .contacto { padding-top: 52vh; padding-bottom: 14vh; }
+  /* Los nombres de los comerciales van en tres columnas angostas: en mayúsculas "plastilina" no cabía
+     y se partía en la última letra. */
+  html[data-estilo="estanque"] .video-nombre { font-size: 0.75rem; letter-spacing: 0; text-transform: capitalize; overflow-wrap: normal; }
 }
 
 @media print {

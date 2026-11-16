@@ -21,7 +21,7 @@ recarga: sube al principio y el estilo nuevo se arma con su entrada completa. Lo
 El más reciente es **Estanque**: un estanque pastel en 3D que se dibuja en vivo detrás del contenido y
 acompaña todo el recorrido. En la portada nada un koi; al bajar aparecen nenúfares y libélulas, un
 cardumen en agua baja, una rana sobre su hoja y, al llegar a contacto, el anochecer con luciérnagas.
-La escena se descarga después de que la página ya se ve (cerca de 1 MB) y no se pide con movimiento
+La escena se descarga después de que la página ya se ve (menos de 1 MB) y no se pide con movimiento
 reducido ni en equipos sin aceleración gráfica: ahí queda un fondo pastel fijo.
 
 ## Cómo verlo

@@ -1,5 +1,13 @@
 # Cambios
 
+## 1.3.6 · noviembre de 2026
+
+- Estanque: en teléfono, al llegar a una sección desde el menú el título ya no tapa al koi ni a la rana.
+- Estanque: en teléfono el agua refleja el cielo y al anochecer se oscurece con él.
+- Estanque: la rana se ve completa junto al texto de la tesis, que ahora tiene renglones más largos.
+- Estanque: el koi y la rana pesan unos 150 KB menos al descargar, y la rana gana textura en la piel.
+- Estanque: se quita un parche claro bajo los juncos, y el nombre de un comercial ya no se parte en teléfono.
+
 ## 1.3.5 · noviembre de 2026
 
 - Estanque: al volver de la poza al estanque el fondo se desvanece poco a poco, sin tramos de agua vacía.
