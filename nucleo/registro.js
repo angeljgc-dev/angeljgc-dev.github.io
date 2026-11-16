@@ -8,7 +8,6 @@ window.RegistroEstilos = [
   { id: 'cursores', nombre: 'Cursores', porDefecto: true, disponible: true },
   { id: 'gafete', nombre: 'Gafete', disponible: true },
   { id: 'escenario', nombre: 'Escenario', disponible: true },
-  { id: 'teclado', nombre: 'Teclado', disponible: true },
   { id: 'pausa', nombre: 'Pausa', disponible: true },
   { id: 'collage', nombre: 'Collage', disponible: true },
   { id: 'descenso', nombre: 'Descenso', disponible: true },

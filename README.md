@@ -13,8 +13,8 @@ piezas que caen en su lugar. Con movimiento reducido, todo aparece terminado des
 
 ## Novedades
 
-Ocho estilos para elegir en la cabecera: **Cursores** (el de base), **Gafete**, **Escenario**,
-**Teclado**, **Pausa**, **Collage**, **Descenso** y **Estanque**. Al cambiar de estilo la página no se
+Siete estilos para elegir en la cabecera: **Cursores** (el de base), **Gafete**, **Escenario**,
+**Pausa**, **Collage**, **Descenso** y **Estanque**. Al cambiar de estilo la página no se
 recarga: sube al principio y el estilo nuevo se arma con su entrada completa. Los cambios están en
 `CHANGELOG.md`.
 

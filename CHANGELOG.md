@@ -1,5 +1,9 @@
 # Cambios
 
+## 1.3.8 · noviembre de 2026
+
+- Se retira el estilo Teclado. Quien lo tenía elegido ve el estilo de base.
+
 ## 1.3.7 · noviembre de 2026
 
 - Estanque: el koi aparece antes. En teléfono se pide un modelo más ligero, la escena se prepara
