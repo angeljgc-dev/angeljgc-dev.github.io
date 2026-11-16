@@ -482,7 +482,8 @@ html[data-estilo="estanque"] .pie p { display: inline-block; padding: 10px 16px;
   html[data-estilo="estanque"] .grados { gap: 34vh; }
   html[data-estilo="estanque"] .subtitulo { margin-top: 34vh; }
   html[data-estilo="estanque"] .idiomas { margin-top: 34vh; width: 86%; }
-  html[data-estilo="estanque"] .canales { gap: 38vh; }
+  /* Respiro amplio entre tarjetas de contacto: el koi nada entre ellas y se ve entero casi siempre. */
+  html[data-estilo="estanque"] .canales { gap: 75vh; }
   html[data-estilo="estanque"] .contacto .zona-cabeza { margin-bottom: 38vh; }
   /* Al llegar a contacto el koi vuelve: se le deja medio cuadro antes del panel. */
   html[data-estilo="estanque"] .contacto { padding-top: 52vh; padding-bottom: 46vh; }

@@ -116,9 +116,9 @@ export function zonasPorSeccion(doc = document) {
   const y0 = cabecera ? Math.round(cabecera.getBoundingClientRect().bottom + HOLGURA) : 0;
   const alto = v.innerHeight;
   return {
-    // La rana, en la franja derecha y abajo del título: al bajar hasta la tesis el título queda a media
-    // pantalla, y con la zona desde el 45 % del alto la tapaba hasta la cabeza.
-    3: { x0: Math.round(ancho * 0.64), y0: Math.round(alto * 0.58), x1: ancho, y1: Math.round(alto * 0.98) },
+    // La rana, en la franja derecha, a media pantalla bajo el título: así la escena sube y el horizonte
+    // queda arriba (con la rana más abajo, la mitad de arriba era cielo vacío).
+    3: { x0: Math.round(ancho * 0.62), y0: Math.round(alto * 0.57), x1: Math.round(ancho * 0.97), y1: Math.round(alto * 0.78) },
     // El koi de contacto nada en el respiro que dejan las tarjetas al final de la página (donde se
     // detiene el scroll): arriba lo cruzaban las tarjetas y quedaba medio tapado.
     5: { x0: 0, y0: Math.round(alto * 0.47), x1: ancho, y1: Math.round(alto * 0.85) },
