@@ -116,8 +116,12 @@ export function zonasPorSeccion(doc = document) {
   const y0 = cabecera ? Math.round(cabecera.getBoundingClientRect().bottom + HOLGURA) : 0;
   const alto = v.innerHeight;
   return {
-    3: { x0: Math.round(ancho * 0.64), y0: Math.round(alto * 0.45), x1: ancho, y1: Math.round(alto * 0.95) },
-    5: { x0: 0, y0, x1: ancho, y1: Math.round(alto * 0.6) },
+    // La rana, en la franja derecha y abajo del título: al bajar hasta la tesis el título queda a media
+    // pantalla, y con la zona desde el 45 % del alto la tapaba hasta la cabeza.
+    3: { x0: Math.round(ancho * 0.64), y0: Math.round(alto * 0.58), x1: ancho, y1: Math.round(alto * 0.98) },
+    // El koi de contacto nada en el respiro que dejan las tarjetas al final de la página (donde se
+    // detiene el scroll): arriba lo cruzaban las tarjetas y quedaba medio tapado.
+    5: { x0: 0, y0: Math.round(alto * 0.47), x1: ancho, y1: Math.round(alto * 0.85) },
   };
 }
 
