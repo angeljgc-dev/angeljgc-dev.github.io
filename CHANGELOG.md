@@ -1,5 +1,20 @@
 # Cambios
 
+## 1.3.5 · noviembre de 2026
+
+- Estanque: al volver de la poza al estanque el fondo se desvanece poco a poco, sin tramos de agua vacía.
+- Estanque: la rana se queda en su hoja mientras se lee la sección de investigación.
+- Estanque: el agua tiene el mismo color en teléfono y en computadora, y se quitan reflejos sueltos bajo
+  los nenúfares y en la orilla.
+
+## 1.3.4 · noviembre de 2026
+
+- Estanque: el paso entre secciones es una sola toma. La cámara se inclina sobre el agua y el fondo de
+  arena se ve a través de ella, sin cortes.
+- Estanque: se corrigen reflejos fuera de lugar en pantallas anchas, recuadros en el pasto del anochecer
+  y franjas en el agua en teléfono.
+- Estanque: el correo de contacto ya no se parte a media palabra.
+
 ## 1.3.3 · noviembre de 2026
 
 - Estanque: la escena es mucho más ligera de dibujar. El pasto pasa de briznas sueltas a un suelo
