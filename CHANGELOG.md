@@ -1,5 +1,12 @@
 # Cambios
 
+## 1.3.7 · noviembre de 2026
+
+- Estanque: el koi aparece antes. En teléfono se pide un modelo más ligero, la escena se prepara
+  mientras el koi baja y su entrada es más corta.
+- Estanque: si el modelo del koi no llega, queda la imagen fija del estanque en lugar de una escena a medias.
+- Estanque: al cambiar de estilo a media carga ya no se vuelve a pedir el modelo.
+
 ## 1.3.6 · noviembre de 2026
 
 - Estanque: en teléfono, al llegar a una sección desde el menú el título ya no tapa al koi ni a la rana.

@@ -282,20 +282,25 @@ export default {
         limpiezas.push(() => l.remove());
       });
     }
-    // El koi se pide junto con el módulo, no después: las dos descargas van en paralelo. Si falla,
-    // resuelve en null y la escena lo vuelve a pedir por su ruta.
+    // El koi se pide aparte y sus bytes se le pasan a la escena, que los lee. En teléfono se pide el
+    // koi con texturas de 512 px (el lienzo va a densidad 1 y el koi mide unos 190 px); si ese archivo
+    // no está, se pide una vez el de escritorio. Resuelve en null si no llega ninguno o si el estilo se
+    // desmonta a media descarga (la descarga se cancela y no se vuelve a pedir).
     const rutaKoi = new URL('koi.glb', RECURSOS).href;
+    const rutaKoiMovil = new URL('koi-movil.glb', RECURSOS).href;
     function pedirKoi() {
       const corte = new AbortController();
       limpiezas.push(() => corte.abort());
-      return fetch(rutaKoi, { signal: corte.signal })
-        .then((r) => (r.ok ? r.arrayBuffer() : null))
-        .then((datos) => datos, () => null);
+      const pedir = (url) => fetch(url, { signal: corte.signal }).then((r) => (r.ok ? r.arrayBuffer() : null));
+      return (movil ? pedir(rutaKoiMovil).then((datos) => datos || (vivo ? pedir(rutaKoi) : null)) : pedir(rutaKoi))
+        .then((datos) => (vivo ? datos : null), () => null);
     }
     async function cargarEscena() {
-      const datosKoi = pedirKoi();
+      // Primero el módulo y después el koi, sin repartirse la red: mientras baja el koi, la escena ya
+      // se evalúa, crea su contexto y compila el resto de la portada.
       await precargar(new URL('escena.min.js', RECURSOS).href);
       if (!vivo) return;
+      const datosKoi = pedirKoi();
       modulo = await importarEscena();
       if (!vivo) return;
       // Con el módulo a mano ya se puede medir el tamaño del koi de la portada.
@@ -304,7 +309,7 @@ export default {
       // estilo, desmontar espera a que esto termine y la escena se quita en cuanto existe.
       montando = (async () => {
         const quitar = await modulo.montarEscena(fondo, {
-          rutaKoi,
+          rutaKoi: movil ? rutaKoiMovil : rutaKoi,
           datosKoi,
           rutaRana: HAY_RANA ? new URL('rana.glb', RECURSOS).href : null,
           movil,
@@ -316,6 +321,8 @@ export default {
           alListo: () => { if (vivo) fondo.classList.add('viva'); },
           alPerderse: soltarEscena,
           diagnostico: DIAG,
+          // Solo con diagnóstico: capas que se apagan por nombre (?diag=1&sin=entorno,efectos).
+          sin: DIAG ? (new URLSearchParams(ventana.location.search).get('sin') || '').split(',').filter(Boolean) : undefined,
         });
         if (!vivo || perdida) {
           await quitar();
@@ -345,9 +352,26 @@ export default {
       escena = null;
       if (quitar) quitar().catch(avisar);
     }
-    // Diagnóstico para un teléfono real (?diag=1): cuadros por segundo, triángulos y llamadas por
-    // cuadro, tamaño y densidad del lienzo, pérdidas de contexto y la tarjeta gráfica. Sin el
-    // parámetro, este panel no existe.
+    // Panel de diagnóstico (?diag=1): cuadros por segundo, triángulos y llamadas por cuadro, tamaño y
+    // densidad del lienzo, pérdidas de contexto, la tarjeta gráfica y los tiempos de la carga de la
+    // portada en segundos desde el inicio de la navegación: fin de las descargas de la escena y del koi
+    // (del registro de recursos del navegador) y los pasos que anota la escena (PASOS_CARGA en el
+    // módulo). Sin el parámetro, este panel no existe.
+    function finDescarga(nombre) {
+      const r = ventana.performance.getEntriesByType('resource').filter((e) => nombre.test(e.name));
+      return r.length ? r[0].responseEnd / 1000 : null;
+    }
+    function tiemposCarga() {
+      const t = escena && escena.tiempos ? escena.tiempos() || {} : {};
+      const s = (x) => (typeof x === 'number' ? x.toFixed(2) + ' s' : '…');
+      const koiListo = typeof t.koiDecodificado === 'number' && typeof t.compilado === 'number' ? Math.max(t.koiDecodificado, t.compilado) : null;
+      return `
+carga: escena.min.js ${s(finDescarga(/\/escena\.min\.js$/))} · koi ${s(finDescarga(/\/koi(-movil)?\.glb$/))}`
+        + ` · escena lista ${s(t.primerCuadro)} · koi listo ${s(koiListo)} · koi visible ${s(t.koiVisible)}`
+        + `
+pasos: módulo ${s(t.modulo)} · bytes del koi ${s(t.koiDatos)} · contexto ${s(t.contexto)}`
+        + ` · koi leído ${s(t.koiDecodificado)} · compilado ${s(t.compilado)} · marcada viva ${s(t.lista)}`;
+    }
     function mostrarDiagnostico() {
       const panel = crear('div', 'estanque-diag', doc.body);
       panel.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:60;max-width:calc(100% - 16px);'
@@ -355,12 +379,12 @@ export default {
         + 'font:12px/1.35 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;pointer-events:none';
       const pintar = () => {
         const d = escena ? escena.diagnostico() : null;
-        panel.textContent = d
+        panel.textContent = (d
           ? `${d.fps} cuadros/s · ${d.triangulos.toLocaleString('es-MX')} triángulos · ${d.llamadas} llamadas
 `
             + `lienzo ${d.lienzo} (densidad ${d.densidad}, pantalla ${ventana.devicePixelRatio}) · pérdidas ${d.perdidas}
 ${d.tarjeta}`
-          : `sin escena (imagen fija) · pérdidas ${perdidas}`;
+          : `sin escena (imagen fija) · pérdidas ${perdidas}`) + tiemposCarga();
       };
       pintar();
       const reloj = ventana.setInterval(pintar, 500);
