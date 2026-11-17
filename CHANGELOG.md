@@ -1,5 +1,15 @@
 # Cambios
 
+## 1.3.9 · noviembre de 2026
+
+- Estanque: los peces de la poza ya no se enciman ni nadan de lado; se reparten por toda el agua que se ve
+  y rodean los nenúfares.
+- Estanque: un pez que se queda dando vueltas en un rincón busca agua despejada y sale nadando.
+- Estanque: el nado se ve parejo en pantallas de 144 y 240 Hz, y cada pez va junto a su sombra.
+- Estanque: en tableta y con el teléfono girado los peces son del tamaño de computadora.
+- Queda pendiente: en algunas pantallas chicas, como un teléfono girado de 667 por 375, un pez puede tardar
+  más de 20 segundos en salir de un rincón.
+
 ## 1.3.8 · noviembre de 2026
 
 - Se retira el estilo Teclado. Quien lo tenía elegido ve el estilo de base.

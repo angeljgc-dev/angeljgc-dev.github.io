@@ -19,6 +19,14 @@ const ORDEN = ['presentacion', 'proyectos', 'experiencia', 'investigacion', 'hab
 
 const acotar = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 
+// La página va en modo teléfono (koi de 512 px, lienzo a densidad 1, cardumen de cuerpo más grande) con
+// una ventana angosta o con un puntero grueso: una tableta también. Las pruebas de la escena importan
+// esta misma regla.
+export const CONSULTA_MOVIL = '(max-width: 767px), (pointer: coarse)';
+export function esMovil(ventana = window) {
+  return !!ventana.matchMedia && ventana.matchMedia(CONSULTA_MOVIL).matches;
+}
+
 // Una prueba barata antes de pedir megas: WebGL 2 sin el aviso de "rendimiento muy bajo" (el
 // navegador lo da cuando dibujaría por software). El contexto de prueba se suelta enseguida.
 function hayGpu(doc) {
@@ -241,7 +249,7 @@ export default {
       throw e;
     }
 
-    const movil = !!ventana.matchMedia && ventana.matchMedia('(max-width: 767px), (pointer: coarse)').matches;
+    const movil = esMovil(ventana);
     const DIAG = new URLSearchParams(ventana.location.search).get('diag') === '1';
 
     function avisar(e) {
