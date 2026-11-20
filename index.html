@@ -159,6 +159,21 @@
             <ul class="proyecto-enlaces"><li><a class="boton" href="https://app.recepcionia.com.mx">app.recepcionia.com.mx<span class="solo-lector"> de Recepción IA</span></a></li></ul>
           </div>
         </article>
+        <article class="proyecto" data-proyecto="cotejo" data-pieza="proy-cotejo" data-destacado aria-labelledby="titulo-cotejo">
+          <figure class="proyecto-medio" data-cae>
+            <img src="img/proyectos/cotejo-960.webp" srcset="img/proyectos/cotejo-560.webp 560w, img/proyectos/cotejo-960.webp 960w" sizes="(min-width: 1024px) 760px, 92vw" width="960" height="600" alt="Asistente de Cotejo contestando sobre un contrato, con la cita abierta al lado" loading="lazy" decoding="async">
+            <figcaption>Demo con datos ficticios</figcaption>
+          </figure>
+          <div class="proyecto-texto">
+            <span class="proyecto-tipo">Código abierto · RAG</span>
+            <h3 class="proyecto-titulo" id="titulo-cotejo" data-teclea>Cotejo</h3>
+            <p class="proyecto-descripcion">Un asistente de cuentas por pagar para empresas mexicanas pequeñas: lee facturas CFDI 4.0 en XML, las valida, marca duplicados, totales que no cuadran y proveedores en la lista 69-B, y contesta preguntas citando el contrato y la página de donde sale la respuesta. La búsqueda es híbrida, con pgvector y el texto completo de PostgreSQL. El modelo no hace cuentas: las cifras salen de la base y el código revisa cada número y cada cita antes de mostrarlos. Puede proponer pagos, pero solo una persona los aprueba. Evaluado con el modelo real: 41 de 47 casos y 9 de 9 ataques sin efecto. Datos ficticios.</p>
+            <p class="proyecto-rol"><strong>Rol:</strong> Lo diseñé, lo construí y lo evalué.</p>
+            <ul class="proyecto-cifras" aria-label="Cifras"><li>Búsqueda híbrida: 44 de 47 en los primeros 5</li><li>Asistente: 41 de 47 con el modelo real</li></ul>
+            <ul class="proyecto-stack" aria-label="Tecnologías"><li>Python 3.11</li><li>FastAPI</li><li>SQLAlchemy 2</li><li>PostgreSQL 16 + pgvector</li><li>React 19</li><li>MCP</li><li>Docker</li><li>GitHub Actions</li></ul>
+            <ul class="proyecto-enlaces"><li><a class="boton" href="https://github.com/angeljgc-dev/cotejo">Código en GitHub<span class="solo-lector"> de Cotejo</span></a></li></ul>
+          </div>
+        </article>
         <article class="proyecto" data-proyecto="medibot" data-pieza="proy-medibot" data-destacado aria-labelledby="titulo-medibot">
           <figure class="proyecto-medio" data-cae>
             <img src="img/proyectos/medibot-960.webp" srcset="img/proyectos/medibot-560.webp 560w, img/proyectos/medibot-960.webp 960w" sizes="(min-width: 1024px) 760px, 92vw" width="960" height="600" alt="Pantalla de bienvenida de MediBot con pulso y oxígeno, temperatura y peso" loading="lazy" decoding="async">
@@ -312,18 +327,6 @@
             <p class="proyecto-rol"><strong>Rol:</strong> Lo construí.</p>
             <ul class="proyecto-stack" aria-label="Tecnologías"><li>Node.js</li><li>Baileys</li><li>SQLite</li><li>Groq</li><li>RSS</li><li>TomTom</li><li>Google Maps</li></ul>
             <ul class="proyecto-enlaces"><li><a class="boton" href="https://github.com/angeljgc-dev/bot-vial-huajuapan">Código<span class="solo-lector"> de Bot vial Huajuapan</span></a></li></ul>
-          </div>
-        </article>
-        <article class="proyecto" data-proyecto="cotizador" data-pieza="proy-cotizador" aria-labelledby="titulo-cotizador">
-          <figure class="proyecto-medio" data-cae>
-            <img src="img/proyectos/cotizador-960.webp" srcset="img/proyectos/cotizador-560.webp 560w, img/proyectos/cotizador-960.webp 960w" sizes="(min-width: 1200px) 420px, (min-width: 768px) 46vw, 92vw" width="960" height="570" alt="Cotización de un PDF de prueba con el desglose de tinta por página" loading="lazy" decoding="async">
-          </figure>
-          <div class="proyecto-texto">
-            <span class="proyecto-tipo">App de escritorio</span>
-            <h3 class="proyecto-titulo" id="titulo-cotizador" data-teclea>Cotizador de impresiones</h3>
-            <p class="proyecto-descripcion">Aplicación de escritorio hecha para cotizar impresiones en una papelería: mide cuánta tinta lleva cada página de un PDF, Word o imagen, sugiere el precio y manda a imprimir desde la misma ventana.</p>
-            <p class="proyecto-rol"><strong>Rol:</strong> La diseñé, la construí y la probé.</p>
-            <ul class="proyecto-stack" aria-label="Tecnologías"><li>Python</li><li>CustomTkinter</li><li>pypdfium2</li><li>numpy</li><li>Word COM</li><li>reportlab</li><li>PyInstaller</li><li>pytest</li></ul>
           </div>
         </article>
 <!-- proyectos:fin -->

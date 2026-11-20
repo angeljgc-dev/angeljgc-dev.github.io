@@ -1,5 +1,10 @@
 # Cambios
 
+## 1.3.10 · noviembre de 2026
+
+- Proyectos: entra Cotejo, un asistente de cuentas por pagar con búsqueda en contratos y facturas CFDI, justo
+  después de Recepción IA. Sale el Cotizador de impresiones.
+
 ## 1.3.9 · noviembre de 2026
 
 - Estanque: los peces de la poza ya no se enciman ni nadan de lado; se reparten por toda el agua que se ve
